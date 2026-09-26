@@ -2,7 +2,7 @@
   "name": "ptc-chms",
   "version": "0.1.0",
   "private": true,
-  "description": "PTC Chapel church management system \u2014 attendance, first timers and follow-up",
+  "description": "PTC Chapel church management system — attendance, first timers and follow-up",
   "engines": {
     "node": ">=20"
   },
@@ -21,7 +21,8 @@
     "db:up": "docker compose up -d mongo mongo-express",
     "db:down": "docker compose down",
     "prepare": "husky",
-    "sms:check": "node scripts/sms-check.mjs"
+    "sms:check": "node scripts/sms-check.mjs",
+    "user:add": "node scripts/add-user.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

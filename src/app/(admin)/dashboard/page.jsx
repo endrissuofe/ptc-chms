@@ -1,7 +1,12 @@
-import ScreenPlaceholder from '@/components/ui/ScreenPlaceholder';
+import ComingSoon from '@/components/ui/ComingSoon';
 
 export const metadata = { title: 'Dashboard' };
 
 export default function DashboardPage() {
-  return <ScreenPlaceholder title="Dashboard" design="dashboard" />;
+  return (
+    <ComingSoon
+      title="Dashboard"
+      description="Attendance trends, first timers this month, second-visit rate, the newcomer journey and who needs attention."
+    />
+  );
 }

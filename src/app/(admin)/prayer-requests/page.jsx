@@ -1,7 +1,12 @@
-import ScreenPlaceholder from '@/components/ui/ScreenPlaceholder';
+import ComingSoon from '@/components/ui/ComingSoon';
 
 export const metadata = { title: 'Prayer requests' };
 
 export default function PrayerRequestsPage() {
-  return <ScreenPlaceholder title="Prayer requests" design="prayer_requests" />;
+  return (
+    <ComingSoon
+      title="Prayer requests"
+      description="The prayer requests from first-timer cards, for the pastoral team only. Mark them prayed for or needing a visit."
+    />
+  );
 }

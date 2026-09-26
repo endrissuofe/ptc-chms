@@ -24,6 +24,14 @@ if (!uri) {
   process.exit(1);
 }
 
+// Seeding wipes the collections, so only ever touch a database on this machine or in the
+// local Docker network — never Atlas or a server, even if MONGODB_URI points there.
+const host = uri.replace(/^mongodb(\+srv)?:\/\/([^@/]*@)?/, '').split(/[/:?,]/)[0];
+if (!['localhost', '127.0.0.1', 'mongo'].includes(host)) {
+  console.error(`Refusing to seed ${host}: seeding wipes data and is only for a local database.`);
+  process.exit(1);
+}
+
 const day = (iso) => new Date(`${iso}T00:00:00Z`);
 
 async function main() {

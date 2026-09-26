@@ -1,12 +1,12 @@
-import ScreenPlaceholder from '@/components/ui/ScreenPlaceholder';
+import ComingSoon from '@/components/ui/ComingSoon';
 
-export const metadata = { title: 'Newcomer profile' };
+export const metadata = { title: 'Newcomer' };
 
-export default async function NewcomerProfilePage({ params }) {
-  const { id } = await params;
+export default function NewcomerProfilePage() {
   return (
-    <ScreenPlaceholder title="Newcomer profile" design="follow_up_newcomer_profile">
-      <p className="mt-2 text-xs text-muted">Record: {id}</p>
-    </ScreenPlaceholder>
+    <ComingSoon
+      title="Newcomer profile"
+      description="A newcomer's details, journey, visits and call history, and a place to log each call."
+    />
   );
 }
