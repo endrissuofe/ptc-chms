@@ -11,3 +11,7 @@ test-results/
 .DS_Store
 Thumbs.db
 backups/
+
+# Internal docs stay local; only the README is published
+*.md
+!README.md
