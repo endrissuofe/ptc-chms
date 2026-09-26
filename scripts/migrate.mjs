@@ -93,6 +93,33 @@ const MIGRATIONS = [
       await db.collection('broadcasts').createIndex({ createdAt: -1 });
     },
   },
+  {
+    id: '006-shared-follow-up-and-members-move',
+    async up(db) {
+      // Follow-up is a shared list now: remember each person's last call attempt and outcome.
+      const people = db.collection('people');
+      const last = await db
+        .collection('followups')
+        .aggregate([
+          { $sort: { createdAt: -1 } },
+          {
+            $group: {
+              _id: '$person',
+              at: { $first: '$createdAt' },
+              outcome: { $first: '$outcome' },
+            },
+          },
+        ])
+        .toArray();
+      for (const f of last) {
+        await people.updateOne(
+          { _id: f._id, lastAttemptAt: { $exists: false } },
+          { $set: { lastAttemptAt: f.at, lastOutcome: f.outcome } },
+        );
+      }
+      await people.createIndex({ movedToMembersAt: 1, lastVisitDate: -1 });
+    },
+  },
 ];
 
 async function main() {

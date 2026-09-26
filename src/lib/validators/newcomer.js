@@ -41,3 +41,25 @@ export const returningVisitSchema = z.object({
     .superRefine(checkBirthday)
     .optional(),
 });
+
+/** Pastor/admin: correct a newcomer's details, or set the milestones visits can't tell us. */
+export const personUpdateSchema = cardFields
+  .pick({ firstName: true, lastName: true, phone: true, email: true, smsConsent: true })
+  .extend({
+    birthDay: z.coerce.number().int().min(1).max(31).nullable(),
+    birthMonth: z.coerce.number().int().min(1).max(12).nullable(),
+    cardUnclear: z.boolean(),
+    inBelieversClass: z.boolean(),
+    isMember: z.boolean(),
+  })
+  .partial()
+  .superRefine((v, ctx) => {
+    if (v.birthDay != null || v.birthMonth != null) checkBirthday(v, ctx);
+  });
+
+export const moveToMembersSchema = z.object({
+  ids: z
+    .array(z.string().regex(/^[0-9a-f]{24}$/i, 'Invalid id'))
+    .min(1)
+    .max(200),
+});

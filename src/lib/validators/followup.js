@@ -5,6 +5,7 @@ export const followUpSchema = z.object({
   outcome: z.enum(['reached', 'no_answer', 'call_back', 'wrong_number']),
   channel: z.enum(['call', 'whatsapp', 'in_person']),
   note: z.string().trim().max(1000).optional(),
+  callerName: z.string().trim().max(60).optional(),
 });
 
 export const prayerStatusSchema = z.object({

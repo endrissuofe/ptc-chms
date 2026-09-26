@@ -4,7 +4,10 @@
     {
       "name": "ptc-dev",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "set NEXTAUTH_URL=http://localhost:3001&& npx next dev -p 3001"],
+      "runtimeArgs": [
+        "/c",
+        "set NEXTAUTH_URL=http://localhost:3001&& set SMS_PROVIDER=mock&& npx next dev -p 3001"
+      ],
       "port": 3001
     }
   ]

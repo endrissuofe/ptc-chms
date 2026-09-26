@@ -23,6 +23,7 @@ export async function audienceRecipients(audience, today = new Date()) {
     (
       await Person.find({
         smsConsent: true,
+        movedToMembersAt: null,
         stage: { $in: [STAGES.FIRST_TIMER, STAGES.SECOND_TIMER] },
         lastVisitDate: { $gte: addDays(toServiceDate(today), -90) },
       }).lean()

@@ -2,13 +2,12 @@ import { NextResponse } from 'next/server';
 import { handler, requireRole } from '@/lib/api';
 import { ROLES } from '@/lib/roles';
 import { followUpSchema } from '@/lib/validators/followup';
-import { logFollowUp } from '@/services/followup.service';
-import { listForWorker } from '@/services/newcomer.service';
+import { listFollowUps, logFollowUp } from '@/services/followup.service';
 
-/** The signed-in worker's newcomers. */
+/** The follow-up team's shared list. */
 export const GET = handler(async () => {
-  const user = await requireRole(ROLES.FOLLOWUP, ROLES.PASTOR, ROLES.ADMIN);
-  return NextResponse.json({ items: await listForWorker(user.id) });
+  await requireRole(ROLES.FOLLOWUP, ROLES.PASTOR, ROLES.ADMIN);
+  return NextResponse.json(await listFollowUps());
 });
 
 export const POST = handler(async (req) => {

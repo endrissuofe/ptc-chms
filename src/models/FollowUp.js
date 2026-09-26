@@ -11,6 +11,8 @@ const followUpSchema = new mongoose.Schema(
     },
     channel: { type: String, enum: ['call', 'whatsapp', 'in_person'], default: 'call' },
     note: { type: String, trim: true },
+    // The follow-up team shares one login, so the caller types their name (remembered on the phone).
+    callerName: { type: String, trim: true },
   },
   { timestamps: true },
 );

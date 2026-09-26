@@ -21,8 +21,15 @@ const personSchema = new mongoose.Schema(
     lastVisitDate: { type: Date },
     visitCount: { type: Number, default: 0 },
 
-    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // no longer used
+    // Follow-up: the last time someone got through, and the last attempt of any kind.
     lastContactAt: { type: Date },
+    lastAttemptAt: { type: Date },
+    lastOutcome: { type: String, enum: ['reached', 'no_answer', 'call_back', 'wrong_number'] },
+
+    // Moved into the Members list: no longer followed up as a first timer.
+    movedToMembersAt: { type: Date },
+    member: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true },
@@ -34,5 +41,6 @@ personSchema.virtual('fullName').get(function fullName() {
 
 personSchema.index({ phone: 1 });
 personSchema.index({ stage: 1, firstVisitDate: -1 });
+personSchema.index({ movedToMembersAt: 1, lastVisitDate: -1 });
 
 export default mongoose.models.Person || mongoose.model('Person', personSchema);

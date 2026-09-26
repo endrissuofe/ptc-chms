@@ -81,6 +81,12 @@ export default async function MembersPage({ searchParams }) {
                     <p className="text-[13px] text-muted">{formatPhone(m.phone)}</p>
                   </div>
                   <div className="hidden flex-wrap justify-end gap-1.5 sm:flex">
+                    {m.source === 'first_timer' && m.person && (
+                      <Link href={`/newcomers/${m.person}`} className="chip chip-coral">
+                        <Icon name="person_add" size={14} />
+                        Was a first timer
+                      </Link>
+                    )}
                     {m.gender && (
                       <span className="chip">{m.gender === 'male' ? 'Male' : 'Female'}</span>
                     )}

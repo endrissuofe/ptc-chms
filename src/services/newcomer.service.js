@@ -1,9 +1,11 @@
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import { HttpError } from '@/lib/api';
 import { normalizePhone } from '@/lib/phone';
-import { computeStage, STAGES } from '@/lib/stages';
-import { toServiceDate } from '@/lib/dates';
-import { Person, Visit, PrayerRequest, FollowUp } from '@/models';
+import { computeStage, STAGES, LOST_AFTER_DAYS } from '@/lib/stages';
+import { MOVE_AFTER_DAYS } from '@/lib/followup';
+import { addDays, toServiceDate } from '@/lib/dates';
+import { Person, Visit, PrayerRequest, FollowUp, Member, SmsLog } from '@/models';
 import { getServiceDay, requireActiveService } from './churchService.service';
 
 /**
@@ -161,56 +163,142 @@ export async function getCardEntry({ serviceDate, today = new Date() } = {}) {
   return { ...day, cardsByService };
 }
 
-/** First timers list for the admin table, with optional stage filter and search. */
-export async function listPeople({ stage, q, page = 1, limit = 20 } = {}) {
+/**
+ * Stages only change when someone visits, so people who stopped coming still show their old
+ * stage. This marks them Lost once their last visit is LOST_AFTER_DAYS behind (cheap, indexed).
+ */
+export async function markLostPeople(today = new Date()) {
   await connectDB();
-  const filter = {};
-  if (stage) filter.stage = stage;
-  if (q) {
-    const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    filter.$or = [{ firstName: rx }, { lastName: rx }, { phone: rx }];
-  }
-  const [items, total] = await Promise.all([
-    Person.find(filter)
-      .sort({ firstVisitDate: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate('assignedTo', 'displayName')
-      .lean(),
-    Person.countDocuments(filter),
-  ]);
-  return { items, total, page, limit };
+  await Person.updateMany(
+    {
+      stage: { $in: [STAGES.FIRST_TIMER, STAGES.SECOND_TIMER, STAGES.REGULAR] },
+      lastVisitDate: { $lt: addDays(toServiceDate(today), -LOST_AFTER_DAYS) },
+    },
+    { stage: STAGES.LOST },
+  );
 }
 
-/** A follow-up worker's own newcomers. */
-export async function listForWorker(workerId) {
+const escapeRx = (q) => q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function searchFilter(q) {
+  if (!q?.trim()) return {};
+  const rx = new RegExp(escapeRx(q.trim()), 'i');
+  const digits = q.replace(/\D/g, '').replace(/^(234|0)/, '');
+  return {
+    $or: [
+      { firstName: rx },
+      { lastName: rx },
+      ...(digits.length >= 3 ? [{ phone: new RegExp(digits) }] : []),
+    ],
+  };
+}
+
+/**
+ * The views on the First timers screen. Everything except "moved" leaves out people already
+ * moved into the Members list.
+ */
+export const PEOPLE_VIEWS = {
+  all: {},
+  ...Object.fromEntries(Object.values(STAGES).map((s) => [s, { stage: s }])),
+  unclear: { cardUnclear: true },
+  moved: { movedToMembersAt: { $ne: null } },
+};
+
+const viewQuery = (view, q) => ({
+  ...(view === 'moved' ? {} : { movedToMembersAt: null }),
+  ...(PEOPLE_VIEWS[view] ?? {}),
+  ...searchFilter(q),
+});
+
+/** First timers table: search, a view (stage, unclear cards, moved), a page, and view counts. */
+export async function listPeople({
+  view = 'all',
+  q,
+  page = 1,
+  limit = 25,
+  today = new Date(),
+} = {}) {
   await connectDB();
-  return Person.find({ assignedTo: workerId, stage: { $nin: [STAGES.MEMBER] } })
-    .sort({ lastVisitDate: -1 })
+  await markLostPeople(today);
+  const filter = viewQuery(view, q);
+
+  const [items, total, byStage, unclear, moved] = await Promise.all([
+    Person.find(filter)
+      .sort({ firstVisitDate: -1, createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .select('-assignedTo -createdBy')
+      .lean(),
+    Person.countDocuments(filter),
+    Person.aggregate([
+      { $match: { movedToMembersAt: null } },
+      { $group: { _id: '$stage', count: { $sum: 1 } } },
+    ]),
+    Person.countDocuments({ movedToMembersAt: null, cardUnclear: true }),
+    Person.countDocuments({ movedToMembersAt: { $ne: null } }),
+  ]);
+
+  const counts = Object.fromEntries(byStage.map((s) => [s._id, s.count]));
+  counts.all = byStage.reduce((sum, s) => sum + s.count, 0);
+  counts.unclear = unclear;
+  counts.moved = moved;
+  return { items, total, page, limit, counts };
+}
+
+/** Everyone matching a view and search, for the spreadsheet export. */
+export async function exportPeople({ view = 'all', q, today = new Date() } = {}) {
+  await connectDB();
+  await markLostPeople(today);
+  return Person.find(viewQuery(view, q))
+    .sort({ firstVisitDate: -1 })
+    .select('-assignedTo -createdBy')
     .lean();
 }
 
-export async function getProfile(personId) {
+/**
+ * Everything about one newcomer. Prayer requests only when asked for — the caller decides
+ * from the viewer's role (prayer team, pastors, admins).
+ */
+export async function getProfile(personId, { includePrayer = false } = {}) {
   await connectDB();
-  const person = await Person.findById(personId).populate('assignedTo', 'displayName').lean();
+  if (!mongoose.isValidObjectId(personId)) throw new HttpError(404, 'Person not found');
+  const person = await Person.findById(personId).select('-assignedTo').lean();
   if (!person) throw new HttpError(404, 'Person not found');
-  const [visits, followUps] = await Promise.all([
+  const [visits, followUps, sms, prayerRequests] = await Promise.all([
     Visit.find({ person: personId }).sort({ serviceDate: -1 }).lean(),
     FollowUp.find({ person: personId })
       .sort({ createdAt: -1 })
       .populate('worker', 'displayName')
       .lean(),
+    SmsLog.find({ person: personId, status: { $ne: 'skipped' } })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .select('template run body status error createdAt')
+      .lean(),
+    includePrayer
+      ? PrayerRequest.find({ person: personId }).sort({ createdAt: -1 }).lean()
+      : Promise.resolve(null),
   ]);
-  return { person, visits, followUps };
+  return { person, visits, followUps, sms, prayerRequests };
 }
 
-export async function assignWorker(personId, workerId) {
+/** Pastor/admin: correct what was typed from the card (e.g. a card that was hard to read). */
+export async function updateDetails(personId, input) {
   await connectDB();
-  const person = await Person.findByIdAndUpdate(
-    personId,
-    { assignedTo: workerId },
-    { new: true },
-  ).lean();
+  const update = {};
+  for (const key of ['firstName', 'lastName', 'smsConsent', 'cardUnclear']) {
+    if (input[key] !== undefined) update[key] = input[key];
+  }
+  if (input.phone !== undefined) update.phone = normalizePhone(input.phone);
+  if (input.email !== undefined) update.email = input.email || null;
+  if (input.birthDay !== undefined || input.birthMonth !== undefined) {
+    update.birthDay = input.birthDay ?? null;
+    update.birthMonth = input.birthMonth ?? null;
+  }
+  const person = await Person.findByIdAndUpdate(personId, update, {
+    new: true,
+    runValidators: true,
+  }).lean();
   if (!person) throw new HttpError(404, 'Person not found');
   return person;
 }
@@ -223,4 +311,62 @@ export async function setMilestones(personId, { inBelieversClass, isMember }) {
   if (typeof isMember === 'boolean') update.isMember = isMember;
   await Person.updateOne({ _id: personId }, update);
   return (await recomputeStage(personId)).toObject();
+}
+
+/** Not moved yet, and first came at least MOVE_AFTER_DAYS ago. */
+export async function readyToMove({ today = new Date() } = {}) {
+  await connectDB();
+  return Person.find({
+    movedToMembersAt: null,
+    firstVisitDate: { $lte: addDays(toServiceDate(today), -MOVE_AFTER_DAYS) },
+  })
+    .sort({ firstVisitDate: 1 })
+    .select('firstName lastName phone stage firstVisitDate lastVisitDate visitCount')
+    .lean();
+}
+
+const lower = (s) => (s || '').trim().toLowerCase();
+
+/**
+ * Moves first timers into the Members list. They stop being followed up as first timers; the
+ * member record links back to them, so their visits and calls stay visible and the church can
+ * count how many first timers joined. Someone already on the list (same phone and name) is
+ * linked rather than added twice. Safe to run twice.
+ */
+export async function moveToMembers(personIds, user, now = new Date()) {
+  await connectDB();
+  const people = await Person.find({ _id: { $in: personIds }, movedToMembersAt: null }).lean();
+  let added = 0;
+  let linked = 0;
+
+  for (const p of people) {
+    const sameNumber = await Member.find({ phone: p.phone }).lean();
+    let member = sameNumber.find(
+      (m) => lower(m.firstName) === lower(p.firstName) && lower(m.lastName) === lower(p.lastName),
+    );
+    if (member) {
+      linked += 1;
+      const fill = { person: member.person ?? p._id, active: true };
+      if (!member.birthDay && p.birthDay) {
+        fill.birthDay = p.birthDay;
+        fill.birthMonth = p.birthMonth;
+      }
+      await Member.updateOne({ _id: member._id }, fill);
+    } else {
+      added += 1;
+      member = await Member.create({
+        firstName: p.firstName,
+        lastName: p.lastName,
+        phone: p.phone,
+        birthDay: p.birthDay,
+        birthMonth: p.birthMonth,
+        source: 'first_timer',
+        person: p._id,
+        smsOptOut: !p.smsConsent,
+        createdBy: user?.id,
+      });
+    }
+    await Person.updateOne({ _id: p._id }, { movedToMembersAt: now, member: member._id });
+  }
+  return { moved: people.length, added, linked };
 }

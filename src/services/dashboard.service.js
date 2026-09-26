@@ -1,46 +1,120 @@
 import { connectDB } from '@/lib/db';
 import { toServiceDate, addDays } from '@/lib/dates';
+import { MOVE_AFTER_DAYS } from '@/lib/followup';
 import { STAGES } from '@/lib/stages';
 import { Person, FollowUp } from '@/models';
 import { attendanceTrend } from './attendance.service';
+import { listServices } from './churchService.service';
+import { listFollowUps } from './followup.service';
+import { countNewPrayerRequests } from './prayer.service';
 
-/** Everything the admin dashboard needs in one call. */
+const monthStartOf = (day) => new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), 1));
+
+/**
+ * The newcomer journey as a funnel: each step counts everyone who got at least that far
+ * (someone in Believers' Class also counts as having come back).
+ */
+async function journeyFunnel() {
+  const [row] = await Person.aggregate([
+    {
+      $group: {
+        _id: null,
+        received: { $sum: 1 },
+        cameBack: { $sum: { $cond: [{ $gte: ['$visitCount', 2] }, 1, 0] } },
+        regular: {
+          $sum: {
+            $cond: [
+              {
+                $or: [
+                  { $gte: ['$visitCount', 3] },
+                  { $in: ['$stage', [STAGES.BELIEVERS_CLASS, STAGES.MEMBER]] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        believersClass: {
+          $sum: {
+            $cond: [{ $or: ['$inBelieversClass', { $eq: ['$stage', STAGES.MEMBER] }] }, 1, 0],
+          },
+        },
+        joined: {
+          $sum: {
+            $cond: [
+              { $or: ['$isMember', { $ne: [{ $ifNull: ['$movedToMembersAt', null] }, null] }] },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ]);
+  return row
+    ? {
+        received: row.received,
+        cameBack: row.cameBack,
+        regular: row.regular,
+        believersClass: row.believersClass,
+        joined: row.joined,
+      }
+    : { received: 0, cameBack: 0, regular: 0, believersClass: 0, joined: 0 };
+}
+
+/** Everything the pastors' dashboard needs in one call. */
 export async function getDashboard({ today = new Date() } = {}) {
   await connectDB();
   const day = toServiceDate(today);
-  const monthStart = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), 1));
-  const threeDaysAgo = addDays(day, -3);
+  const monthStart = monthStartOf(day);
+  const lastMonthStart = monthStartOf(addDays(monthStart, -1));
 
-  const [trend, stageCounts, firstTimersThisMonth, unassigned, overdue, unclear] =
+  const [trend, services, funnel, thisMonth, lastMonth, movedThisMonth, followUps, unclear] =
     await Promise.all([
       attendanceTrend({ weeks: 8, today }),
-      Person.aggregate([{ $group: { _id: '$stage', count: { $sum: 1 } } }]),
+      listServices({ includeInactive: true }),
+      journeyFunnel(),
       Person.countDocuments({ firstVisitDate: { $gte: monthStart } }),
-      Person.countDocuments({
-        assignedTo: null,
-        stage: { $in: [STAGES.FIRST_TIMER, STAGES.SECOND_TIMER] },
-      }),
-      Person.countDocuments({
-        stage: { $in: [STAGES.FIRST_TIMER, STAGES.SECOND_TIMER] },
-        firstVisitDate: { $lte: threeDaysAgo },
-        $or: [{ lastContactAt: null }, { $expr: { $lt: ['$lastContactAt', '$lastVisitDate'] } }],
-      }),
-      Person.countDocuments({ cardUnclear: true }),
+      Person.countDocuments({ firstVisitDate: { $gte: lastMonthStart, $lt: monthStart } }),
+      Person.countDocuments({ movedToMembersAt: { $gte: monthStart } }),
+      listFollowUps({ today }),
+      Person.countDocuments({ movedToMembersAt: null, cardUnclear: true }),
     ]);
+  const [newPrayer, readyToMove, callsThisWeek] = await Promise.all([
+    countNewPrayerRequests(),
+    Person.countDocuments({
+      movedToMembersAt: null,
+      firstVisitDate: { $lte: addDays(day, -MOVE_AFTER_DAYS) },
+    }),
+    FollowUp.countDocuments({ createdAt: { $gte: addDays(new Date(today), -7) } }),
+  ]);
 
-  const byStage = Object.fromEntries(stageCounts.map((s) => [s._id, s.count]));
-  const everyone = Object.values(byStage).reduce((a, b) => a + b, 0);
-  const cameBack = everyone - (byStage[STAGES.FIRST_TIMER] || 0) - (byStage[STAGES.LOST] || 0);
-
+  const sundays = trend.filter(
+    (t) => new Date(t.serviceDate).getUTCDay() === 0 && new Date(t.serviceDate) <= day,
+  );
   return {
-    // Midweek and special services are in the trend too; this headline is Sundays only.
-    lastSunday: trend.findLast((t) => new Date(t.serviceDate).getUTCDay() === 0) || null,
+    // The headline is Sundays; the chart shows every service day (midweek and special too).
+    lastSunday: sundays.at(-1) ?? null,
+    previousSunday: sundays.at(-2) ?? null,
     trend,
-    firstTimersThisMonth,
-    secondVisitRate: everyone ? Math.round((cameBack / everyone) * 1000) / 10 : 0,
-    members: byStage[STAGES.MEMBER] || 0,
-    funnel: byStage,
-    needsAttention: { unassigned, overdue, unclear },
-    followUpsLogged: await FollowUp.countDocuments({ createdAt: { $gte: monthStart } }),
+    services: services.map((s) => ({ key: s.key, name: s.name })),
+    firstTimersThisMonth: thisMonth,
+    firstTimersLastMonth: lastMonth,
+    // Of everyone who filled a card, the share who came back at least once.
+    secondVisitRate: funnel.received
+      ? Math.round((funnel.cameBack / funnel.received) * 1000) / 10
+      : null,
+    funnel,
+    movedThisMonth,
+    needsAttention: {
+      overdue: followUps.stats.overdue,
+      toCall: followUps.stats.toCall,
+      unclear,
+      newPrayer,
+      readyToMove,
+    },
+    callsThisWeek,
+    reachRate: followUps.stats.reachRate,
   };
 }

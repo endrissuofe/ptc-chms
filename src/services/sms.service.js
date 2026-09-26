@@ -151,9 +151,13 @@ export async function sendCardMessage({ personId, templateKey, serviceDate }) {
   }
 }
 
-/** Saturday invite: recent first and second timers who agreed and aren't regulars yet. */
+/**
+ * Saturday invite: recent first and second timers who aren't regulars yet (and haven't been
+ * moved into the Members list).
+ */
 async function inviteRecipients(day) {
   const people = await Person.find({
+    movedToMembersAt: null,
     stage: { $in: [STAGES.FIRST_TIMER, STAGES.SECOND_TIMER] },
     lastVisitDate: { $gte: addDays(day, -28) },
   }).lean();

@@ -5,12 +5,12 @@ import { newcomerSchema } from '@/lib/validators/newcomer';
 import { createFromCard, listPeople } from '@/services/newcomer.service';
 import { sendCardMessage } from '@/services/sms.service';
 
-/** Admin table. GET ?stage=first_timer&q=okafor&page=1 */
+/** Admin table. GET ?view=first_timer&q=okafor&page=1 (views: see PEOPLE_VIEWS) */
 export const GET = handler(async (req) => {
   await requireRole(ROLES.PASTOR, ROLES.ADMIN);
   const { searchParams } = new URL(req.url);
   const result = await listPeople({
-    stage: searchParams.get('stage') || undefined,
+    view: searchParams.get('view') || 'all',
     q: searchParams.get('q') || undefined,
     page: Math.max(Number(searchParams.get('page')) || 1, 1),
   });

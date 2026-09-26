@@ -1,31 +1,24 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { handler, requireRole, HttpError } from '@/lib/api';
-import { ROLES } from '@/lib/roles';
-import { getProfile, assignWorker, setMilestones } from '@/services/newcomer.service';
+import { handler, requireRole } from '@/lib/api';
+import { ROLES, hasRole } from '@/lib/roles';
+import { personUpdateSchema } from '@/lib/validators/newcomer';
+import { getProfile, setMilestones, updateDetails } from '@/services/newcomer.service';
 
+/** The follow-up team shares one list, so any follow-up worker may open any newcomer. */
 export const GET = handler(async (_req, { params }) => {
   const user = await requireRole(ROLES.FOLLOWUP, ROLES.PASTOR, ROLES.ADMIN);
   const { id } = await params;
-  const profile = await getProfile(id);
-  if (user.role === ROLES.FOLLOWUP && String(profile.person.assignedTo?._id) !== user.id) {
-    throw new HttpError(403, 'This newcomer is assigned to someone else');
-  }
-  return NextResponse.json(profile);
+  // Prayer requests: pastors and admins here (never follow-up workers).
+  const includePrayer = hasRole(user, ROLES.PASTOR, ROLES.ADMIN);
+  return NextResponse.json(await getProfile(id, { includePrayer }));
 });
 
-const patchSchema = z.object({
-  assignedTo: z.string().optional(),
-  inBelieversClass: z.boolean().optional(),
-  isMember: z.boolean().optional(),
-});
-
-/** Pastor/admin: assign a follow-up worker or set Believers' Class / Member. */
+/** Pastor/admin: correct details, or set Believers' Class / Member. */
 export const PATCH = handler(async (req, { params }) => {
   await requireRole(ROLES.PASTOR, ROLES.ADMIN);
   const { id } = await params;
-  const body = patchSchema.parse(await req.json());
-  if (body.assignedTo) await assignWorker(id, body.assignedTo);
-  const person = await setMilestones(id, body);
+  const { inBelieversClass, isMember, ...details } = personUpdateSchema.parse(await req.json());
+  if (Object.keys(details).length) await updateDetails(id, details);
+  const person = await setMilestones(id, { inBelieversClass, isMember });
   return NextResponse.json({ id, stage: person.stage });
 });
