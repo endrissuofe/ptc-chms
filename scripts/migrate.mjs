@@ -45,6 +45,15 @@ const MIGRATIONS = [
       await db.collection('churchservices').createIndex({ kind: 1, date: 1 });
     },
   },
+  {
+    id: '004-shared-phone-numbers',
+    async up(db) {
+      // Family members may share a phone, so the phone index is no longer unique.
+      const people = db.collection('people');
+      if (await people.indexExists('phone_1')) await people.dropIndex('phone_1');
+      await people.createIndex({ phone: 1 });
+    },
+  },
 ];
 
 async function main() {

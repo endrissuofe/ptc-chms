@@ -16,7 +16,10 @@ export const GET = handler(async (req) => {
   return NextResponse.json(result);
 });
 
-/** Usher saves a first-timer card. 409 means the phone already exists (see details.match). */
+/**
+ * Usher saves a first-timer card. 409 means people already use this phone (details.matches);
+ * resend with newPersonConfirmed: true once the usher confirms it is someone else.
+ */
 export const POST = handler(async (req) => {
   const user = await requireRole(ROLES.USHER, ROLES.PASTOR, ROLES.ADMIN);
   const input = newcomerSchema.parse(await req.json());

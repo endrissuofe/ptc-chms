@@ -4,15 +4,40 @@ import { normalizePhone } from '@/lib/phone';
 import { computeStage, STAGES } from '@/lib/stages';
 import { toServiceDate } from '@/lib/dates';
 import { Person, Visit, PrayerRequest, FollowUp } from '@/models';
-import { requireActiveService } from './churchService.service';
+import { getServiceDay, requireActiveService } from './churchService.service';
 
-/** Finds someone by phone number in any format. */
+/**
+ * What an usher sees about someone already on a phone number: enough to recognise them,
+ * nothing private (no prayer requests, no contact details beyond the number they typed).
+ */
+function toMatch(person) {
+  return {
+    id: String(person._id),
+    firstName: person.firstName,
+    lastName: person.lastName,
+    stage: person.stage,
+    firstVisitDate: person.firstVisitDate,
+    lastVisitDate: person.lastVisitDate,
+    visitCount: person.visitCount,
+    assignedTo: person.assignedTo?.displayName ?? null,
+  };
+}
+
+/** Everyone on a phone number (any format). Family members may share one phone. */
 export async function findByPhone(phone) {
   await connectDB();
   const normalized = normalizePhone(phone);
-  if (!normalized) return null;
-  return Person.findOne({ phone: normalized }).lean();
+  if (!normalized) return [];
+  const people = await Person.find({ phone: normalized })
+    .sort({ firstVisitDate: 1 })
+    .populate('assignedTo', 'displayName')
+    .lean();
+  return people.map(toMatch);
 }
+
+const sameName = (a, b) =>
+  a.firstName.trim().toLowerCase() === b.firstName.trim().toLowerCase() &&
+  a.lastName.trim().toLowerCase() === b.lastName.trim().toLowerCase();
 
 /** Re-reads a person's visits and saves their correct stage and visit summary. */
 export async function recomputeStage(personId, today = new Date()) {
@@ -34,8 +59,11 @@ export async function recomputeStage(personId, today = new Date()) {
 }
 
 /**
- * Saves a first-timer card. If the phone number already exists, nothing is saved and
- * a 409 comes back with the existing person so the usher can confirm a returning visit.
+ * Saves a first-timer card.
+ * If people already use this phone number, nothing is saved and a 409 comes back with them
+ * (details.matches) so the usher can pick the returning visitor. The usher can instead confirm
+ * it's a different person (newPersonConfirmed) — unless someone with the same name is already
+ * on the number, which is almost always the same card entered twice.
  */
 export async function createFromCard(input, user) {
   await connectDB();
@@ -43,18 +71,9 @@ export async function createFromCard(input, user) {
   const phone = normalizePhone(input.phone);
   const serviceDate = toServiceDate(input.serviceDate);
 
-  const existing = await Person.findOne({ phone }).lean();
-  if (existing) {
-    throw new HttpError(409, 'Phone number already registered', {
-      match: {
-        id: String(existing._id),
-        firstName: existing.firstName,
-        lastName: existing.lastName,
-        stage: existing.stage,
-        firstVisitDate: existing.firstVisitDate,
-        visitCount: existing.visitCount,
-      },
-    });
+  const matches = await findByPhone(phone);
+  if (matches.length && (!input.newPersonConfirmed || matches.some((m) => sameName(m, input)))) {
+    throw new HttpError(409, 'Someone already uses this phone number', { matches });
   }
 
   const person = await Person.create({
@@ -87,18 +106,59 @@ export async function createFromCard(input, user) {
   return person.toObject();
 }
 
-/** Records that a known person came back. Safe to call twice for the same service. */
-export async function recordReturningVisit({ personId, service, serviceDate }, user) {
+/**
+ * Records that a known person came back. Safe to call twice for the same service.
+ * `card` is what they wrote on today's card: a new prayer request is saved for the pastors,
+ * email and birthday only fill in blanks, and SMS consent can be given but not withdrawn here.
+ */
+export async function recordReturningVisit({ personId, service, serviceDate, card = {} }, user) {
   await connectDB();
   await requireActiveService(service, serviceDate, user);
   const day = toServiceDate(serviceDate);
+  const existing = await Person.findById(personId).lean();
+  if (!existing) throw new HttpError(404, 'Person not found');
+
   await Visit.updateOne(
     { person: personId, serviceDate: day, service },
     { $setOnInsert: { source: 'returning', recordedBy: user?.id } },
     { upsert: true },
   );
+
+  const fill = {};
+  if (card.email && !existing.email) fill.email = card.email;
+  if (card.birthDay && card.birthMonth && !existing.birthDay) {
+    fill.birthDay = card.birthDay;
+    fill.birthMonth = card.birthMonth;
+  }
+  if (card.smsConsent && !existing.smsConsent) fill.smsConsent = true;
+  if (Object.keys(fill).length) await Person.updateOne({ _id: personId }, fill);
+
+  if (card.prayerRequest) {
+    await PrayerRequest.updateOne(
+      { person: personId, serviceDate: day, text: card.prayerRequest },
+      { $setOnInsert: { status: 'new' } },
+      { upsert: true },
+    );
+  }
+
   const person = await recomputeStage(personId);
   return person.toObject();
+}
+
+/**
+ * What the card entry screen needs: the service day (with day picker options) and how many
+ * cards have been entered for each of that day's services.
+ */
+export async function getCardEntry({ serviceDate, today = new Date() } = {}) {
+  await connectDB();
+  const day = await getServiceDay({ serviceDate, today });
+  const counts = await Visit.aggregate([
+    { $match: { serviceDate: day.serviceDate, source: 'card' } },
+    { $group: { _id: '$service', count: { $sum: 1 } } },
+  ]);
+  const cardsByService = Object.fromEntries(day.services.map((s) => [s.key, 0]));
+  for (const c of counts) if (c._id in cardsByService) cardsByService[c._id] = c.count;
+  return { ...day, cardsByService };
 }
 
 /** First timers list for the admin table, with optional stage filter and search. */

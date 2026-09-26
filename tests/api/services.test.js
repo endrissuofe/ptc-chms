@@ -63,7 +63,7 @@ describe('first-timer cards', () => {
       svc.createFromCard(card({ phone: '+234 806 000 0101', firstName: 'K' })),
     ).rejects.toMatchObject({
       status: 409,
-      details: { match: { firstName: 'Kemi' } },
+      details: { matches: [{ firstName: 'Kemi', lastName: 'Adebayo', visitCount: 1 }] },
     });
   });
 
@@ -344,5 +344,66 @@ describe('services on different days', () => {
 
     const tooOld = await att.getAttendanceForm({ today, serviceDate: new Date('2026-09-13') });
     expect(tooOld.serviceDate.toISOString().slice(0, 10)).toBe('2026-09-27');
+  });
+});
+
+describe('shared phone numbers and returning cards', () => {
+  it('saves a second person on a shared phone only after the usher confirms', async () => {
+    await svc.createFromCard(card({ firstName: 'Chinedu', lastName: 'Okafor' }));
+    const wife = card({ firstName: 'Ngozi', lastName: 'Okafor' });
+    await expect(svc.createFromCard(wife)).rejects.toMatchObject({ status: 409 });
+
+    const saved = await svc.createFromCard({ ...wife, newPersonConfirmed: true });
+    expect(saved.firstName).toBe('Ngozi');
+    const matches = await svc.findByPhone('0806 000 0101');
+    expect(matches.map((m) => m.firstName)).toEqual(['Chinedu', 'Ngozi']);
+  });
+
+  it('treats the same name on the same phone as a duplicate even when confirmed', async () => {
+    await svc.createFromCard(card());
+    await expect(
+      svc.createFromCard(card({ firstName: ' kemi ', newPersonConfirmed: true })),
+    ).rejects.toMatchObject({ status: 409 });
+    expect(await models.Person.countDocuments()).toBe(1);
+  });
+
+  it("uses a returning visitor's card without overwriting what we know", async () => {
+    const p = await svc.createFromCard(
+      card({ email: 'kemi@example.com', smsConsent: false, serviceDate: new Date('2026-09-20') }),
+    );
+    const visit = {
+      personId: String(p._id),
+      service: 'sunday',
+      serviceDate: new Date('2026-09-27T09:00:00Z'),
+      card: {
+        email: 'other@example.com',
+        birthDay: 14,
+        birthMonth: 10,
+        smsConsent: true,
+        prayerRequest: 'New job',
+      },
+    };
+    await svc.recordReturningVisit(visit);
+    await svc.recordReturningVisit(visit); // a double tap changes nothing
+
+    const person = await models.Person.findById(p._id).lean();
+    expect(person).toMatchObject({
+      email: 'kemi@example.com',
+      birthDay: 14,
+      birthMonth: 10,
+      smsConsent: true,
+      stage: 'second_timer',
+      visitCount: 2,
+    });
+    expect(await models.PrayerRequest.countDocuments({ person: p._id })).toBe(1);
+  });
+
+  it('counts cards per service for the card entry screen', async () => {
+    const today = new Date('2026-09-27T12:00:00Z');
+    await svc.createFromCard(card());
+    await svc.createFromCard(card({ phone: '0901 000 0102', firstName: 'Tunde' }));
+    const entry = await svc.getCardEntry({ today });
+    expect(entry.services.map((s) => s.key)).toEqual(['sunday']);
+    expect(entry.cardsByService).toEqual({ sunday: 2 });
   });
 });

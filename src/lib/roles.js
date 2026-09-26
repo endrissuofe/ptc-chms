@@ -13,7 +13,6 @@ export const ROUTE_ACCESS = [
   { prefix: '/today', roles: [ROLES.USHER, ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/attendance', roles: [ROLES.USHER, ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/newcomers/new', roles: [ROLES.USHER, ROLES.PASTOR, ROLES.ADMIN] },
-  { prefix: '/newcomers/match', roles: [ROLES.USHER, ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/my-newcomers', roles: [ROLES.FOLLOWUP, ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/newcomers', roles: [ROLES.FOLLOWUP, ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/dashboard', roles: [ROLES.PASTOR, ROLES.ADMIN] },

@@ -6,7 +6,8 @@ const personSchema = new mongoose.Schema(
   {
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
-    phone: { type: String, required: true, unique: true }, // normalised +234...
+    // Normalised +234... Not unique: family members sometimes share one phone.
+    phone: { type: String, required: true },
     email: { type: String, trim: true, lowercase: true },
     birthDay: { type: Number, min: 1, max: 31 },
     birthMonth: { type: Number, min: 1, max: 12 },
@@ -31,6 +32,7 @@ personSchema.virtual('fullName').get(function fullName() {
   return `${this.firstName} ${this.lastName}`;
 });
 
+personSchema.index({ phone: 1 });
 personSchema.index({ stage: 1, firstVisitDate: -1 });
 
 export default mongoose.models.Person || mongoose.model('Person', personSchema);

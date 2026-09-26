@@ -2,8 +2,7 @@ import { connectDB } from '@/lib/db';
 import { toServiceDate, addDays } from '@/lib/dates';
 import { COUNT_FIELDS, totalCount } from '@/lib/attendance';
 import { Attendance } from '@/models';
-import { recentServiceDays, servicesOn } from '@/lib/church';
-import { listServices, requireActiveService } from './churchService.service';
+import { getServiceDay, requireActiveService } from './churchService.service';
 
 /** Saves (or corrects) the headcount for one service. */
 export async function recordAttendance(input, user) {
@@ -61,12 +60,7 @@ export async function attendanceTrend({ weeks = 8, today = new Date() } = {}) {
  */
 export async function getAttendanceForm({ serviceDate, today = new Date() } = {}) {
   await connectDB();
-  const allServices = await listServices();
-  const serviceDays = recentServiceDays(allServices, toServiceDate(today));
-  const requested = serviceDate && toServiceDate(serviceDate).getTime();
-  const day =
-    serviceDays.find((d) => d.getTime() === requested) ?? serviceDays[0] ?? toServiceDate(today);
-  const services = servicesOn(allServices, day);
+  const { serviceDate: day, serviceDays, services } = await getServiceDay({ serviceDate, today });
 
   const byService = Object.fromEntries(
     await Promise.all(

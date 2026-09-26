@@ -6,6 +6,7 @@ import {
   DEFAULT_SERVICES,
   USHER_BACKDATE_DAYS,
   isHeldOn,
+  recentServiceDays,
   serviceKeyFromName,
   servicesOn,
   sortServices,
@@ -37,6 +38,21 @@ export async function listServices({ includeInactive = false, on } = {}) {
   const filter = includeInactive ? {} : { active: true };
   const services = await ChurchService.find(filter).select(PUBLIC_FIELDS).lean();
   return on ? servicesOn(services, toServiceDate(on)) : sortServices(services);
+}
+
+/**
+ * The service day an usher is working on, for screens with a day picker.
+ * - serviceDays: days in the last week that had a service (newest first)
+ * - serviceDate: the requested day if it's one of those, otherwise the most recent one
+ * - services: the services held that day
+ */
+export async function getServiceDay({ serviceDate, today = new Date() } = {}) {
+  const allServices = await listServices();
+  const serviceDays = recentServiceDays(allServices, toServiceDate(today));
+  const requested = serviceDate && toServiceDate(serviceDate).getTime();
+  const day =
+    serviceDays.find((d) => d.getTime() === requested) ?? serviceDays[0] ?? toServiceDate(today);
+  return { serviceDate: day, serviceDays, services: servicesOn(allServices, day) };
 }
 
 /**

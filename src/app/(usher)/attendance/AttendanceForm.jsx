@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import { DayChips, ServiceChips } from '@/components/usher/ServiceDayPicker';
 import {
   COUNT_FIELDS,
   clampCount,
@@ -56,16 +57,6 @@ const clock = new Intl.DateTimeFormat('en-GB', {
   minute: '2-digit',
   hour12: true,
 });
-
-const shortDay = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'UTC',
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-});
-const lagosToday = () =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(new Date());
-const isToday = (day) => day === lagosToday();
 
 const EMPTY = { men: 0, women: 0, teens: 0, children: 0, note: '' };
 const pick = (s) => ({ ...Object.fromEntries(COUNT_FIELDS.map((f) => [f, s[f]])), note: s.note });
@@ -187,56 +178,16 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
         </p>
       </section>
 
-      {serviceDays.length > 1 && (
-        <div className="flex flex-col gap-1">
-          <span className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-            Day
-          </span>
-          <div role="tablist" aria-label="Day" className="flex gap-2 overflow-x-auto">
-            {serviceDays.map((day) => (
-              <button
-                key={day}
-                type="button"
-                role="tab"
-                aria-selected={day === serviceDate}
-                onClick={() => day !== serviceDate && goToDay(day)}
-                className={`flex h-10 shrink-0 items-center rounded-full border px-4 text-[13px] font-semibold ${
-                  day === serviceDate
-                    ? 'border-primary bg-stage-first-bg text-primary'
-                    : 'border-line bg-surface text-muted'
-                }`}
-              >
-                {isToday(day) ? 'Today' : shortDay.format(new Date(day))}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {services.length > 1 && (
-        <div role="tablist" aria-label="Service" className="flex gap-2 overflow-x-auto">
-          {services.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              role="tab"
-              aria-selected={s.key === selected}
-              onClick={() => {
-                setSelected(s.key);
-                setStatus({ state: 'idle' });
-              }}
-              className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-[13px] font-semibold ${
-                s.key === selected
-                  ? 'border-ink bg-ink text-white'
-                  : 'border-line bg-surface text-muted'
-              }`}
-            >
-              {saved[s.key] && <Icon name="check" size={16} />}
-              {s.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
+      <ServiceChips
+        services={services}
+        selected={selected}
+        done={saved}
+        onSelect={(key) => {
+          setSelected(key);
+          setStatus({ state: 'idle' });
+        }}
+      />
 
       <section className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4">
         <div className="flex items-start justify-between">
