@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 const attendanceSchema = new mongoose.Schema(
   {
     serviceDate: { type: Date, required: true },
-    service: { type: String, enum: ['first', 'second'], required: true },
+    service: { type: String, required: true }, // ChurchService key
     men: { type: Number, default: 0, min: 0 },
     women: { type: Number, default: 0, min: 0 },
     teens: { type: Number, default: 0, min: 0 },

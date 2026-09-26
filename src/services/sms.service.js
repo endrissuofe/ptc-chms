@@ -2,8 +2,10 @@ import { connectDB } from '@/lib/db';
 import { getSmsProvider, renderTemplate } from '@/lib/sms';
 import { toServiceDate, addDays, isoDay } from '@/lib/dates';
 import { STAGES } from '@/lib/stages';
+import { describeServiceTimes } from '@/lib/church';
 import { logger } from '@/lib/logger';
 import { Person, Visit, SmsTemplate, SmsLog } from '@/models';
+import { listServices } from './churchService.service';
 
 export const DEFAULT_TEMPLATES = [
   {
@@ -14,7 +16,7 @@ export const DEFAULT_TEMPLATES = [
   {
     key: 'saturday_invite',
     name: 'Saturday invite',
-    body: 'Hi {FirstName}, we would love to see you in church tomorrow! Service starts at 7:30 AM (1st) & 9:30 AM (2nd). See you there. PTC Chapel',
+    body: 'Hi {FirstName}, we would love to see you in church tomorrow! {ServiceTimes} See you there. PTC Chapel',
   },
 ];
 
@@ -59,6 +61,8 @@ export async function runScheduledSend(templateKey, { today = new Date() } = {})
   const from = process.env.SMS_SENDER_ID || 'PTCChapel';
   const runKey = `${templateKey}:${isoDay(toServiceDate(today))}`;
   const people = await RECIPIENTS[templateKey](today);
+  // {ServiceTimes} comes from the active services, e.g. "Service starts at 8:00 AM."
+  const serviceTimes = describeServiceTimes(await listServices());
 
   const result = { templateKey, runKey, total: people.length, sent: 0, failed: 0, alreadySent: 0 };
 
@@ -71,6 +75,7 @@ export async function runScheduledSend(templateKey, { today = new Date() } = {})
     const body = renderTemplate(template.body, {
       FirstName: person.firstName,
       LastName: person.lastName,
+      ServiceTimes: serviceTimes,
     });
     const res = await provider.send({ to: person.phone, body, from });
     try {

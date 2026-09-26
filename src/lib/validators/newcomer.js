@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { serviceKey } from './churchService';
 import { isValidPhone } from '../phone';
 
 export const newcomerSchema = z.object({
@@ -11,7 +12,7 @@ export const newcomerSchema = z.object({
   prayerRequest: z.string().trim().max(1000).optional(),
   smsConsent: z.boolean().default(false),
   cardUnclear: z.boolean().default(false),
-  service: z.enum(['first', 'second']),
+  service: serviceKey,
   serviceDate: z.coerce.date(),
 });
 
@@ -21,6 +22,6 @@ export const lookupSchema = z.object({
 
 export const returningVisitSchema = z.object({
   personId: z.string().min(1),
-  service: z.enum(['first', 'second']),
+  service: serviceKey,
   serviceDate: z.coerce.date(),
 });

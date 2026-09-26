@@ -4,6 +4,7 @@ import { normalizePhone } from '@/lib/phone';
 import { computeStage, STAGES } from '@/lib/stages';
 import { toServiceDate } from '@/lib/dates';
 import { Person, Visit, PrayerRequest, FollowUp } from '@/models';
+import { requireActiveService } from './churchService.service';
 
 /** Finds someone by phone number in any format. */
 export async function findByPhone(phone) {
@@ -38,6 +39,7 @@ export async function recomputeStage(personId, today = new Date()) {
  */
 export async function createFromCard(input, user) {
   await connectDB();
+  await requireActiveService(input.service);
   const phone = normalizePhone(input.phone);
   const serviceDate = toServiceDate(input.serviceDate);
 
@@ -88,6 +90,7 @@ export async function createFromCard(input, user) {
 /** Records that a known person came back. Safe to call twice for the same service. */
 export async function recordReturningVisit({ personId, service, serviceDate }, user) {
   await connectDB();
+  await requireActiveService(service);
   const day = toServiceDate(serviceDate);
   await Visit.updateOne(
     { person: personId, serviceDate: day, service },

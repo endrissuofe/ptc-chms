@@ -14,6 +14,12 @@ describe('route access', () => {
     expect(canAccess('/dashboard', ROLES.USHER)).toBe(false);
   });
 
+  it('keeps service settings to admins', () => {
+    expect(canAccess('/services', ROLES.ADMIN)).toBe(true);
+    expect(canAccess('/services', ROLES.PASTOR)).toBe(false);
+    expect(canAccess('/services', ROLES.USHER)).toBe(false);
+  });
+
   it('keeps ushers out of newcomer profiles', () => {
     expect(canAccess('/newcomers/abc123', ROLES.USHER)).toBe(false);
     expect(canAccess('/newcomers/abc123', ROLES.FOLLOWUP)).toBe(true);

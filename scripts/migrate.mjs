@@ -27,6 +27,13 @@ const MIGRATIONS = [
         );
     },
   },
+  {
+    id: '002-church-services',
+    async up(db) {
+      // Services are created by the app (default: Sunday Service 08:00); this only adds the index.
+      await db.collection('churchservices').createIndex({ key: 1 }, { unique: true });
+    },
+  },
 ];
 
 async function main() {

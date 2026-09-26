@@ -20,6 +20,7 @@ export const ROUTE_ACCESS = [
   { prefix: '/first-timers', roles: [ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/prayer-requests', roles: [ROLES.PASTOR] },
   { prefix: '/sms', roles: [ROLES.ADMIN] },
+  { prefix: '/services', roles: [ROLES.ADMIN] },
   { prefix: '/modules', roles: [ROLES.PASTOR, ROLES.ADMIN] },
 ];
 

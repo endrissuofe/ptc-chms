@@ -10,6 +10,7 @@ const MAIN = [
   { href: '/first-timers', label: 'First Timers' },
   { href: '/prayer-requests', label: 'Prayer Requests', roles: ['pastor'] },
   { href: '/sms', label: 'SMS Messages', roles: ['admin'] },
+  { href: '/services', label: 'Services', roles: ['admin'] },
 ];
 
 export default function Sidebar() {

@@ -1,5 +1,6 @@
 import './globals.css';
 import Providers from '@/components/Providers';
+import { ICON_FONT_URL } from '@/components/ui/Icon';
 
 export const metadata = {
   title: { default: 'PTC Chapel', template: '%s · PTC Chapel' },
@@ -25,6 +26,8 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&family=Public+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link href={ICON_FONT_URL} rel="stylesheet" />
       </head>
       <body>
         <Providers>{children}</Providers>

@@ -5,7 +5,7 @@ const visitSchema = new mongoose.Schema(
   {
     person: { type: mongoose.Schema.Types.ObjectId, ref: 'Person', required: true },
     serviceDate: { type: Date, required: true },
-    service: { type: String, enum: ['first', 'second'], required: true },
+    service: { type: String, required: true }, // ChurchService key
     source: { type: String, enum: ['card', 'returning'], default: 'card' },
     recordedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },

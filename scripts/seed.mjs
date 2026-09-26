@@ -39,9 +39,22 @@ async function main() {
     'prayerrequests',
     'smslogs',
     'smstemplates',
+    'churchservices',
   ]) {
     await db.collection(c).deleteMany({});
   }
+
+  // One Sunday service for now; admins add more under Services.
+  const SERVICE = 'sunday';
+  await db.collection('churchservices').insertOne({
+    key: SERVICE,
+    name: 'Sunday Service',
+    startTime: '08:00',
+    order: 1,
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
 
   const hash = (p) => bcrypt.hashSync(p, 10);
   const users = await db.collection('users').insertMany([
@@ -148,7 +161,7 @@ async function main() {
       dates.map((d, i) => ({
         person: insertedId,
         serviceDate: d,
-        service: 'first',
+        service: SERVICE,
         source: i === 0 ? 'card' : 'returning',
         createdAt: new Date(),
       })),
@@ -174,26 +187,15 @@ async function main() {
     '2026-09-20',
     '2026-09-27',
   ];
-  const rows = sundays.flatMap((s, i) => [
-    {
-      serviceDate: day(s),
-      service: 'first',
-      men: 44 + i,
-      women: 60 + i,
-      teens: 20,
-      children: 27 + (i % 3),
-      createdAt: new Date(),
-    },
-    {
-      serviceDate: day(s),
-      service: 'second',
-      men: 30 + i,
-      women: 42 + i,
-      teens: 15,
-      children: 20,
-      createdAt: new Date(),
-    },
-  ]);
+  const rows = sundays.map((s, i) => ({
+    serviceDate: day(s),
+    service: SERVICE,
+    men: 74 + i,
+    women: 102 + i,
+    teens: 35,
+    children: 47 + (i % 3),
+    createdAt: new Date(),
+  }));
   await db.collection('attendances').insertMany(rows);
 
   console.log(

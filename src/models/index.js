@@ -6,3 +6,4 @@ export { default as FollowUp } from './FollowUp';
 export { default as PrayerRequest } from './PrayerRequest';
 export { default as SmsTemplate } from './SmsTemplate';
 export { default as SmsLog } from './SmsLog';
+export { default as ChurchService } from './ChurchService';
