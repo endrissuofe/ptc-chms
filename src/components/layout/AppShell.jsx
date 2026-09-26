@@ -2,10 +2,11 @@ import Logo from '@/components/ui/Logo';
 import Icon from '@/components/ui/Icon';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { OnlineBadge } from '@/components/ui/ConnectionStatus';
-import { getSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { ROLE_LABELS, navFor } from '@/lib/nav';
 import { Rail, TabBar } from './NavBars';
 import UserMenu from './UserMenu';
+import AccountNotice from './AccountNotice';
 
 const today = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Africa/Lagos',
@@ -19,9 +20,11 @@ const today = new Intl.DateTimeFormat('en-GB', {
  * The menu comes from the signed-in person's role (lib/nav.js).
  */
 export default async function AppShell({ children }) {
-  const session = await getSession();
-  const role = session?.user?.role;
-  const name = session?.user?.name || 'Signed in';
+  const user = await getCurrentUser();
+  // A login switched off or changed since sign-in sees a notice, not the screen or the menu.
+  const blocked = user && user.status !== 'ok';
+  const role = blocked ? null : user?.role;
+  const name = user?.name || 'Signed in';
   const nav = navFor(role);
 
   return (
@@ -52,7 +55,9 @@ export default async function AppShell({ children }) {
           nav.tabs.length > 1 ? 'pb-28' : 'pb-10'
         }`}
       >
-        <div className="mx-auto max-w-[1320px]">{children}</div>
+        <div className="mx-auto max-w-[1320px]">
+          {blocked ? <AccountNotice status={user.status} /> : children}
+        </div>
       </main>
 
       <TabBar items={nav.tabs} />

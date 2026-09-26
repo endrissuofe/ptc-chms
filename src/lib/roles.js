@@ -22,6 +22,7 @@ export const ROUTE_ACCESS = [
   { prefix: '/sms', roles: [ROLES.ADMIN] },
   { prefix: '/services', roles: [ROLES.ADMIN, ROLES.PASTOR] },
   { prefix: '/members', roles: [ROLES.ADMIN] },
+  { prefix: '/users', roles: [ROLES.ADMIN] },
   { prefix: '/modules', roles: [ROLES.PASTOR, ROLES.ADMIN] },
 ];
 

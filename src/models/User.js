@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     phone: { type: String },
     active: { type: Boolean, default: true },
+    lastSignInAt: { type: Date },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true },
 );

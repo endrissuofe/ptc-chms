@@ -32,6 +32,7 @@ export const NAV = [
   { href: '/sms', label: 'SMS', icon: 'sms', roles: [ADMIN] },
   { href: '/members', label: 'Members', icon: 'contacts', roles: [ADMIN] },
   { href: '/services', label: 'Services', icon: 'event', roles: [PASTOR, ADMIN] },
+  { href: '/users', label: 'Logins', icon: 'supervisor_account', roles: [ADMIN] },
   { href: '/modules', label: 'Later', icon: 'extension', roles: [PASTOR, ADMIN] },
 ];
 
