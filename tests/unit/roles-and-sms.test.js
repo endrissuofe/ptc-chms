@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { canAccess, ROLES } from '@/lib/roles';
-import { renderTemplate } from '@/lib/sms';
 
 describe('route access', () => {
   it('keeps prayer requests to pastors', () => {
@@ -23,13 +22,5 @@ describe('route access', () => {
   it('keeps ushers out of newcomer profiles', () => {
     expect(canAccess('/newcomers/abc123', ROLES.USHER)).toBe(false);
     expect(canAccess('/newcomers/abc123', ROLES.FOLLOWUP)).toBe(true);
-  });
-});
-
-describe('SMS templates', () => {
-  it('fills known tags and leaves unknown ones', () => {
-    expect(renderTemplate('Hi {FirstName}, see you {Day}', { FirstName: 'Kemi' })).toBe(
-      'Hi Kemi, see you {Day}',
-    );
   });
 });

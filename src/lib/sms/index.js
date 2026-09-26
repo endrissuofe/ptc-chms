@@ -18,9 +18,4 @@ export function getSmsProvider() {
   return provider;
 }
 
-/** Fills {FirstName}-style tags in a template. Unknown tags are left as-is. */
-export function renderTemplate(template, values) {
-  return template.replace(/\{(\w+)\}/g, (match, key) =>
-    values[key] != null ? String(values[key]) : match,
-  );
-}
+export { renderTemplate } from './templates';

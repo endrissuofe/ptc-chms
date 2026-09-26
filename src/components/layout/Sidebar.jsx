@@ -10,7 +10,7 @@ const MAIN = [
   { href: '/dashboard', label: 'Dashboard', soon: true },
   { href: '/first-timers', label: 'First Timers', soon: true },
   { href: '/prayer-requests', label: 'Prayer Requests', roles: ['pastor'], soon: true },
-  { href: '/sms', label: 'SMS Messages', roles: ['admin'], soon: true },
+  { href: '/sms', label: 'SMS Messages', roles: ['admin'] },
   { href: '/services', label: 'Services', roles: ['admin', 'pastor'] },
 ];
 

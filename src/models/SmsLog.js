@@ -4,6 +4,8 @@ const smsLogSchema = new mongoose.Schema(
   {
     person: { type: mongoose.Schema.Types.ObjectId, ref: 'Person' },
     template: { type: String },
+    // Which batch this belongs to, e.g. "sunday_thanks:2026-09-27" or "test:2026-09-27".
+    run: { type: String },
     to: { type: String, required: true },
     body: { type: String, required: true },
     provider: { type: String, required: true },
@@ -11,7 +13,7 @@ const smsLogSchema = new mongoose.Schema(
     providerRef: { type: String },
     cost: { type: Number },
     error: { type: String },
-    runKey: { type: String }, // e.g. "sunday_thanks:2026-09-27" — stops double sends
+    runKey: { type: String }, // set only on successful sends — stops double sends
   },
   { timestamps: true },
 );
@@ -21,5 +23,6 @@ smsLogSchema.index(
   { unique: true, partialFilterExpression: { runKey: { $type: 'string' } } },
 );
 smsLogSchema.index({ createdAt: -1 });
+smsLogSchema.index({ run: 1, createdAt: -1 });
 
 export default mongoose.models.SmsLog || mongoose.model('SmsLog', smsLogSchema);

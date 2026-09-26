@@ -407,3 +407,89 @@ describe('shared phone numbers and returning cards', () => {
     expect(entry.cardsByService).toEqual({ sunday: 2 });
   });
 });
+
+describe('SMS screen', () => {
+  const sunday = new Date('2026-09-20T09:00:00Z');
+  const tuesday = new Date('2026-09-22T12:00:00Z');
+
+  it('previews who a run reaches, including those who did not agree', async () => {
+    await svc.createFromCard(card({ serviceDate: sunday }));
+    await svc.createFromCard(
+      card({ phone: '0901 000 0102', firstName: 'Tunde', smsConsent: false, serviceDate: sunday }),
+    );
+    expect(await sms.previewRun('sunday_thanks', sunday)).toMatchObject({
+      total: 2,
+      consented: 1,
+      noConsent: 1,
+      toSend: 1,
+    });
+  });
+
+  it('sends a missed thank-you once, with belated wording, and the Sunday job then skips it', async () => {
+    await svc.createFromCard(card({ serviceDate: sunday }));
+    const body = 'Hi {FirstName}, thank you for joining us on Sunday.';
+    const first = await sms.sendMissedThanks({ serviceDate: sunday, body }, tuesday);
+    expect(first.sent).toBe(1);
+    const log = await models.SmsLog.findOne().lean();
+    expect(log).toMatchObject({
+      body: 'Hi Kemi, thank you for joining us on Sunday.',
+      run: 'sunday_thanks:2026-09-20',
+    });
+
+    const again = await sms.runScheduledSend('sunday_thanks', { today: sunday });
+    expect(again).toMatchObject({ sent: 0, alreadySent: 1 });
+  });
+
+  it('only sends missed thank-yous for recent Sundays', async () => {
+    const body = 'Hi {FirstName}';
+    await expect(
+      sms.sendMissedThanks({ serviceDate: new Date('2026-09-19'), body }, tuesday),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(
+      sms.sendMissedThanks({ serviceDate: new Date('2026-08-30'), body }, tuesday),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(
+      sms.sendMissedThanks({ serviceDate: new Date('2026-09-27'), body }, tuesday),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('sends a test to the admin with their first name and keeps it out of real runs', async () => {
+    const res = await sms.sendTest(
+      { templateKey: 'sunday_thanks', phone: '0803 000 0999' },
+      { name: 'Endris Suofe' },
+    );
+    expect(res.body).toMatch(/^Hi Endris, thank you/);
+    const runs = await sms.recentRuns();
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toMatchObject({ test: true, sent: 1 });
+  });
+
+  it('groups sends into runs for the history table', async () => {
+    await svc.createFromCard(card({ serviceDate: sunday }));
+    await svc.createFromCard(
+      card({ phone: '0901 000 0102', firstName: 'Tunde', serviceDate: sunday }),
+    );
+    await sms.runScheduledSend('sunday_thanks', { today: sunday });
+    const [run] = await sms.recentRuns();
+    expect(run).toMatchObject({ run: 'sunday_thanks:2026-09-20', total: 2, sent: 2, failed: 0 });
+    const people = await sms.runDetails(run.run);
+    expect(people.map((p) => p.name).sort()).toEqual(['Kemi Adebayo', 'Tunde Adebayo']);
+  });
+
+  it('refuses template wording with tags it cannot fill', async () => {
+    await expect(
+      sms.updateTemplate('sunday_thanks', { body: 'Hi {Firstname}', enabled: true }),
+    ).rejects.toMatchObject({ status: 400 });
+    const saved = await sms.updateTemplate('sunday_thanks', {
+      body: 'Hi {FirstName}, welcome!',
+      enabled: false,
+    });
+    expect(saved).toMatchObject({ body: 'Hi {FirstName}, welcome!', enabled: false });
+  });
+
+  it('shows SMS as off while the provider is the mock one', async () => {
+    const overview = await sms.getSmsOverview({ today: tuesday });
+    expect(overview.status).toMatchObject({ provider: 'mock', live: false });
+    expect(overview.templates.map((t) => t.key)).toEqual(['sunday_thanks', 'saturday_invite']);
+  });
+});

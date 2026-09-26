@@ -10,8 +10,3 @@ export const followUpSchema = z.object({
 export const prayerStatusSchema = z.object({
   status: z.enum(['new', 'prayed', 'needs_visit']),
 });
-
-export const smsTemplateSchema = z.object({
-  body: z.string().trim().min(1).max(459),
-  enabled: z.boolean(),
-});
