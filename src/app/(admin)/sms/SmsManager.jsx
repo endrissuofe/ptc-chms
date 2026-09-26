@@ -29,12 +29,10 @@ const when = new Intl.DateTimeFormat('en-GB', {
 });
 const naira = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' });
 
-const card = 'rounded-xl border border-line bg-surface p-5';
-const eyebrow = 'text-[11px] font-semibold uppercase tracking-wider text-muted';
-const primaryBtn =
-  'flex h-11 items-center justify-center gap-1.5 rounded-[10px] bg-primary px-4 text-[15px] font-semibold text-white hover:bg-primary-dark disabled:opacity-40';
-const secondaryBtn =
-  'flex h-11 items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-line bg-surface px-4 text-[15px] font-semibold hover:border-primary disabled:opacity-40';
+const card = 'card';
+const eyebrow = 'label-caps';
+const primaryBtn = 'btn btn-primary';
+const secondaryBtn = 'btn btn-ghost';
 
 async function call(url, method, body) {
   const res = await fetch(url, {
@@ -56,7 +54,7 @@ export default function SmsManager({ status, balance, templates, upcoming, misse
         <BalanceCard status={status} balance={balance} />
         <section className={card}>
           <p className={eyebrow}>Sender name</p>
-          <p className="mt-1 font-serif text-2xl font-semibold">{status.senderId}</p>
+          <p className="mt-1 font-display text-3xl font-black">{status.senderId}</p>
           <p className="mt-2 text-[13px] text-muted">
             Shown as who the SMS is from. It must be registered with BulkSMS Nigeria, or networks
             may block it or replace it with a number.
@@ -64,12 +62,12 @@ export default function SmsManager({ status, balance, templates, upcoming, misse
         </section>
         <section className={card}>
           <p className={eyebrow}>Next sends</p>
-          <ul className="mt-2 flex flex-col gap-3 text-[13px]">
+          <ul className="mt-2 flex flex-col gap-3 text-sm">
             {['sunday_thanks', 'saturday_invite'].map((key) => {
               const next = upcoming[key];
               return (
                 <li key={key}>
-                  <p className="font-semibold">
+                  <p className="font-display font-extrabold">
                     {TEMPLATE_INFO[key].title} · {dayLabel.format(new Date(next.serviceDate))}
                   </p>
                   <p className="text-muted">
@@ -89,22 +87,24 @@ export default function SmsManager({ status, balance, templates, upcoming, misse
 
       <section className="flex flex-col gap-3">
         <div>
-          <h2 className="text-xl font-semibold">Automatic messages</h2>
+          <h2 className="text-2xl font-black">Automatic messages</h2>
           <p className="text-[13px] text-muted">
             Midweek and special services don’t send SMS yet — only Sunday first timers.
           </p>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
           {templates.map((t) => (
             <TemplateEditor key={t.key} template={t} live={status.live} />
           ))}
         </div>
       </section>
 
-      <section className="flex items-start gap-3 rounded-xl border border-line bg-stage-class-bg p-5 text-stage-class-text">
+      <section className="card flex items-start gap-4 border-violet/30 bg-violet-soft text-violet">
         <Icon name="cake" size={22} />
         <div>
-          <p className="font-semibold">Birthday and anniversary messages — coming later</p>
+          <p className="font-display text-lg font-extrabold">
+            Birthday and anniversary messages — coming later
+          </p>
           <p className="text-[13px]">
             Planned with the members directory. Birthdays from first-timer cards are already being
             saved.
@@ -120,22 +120,24 @@ export default function SmsManager({ status, balance, templates, upcoming, misse
 function StatusBanner({ status }) {
   if (status.live && status.scheduled) {
     return (
-      <p className="flex items-center gap-2 rounded-xl bg-stage-regular-bg px-5 py-4 text-[15px] font-semibold text-stage-regular-text">
+      <p className="alert alert-success text-[15px]">
         <Icon name="check_circle" size={20} filled />
         SMS are live through BulkSMS Nigeria, and the automatic Sunday and Saturday sends are on.
       </p>
     );
   }
   return (
-    <details className="rounded-xl border border-line bg-stage-first-bg px-5 py-4 text-stage-first-text">
-      <summary className="flex cursor-pointer items-start gap-2 text-[15px] font-semibold">
+    <details className="rounded-card border border-coral/30 bg-coral-soft px-5 py-4 text-coral-ink">
+      <summary className="flex cursor-pointer items-start gap-2 font-display text-base font-extrabold">
         <Icon name="error_outline" size={20} />
         {status.live
           ? 'SMS are live, but the automatic Sunday and Saturday sends are off.'
           : 'SMS are off — messages are only recorded here; nobody receives them.'}
-        <span className="ml-auto shrink-0 text-[13px] underline">How to switch on</span>
+        <span className="ml-auto shrink-0 font-sans text-[13px] font-bold underline">
+          How to switch on
+        </span>
       </summary>
-      <ol className="mt-3 list-decimal space-y-1.5 pl-6 text-[13px] text-ink">
+      <ol className="mt-3 list-decimal space-y-1.5 pl-6 text-sm text-ink">
         <li>Make sure the sender name {status.senderId} is registered with BulkSMS Nigeria.</li>
         <li>
           In Vercel → Settings → Environment Variables, add <code>BULKSMSNIGERIA_API_TOKEN</code>{' '}
@@ -162,7 +164,7 @@ function BalanceCard({ status, balance }) {
         <p className="mt-2 text-[13px] text-danger">Couldn’t read the balance: {balance.error}</p>
       ) : balance ? (
         <>
-          <p className="mt-1 font-serif text-2xl font-semibold">{naira.format(balance.amount)}</p>
+          <p className="mt-1 font-display text-3xl font-black">{naira.format(balance.amount)}</p>
           <p className="mt-2 text-[13px] text-muted">
             As reported by BulkSMS Nigeria. Top up there.
           </p>
@@ -199,9 +201,7 @@ function MessageBox({ templateKey, value, onChange, id }) {
         <label htmlFor={id} className={eyebrow}>
           Message
         </label>
-        <span
-          className={`text-[11px] font-semibold ${seg.pages > 1 ? 'text-primary' : 'text-secondary'}`}
-        >
+        <span className={`chip ${seg.pages > 1 ? 'chip-warning' : 'chip-success'}`}>
           about {seg.length} characters · {seg.pages} {seg.pages === 1 ? 'page' : 'pages'}
         </span>
       </div>
@@ -212,16 +212,16 @@ function MessageBox({ templateKey, value, onChange, id }) {
         maxLength={459}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full resize-y rounded-[10px] border-[1.5px] border-line p-3 text-[15px] leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="input resize-y leading-relaxed"
       />
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] font-semibold text-muted">Insert:</span>
+        <span className="label-caps">Insert</span>
         {TEMPLATE_INFO[templateKey].tags.map((tag) => (
           <button
             key={tag}
             type="button"
             onClick={() => insert(tag)}
-            className="flex h-8 items-center gap-1 rounded-md border border-line bg-paper px-2 text-[12px] font-semibold"
+            className="chip chip-primary min-h-[32px] hover:bg-primary/20"
           >
             <Icon name="add" size={14} />
             {`{${tag}}`}
@@ -229,18 +229,18 @@ function MessageBox({ templateKey, value, onChange, id }) {
         ))}
       </div>
       {bad.length > 0 && (
-        <p className="text-[13px] text-danger">
+        <p className="field-error">
           {`{${bad[0]}}`} isn’t a tag this message can use. Check the spelling.
         </p>
       )}
       {odd.length > 0 && (
-        <p className="text-[13px] text-primary">
+        <p className="alert alert-warning">
           {odd.map((c) => `“${c}”`).join(' ')} {odd.length === 1 ? 'makes' : 'make'} each page hold
           only 70 characters, so the message costs more. Use plain quotes and write “NGN” or “N”
           instead of ₦ to avoid it.
         </p>
       )}
-      <div className="rounded-lg bg-paper p-3 text-[13px]">
+      <div className="rounded-tile bg-surface-2 p-4 text-sm">
         <p className={`${eyebrow} mb-1`}>Preview</p>
         {renderTemplate(value, SAMPLE)}
       </div>
@@ -301,10 +301,10 @@ function TemplateEditor({ template, live }) {
     <section className={`${card} flex flex-col gap-4`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">{info.title}</h3>
+          <h3 className="text-xl font-black">{info.title}</h3>
           <p className="text-[13px] text-muted">{info.schedule}</p>
         </div>
-        <label className="flex cursor-pointer items-center gap-2 text-[13px] font-semibold">
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-bold">
           {enabled ? 'On' : 'Off'}
           <input
             type="checkbox"
@@ -313,10 +313,10 @@ function TemplateEditor({ template, live }) {
             onChange={(e) => setEnabled(e.target.checked)}
             className="peer sr-only"
           />
-          <span className="relative h-7 w-12 rounded-full bg-line transition peer-checked:bg-secondary peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-5" />
+          <span className="relative h-7 w-12 rounded-full bg-line-2 transition peer-checked:bg-primary peer-focus-visible:ring-4 peer-focus-visible:ring-primary/25 after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5" />
         </label>
       </div>
-      <p className="flex items-start gap-2 rounded-lg bg-paper px-3 py-2 text-[13px]">
+      <p className="flex items-start gap-2 rounded-tile bg-surface-2 px-3.5 py-2.5 text-sm">
         <Icon name="group" size={16} className="mt-0.5 text-muted" />
         {info.recipients}
       </p>
@@ -332,19 +332,19 @@ function TemplateEditor({ template, live }) {
       />
 
       {state.kind === 'error' && (
-        <p role="alert" className="rounded-lg bg-danger-subtle px-3 py-2 text-[13px] text-danger">
+        <p role="alert" className="alert alert-danger">
           {state.message}
         </p>
       )}
       {state.kind === 'ok' && (
-        <p role="status" className="text-[13px] font-semibold text-secondary">
+        <p role="status" className="alert alert-success">
           {state.message}
         </p>
       )}
 
       {testing ? (
-        <div className="flex flex-wrap items-end gap-2 rounded-lg bg-paper p-3">
-          <label className="flex flex-1 flex-col gap-1 text-[13px] font-semibold">
+        <div className="flex flex-wrap items-end gap-2 rounded-tile bg-surface-2 p-4">
+          <label className="flex flex-1 flex-col gap-1.5 text-[13.5px] font-bold">
             Your phone number
             <input
               type="tel"
@@ -352,7 +352,7 @@ function TemplateEditor({ template, live }) {
               value={testPhone}
               onChange={(e) => setTestPhone(e.target.value)}
               placeholder="0803 000 0000"
-              className="h-11 rounded-[10px] border-[1.5px] border-line bg-surface px-3 font-normal outline-none focus:border-primary"
+              className="input font-normal"
             />
           </label>
           <button
@@ -418,12 +418,14 @@ function MissedThanks({ missed, live }) {
   }
 
   return (
-    <section className={`${card} flex flex-col gap-3 border-primary/40`}>
+    <section className={`${card} flex flex-col gap-3 border-coral/40`}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-start gap-2">
-          <Icon name="schedule_send" size={22} className="text-primary" />
+        <div className="flex items-start gap-3">
+          <span className="icon-tile tone-coral">
+            <Icon name="schedule_send" size={22} />
+          </span>
           <div>
-            <p className="font-semibold">Thank-you not sent for {day}</p>
+            <p className="font-display text-lg font-extrabold">Thank-you not sent for {day}</p>
             <p className="text-[13px] text-muted">
               {missed.toSend} first {missed.toSend === 1 ? 'timer' : 'timers'} agreed to messages
               but haven’t been thanked.
@@ -472,12 +474,12 @@ function MissedThanks({ missed, live }) {
         </>
       )}
       {state.kind === 'error' && (
-        <p role="alert" className="text-[13px] text-danger">
+        <p role="alert" className="alert alert-danger">
           {state.message}
         </p>
       )}
       {state.kind === 'ok' && (
-        <p role="status" className="text-[13px] font-semibold text-secondary">
+        <p role="status" className="alert alert-success">
           {state.message}
         </p>
       )}
@@ -489,7 +491,7 @@ function RunHistory({ runs }) {
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <h2 className="text-xl font-semibold">Recent sends</h2>
+        <h2 className="text-2xl font-black">Recent sends</h2>
         <p className="text-[13px] text-muted">
           “Sent” means BulkSMS Nigeria accepted the message; it can’t tell us whether the phone
           received it.
@@ -498,16 +500,16 @@ function RunHistory({ runs }) {
       {runs.length === 0 ? (
         <p className={`${card} text-[15px] text-muted`}>Nothing has been sent yet.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-line bg-surface">
-          <table className="w-full min-w-[640px] text-left text-[13px]">
-            <thead className="border-b border-line bg-paper text-[11px] uppercase tracking-wider text-muted">
+        <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-soft">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="border-b border-line bg-surface-2 text-[11px] font-extrabold uppercase tracking-[0.07em] text-muted">
               <tr>
-                <th className="px-4 py-3 font-semibold">When</th>
-                <th className="px-4 py-3 font-semibold">Message</th>
-                <th className="px-4 py-3 text-right font-semibold">Sent</th>
-                <th className="px-4 py-3 text-right font-semibold">Failed</th>
-                <th className="px-4 py-3 text-right font-semibold">Cost</th>
-                <th className="px-4 py-3" />
+                <th className="px-5 py-3.5 font-extrabold">When</th>
+                <th className="px-5 py-3.5 font-extrabold">Message</th>
+                <th className="px-5 py-3.5 text-right font-extrabold">Sent</th>
+                <th className="px-5 py-3.5 text-right font-extrabold">Failed</th>
+                <th className="px-5 py-3.5 text-right font-extrabold">Cost</th>
+                <th className="px-5 py-3.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -542,30 +544,26 @@ function RunRow({ run }) {
   return (
     <>
       <tr>
-        <td className="px-4 py-3 whitespace-nowrap">{when.format(new Date(run.lastAt))}</td>
-        <td className="px-4 py-3">
-          <span className="font-semibold">{title}</span>
-          {run.provider === 'mock' && (
-            <span className="ml-2 rounded-full bg-stage-second-bg px-2 py-0.5 text-[11px] font-semibold text-muted">
-              Not really sent (SMS off)
-            </span>
-          )}
+        <td className="px-5 py-3.5 whitespace-nowrap">{when.format(new Date(run.lastAt))}</td>
+        <td className="px-5 py-3.5">
+          <span className="font-display font-extrabold">{title}</span>
+          {run.provider === 'mock' && <span className="chip ml-2">Not really sent (SMS off)</span>}
         </td>
-        <td className="px-4 py-3 text-right tabular-nums">{run.sent}</td>
+        <td className="px-5 py-3.5 text-right tabular-nums">{run.sent}</td>
         <td
           className={`px-4 py-3 text-right tabular-nums ${run.failed ? 'font-semibold text-danger' : ''}`}
         >
           {run.failed}
         </td>
-        <td className="px-4 py-3 text-right tabular-nums">
+        <td className="px-5 py-3.5 text-right tabular-nums">
           {run.cost ? naira.format(run.cost) : '—'}
         </td>
-        <td className="px-4 py-3 text-right">
+        <td className="px-5 py-3.5 text-right">
           <button
             type="button"
             onClick={toggle}
             aria-expanded={open}
-            className="text-[13px] font-semibold text-primary underline-offset-2 hover:underline"
+            className="btn btn-soft btn-sm"
           >
             {open ? 'Hide' : 'Who'}
           </button>
@@ -573,7 +571,7 @@ function RunRow({ run }) {
       </tr>
       {open && (
         <tr>
-          <td colSpan={6} className="bg-paper px-4 py-3">
+          <td colSpan={6} className="bg-surface-2 px-5 py-3.5">
             {error ? (
               <p className="text-danger">{error}</p>
             ) : !people ? (
@@ -584,7 +582,11 @@ function RunRow({ run }) {
                   <li key={i} className="flex flex-wrap gap-x-3">
                     <span className="font-semibold">{p.name}</span>
                     <span className="text-muted">{p.to}</span>
-                    <span className={p.status === 'sent' ? 'text-secondary' : 'text-danger'}>
+                    <span
+                      className={
+                        p.status === 'sent' ? 'font-bold text-success' : 'font-bold text-danger'
+                      }
+                    >
                       {p.status === 'sent' ? 'Sent' : `Failed: ${p.error || 'unknown reason'}`}
                     </span>
                   </li>

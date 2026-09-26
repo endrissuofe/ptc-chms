@@ -12,12 +12,18 @@ const MODULES = [
 export default function ModulesPage() {
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-3xl font-semibold">Coming later</h1>
+      <div>
+        <p className="eyebrow">Roadmap</p>
+        <h1 className="page-title">Coming later</h1>
+        <p className="page-sub">What the church management system will grow into after phase 1.</p>
+      </div>
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {MODULES.map(([name, phase]) => (
-          <li key={name} className="rounded-xl border border-line bg-surface p-5">
-            <p className="font-semibold">{name}</p>
-            <p className="mt-1 text-sm text-muted">{phase}</p>
+          <li key={name} className="card">
+            <p className="font-display text-lg font-extrabold">{name}</p>
+            <p className="mt-2">
+              <span className="chip chip-primary">{phase}</span>
+            </p>
           </li>
         ))}
       </ul>

@@ -27,9 +27,8 @@ const dayLabel = new Intl.DateTimeFormat('en-GB', {
   month: 'short',
 });
 
-const input =
-  'h-12 w-full rounded-[10px] border-[1.5px] border-line bg-surface px-4 text-[15px] outline-none focus:border-primary focus:ring-2 focus:ring-primary/15';
-const label = 'flex items-center justify-between text-[13px] font-semibold';
+const input = 'input';
+const label = 'field-label';
 
 async function post(url, body) {
   const res = await fetch(url, {
@@ -221,37 +220,35 @@ export default function CardEntry({
   const monthDays = daysInMonth(Number(card.birthMonth) || 1);
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stage-first-bg text-[15px] font-bold text-primary">
-              {count + 1}
-            </span>
-            <h1 className="text-xl font-semibold leading-tight">Card {count + 1}</h1>
-          </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-stage-second-bg px-2.5 py-1 text-[11px] font-semibold">
-            <Icon name="church" size={14} />
-            {service.name}
-          </span>
-        </div>
-        <p className="text-[13px] text-muted">
-          {count === 1 ? '1 card' : `${count} cards`} saved for {service.name},{' '}
-          {dayLabel.format(new Date(serviceDate))}
-        </p>
-        {lastSaved && (
-          <p
-            role="status"
-            className="flex items-center gap-2 rounded-lg bg-stage-regular-bg px-3 py-2 text-[13px] font-semibold text-stage-regular-text"
-          >
-            <Icon name="check_circle" size={18} filled />
-            {lastSaved}
+    <div className="mx-auto flex max-w-3xl flex-col gap-5">
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">
+            <Icon name="person_add" size={16} />
+            {service.name} · {dayLabel.format(new Date(serviceDate))}
           </p>
-        )}
-      </section>
+          <h1 className="page-title">First-timer card {count + 1}</h1>
+          <p className="page-sub">
+            Type the card exactly as written, in the same order as the paper.
+          </p>
+        </div>
+        <span className="chip chip-primary">
+          <Icon name="fact_check" size={15} />
+          {count === 1 ? '1 card saved' : `${count} cards saved`}
+        </span>
+      </div>
 
-      <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
-      <ServiceChips services={services} selected={serviceKey} onSelect={setServiceKey} />
+      {lastSaved && (
+        <p role="status" className="alert alert-success">
+          <Icon name="check_circle" size={20} filled />
+          {lastSaved}
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-4">
+        <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
+        <ServiceChips services={services} selected={serviceKey} onSelect={setServiceKey} />
+      </div>
 
       <form
         noValidate
@@ -260,9 +257,9 @@ export default function CardEntry({
           if (matches.length && validate()) setReviewing(true);
           else saveNew();
         }}
-        className="flex flex-col gap-5 rounded-xl border border-line bg-surface p-4"
+        className="card flex flex-col gap-5"
       >
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field id="firstName" label="First name" required error={errors.firstName}>
             <input
               ref={firstNameRef}
@@ -290,7 +287,7 @@ export default function CardEntry({
 
         <Field id="phone" label="Phone number" required error={errors.phone}>
           <div className="flex gap-2">
-            <span className="flex h-12 items-center rounded-[10px] bg-paper px-3 text-[15px] font-semibold">
+            <span className="flex min-h-[46px] items-center rounded-xl bg-surface-2 px-3.5 text-[15px] font-bold text-ink-2">
               +234
             </span>
             <input
@@ -322,12 +319,12 @@ export default function CardEntry({
         </Field>
 
         <fieldset className="flex flex-col gap-1.5">
-          <legend className={`${label} mb-1.5 w-full`}>
+          <legend className={`${label} w-full`}>
             <span className="flex items-center gap-1.5">
-              <Icon name="cake" size={16} className="text-primary" />
+              <Icon name="cake" size={18} className="text-coral-strong" />
               Birthday
             </span>
-            <span className="font-normal text-muted">Year not needed</span>
+            <span className="font-semibold text-muted">Year not needed</span>
           </legend>
           <div className="grid grid-cols-2 gap-3">
             <select
@@ -357,18 +354,16 @@ export default function CardEntry({
               ))}
             </select>
           </div>
-          {errors.birthDay && <p className="text-[13px] text-danger">{errors.birthDay}</p>}
+          {errors.birthDay && <p className="field-error">{errors.birthDay}</p>}
         </fieldset>
 
-        <div className="flex flex-col gap-2 rounded-xl border-l-4 border-tertiary bg-stage-class-bg p-3">
+        <div className="flex flex-col gap-2 rounded-tile bg-violet-soft p-4">
           <label htmlFor="prayerRequest" className={label}>
-            <span className="flex items-center gap-1.5 text-stage-class-text">
+            <span className="flex items-center gap-1.5 text-violet">
               <Icon name="lock" size={16} />
               Prayer request
             </span>
-            <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] text-stage-class-text">
-              Pastors only
-            </span>
+            <span className="chip bg-surface text-violet">Pastors only</span>
           </label>
           <textarea
             id="prayerRequest"
@@ -376,9 +371,9 @@ export default function CardEntry({
             maxLength={1000}
             value={card.prayerRequest}
             onChange={set('prayerRequest')}
-            className="w-full resize-none rounded-lg border border-line bg-surface p-3 text-[15px] outline-none focus:ring-2 focus:ring-tertiary/20"
+            className="input resize-none"
           />
-          <p className="flex justify-between text-[11px] font-semibold text-stage-class-text">
+          <p className="flex justify-between text-[12px] font-semibold text-violet">
             <span className="flex items-center gap-1">
               <Icon name="shield" size={14} />
               Once saved, only the pastors can read it
@@ -387,12 +382,12 @@ export default function CardEntry({
           </p>
         </div>
 
-        <label className="flex items-start gap-3 rounded-xl bg-paper p-3">
+        <label className="flex cursor-pointer items-start gap-3 rounded-tile border border-line bg-surface-2 p-4">
           <input
             type="checkbox"
             checked={card.smsConsent}
             onChange={set('smsConsent')}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+            className="mt-0.5 h-5 w-5 shrink-0 rounded accent-[rgb(var(--primary))]"
           />
           <span>
             <span className="block text-[15px] font-semibold">Agreed to receive messages</span>
@@ -402,12 +397,12 @@ export default function CardEntry({
           </span>
         </label>
 
-        <label className="flex items-start gap-3 rounded-xl bg-stage-second-bg p-3">
+        <label className="flex cursor-pointer items-start gap-3 rounded-tile border border-line bg-surface-2 p-4">
           <input
             type="checkbox"
             checked={card.cardUnclear}
             onChange={set('cardUnclear')}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+            className="mt-0.5 h-5 w-5 shrink-0 rounded accent-[rgb(var(--primary))]"
           />
           <span>
             <span className="flex items-center gap-1.5 text-[15px] font-semibold">
@@ -421,16 +416,16 @@ export default function CardEntry({
         </label>
 
         {status.state === 'error' && (
-          <p role="alert" className="rounded-lg bg-danger-subtle px-4 py-3 text-sm text-danger">
+          <p role="alert" className="alert alert-danger">
             {status.message}
           </p>
         )}
 
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 sm:flex-row-reverse sm:justify-start">
           <button
             type="submit"
             disabled={status.state === 'saving'}
-            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary text-[15px] font-semibold text-white active:bg-primary-dark disabled:opacity-50"
+            className="btn btn-primary btn-lg"
           >
             <Icon
               name={status.state === 'saving' ? 'sync' : 'add_circle'}
@@ -445,7 +440,7 @@ export default function CardEntry({
               if (started && !window.confirm('This card isn’t saved. Finish anyway?')) return;
               router.push('/today');
             }}
-            className="flex h-12 items-center justify-center gap-2 rounded-xl border border-line bg-surface text-[15px] font-semibold"
+            className="btn btn-ghost btn-lg"
           >
             <Icon name="task_alt" size={20} className="text-muted" />
             Done for now
@@ -458,17 +453,17 @@ export default function CardEntry({
 
 function Field({ id, label: text, required, hint, error, children }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col">
       <label htmlFor={id} className={label}>
         <span>
           {text}
-          {required && <span className="ml-0.5 text-primary">*</span>}
+          {required && <span className="ml-0.5 text-coral-strong">*</span>}
         </span>
-        {hint && <span className="font-normal text-muted">{hint}</span>}
+        {hint && <span className="font-semibold text-muted">{hint}</span>}
       </label>
       {children}
       {error && (
-        <p id={`${id}-error`} className="text-[13px] text-danger">
+        <p id={`${id}-error`} className="field-error">
           {error}
         </p>
       )}
@@ -481,15 +476,15 @@ function PhoneStatus({ phone, typed, lookup, matches }) {
   const digits = typed.replace(/\D/g, '');
   if (!phone) {
     return digits.length >= 10 ? (
-      <p className="text-[13px] text-danger">That doesn’t look like a Nigerian mobile number</p>
+      <p className="field-error">That doesn’t look like a Nigerian mobile number</p>
     ) : null;
   }
   if (lookup.phone !== phone) {
-    return <p className="text-[13px] text-muted">Checking church records…</p>;
+    return <p className="mt-1.5 text-[13px] text-muted">Checking church records…</p>;
   }
   if (!matches.length) {
     return (
-      <p className="flex items-center gap-1 text-[13px] font-semibold text-secondary">
+      <p className="mt-1.5 flex items-center gap-1 text-[13px] font-bold text-success">
         <Icon name="check_circle" size={16} />
         New number
       </p>
@@ -497,7 +492,7 @@ function PhoneStatus({ phone, typed, lookup, matches }) {
   }
   const names = matches.map((m) => `${m.firstName} ${m.lastName}`).join(', ');
   return (
-    <p className="flex items-start gap-1.5 rounded-lg bg-stage-first-bg px-3 py-2 text-[13px] font-semibold text-stage-first-text">
+    <p className="alert alert-warning mt-2">
       <Icon name="contact_phone" size={18} />
       Already in our records: {names}. Save to check if this is a returning visitor.
     </p>

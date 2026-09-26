@@ -1,12 +1,20 @@
 import Link from 'next/link';
+import Icon from '@/components/ui/Icon';
+import Logo from '@/components/ui/Logo';
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
-      <h1 className="text-2xl font-semibold">Page not found</h1>
-      <Link href="/" className="font-semibold text-primary">
-        Go to your home screen
-      </Link>
+    <main className="flex min-h-screen items-center justify-center p-6">
+      <div className="card flex max-w-md flex-col items-center gap-4 text-center">
+        <Logo size={48} />
+        <span className="chip chip-coral">404</span>
+        <h1 className="page-title">Page not found</h1>
+        <p className="text-muted">That page doesn’t exist or has moved.</p>
+        <Link href="/" className="btn btn-primary">
+          <Icon name="home" size={18} />
+          Go to your home screen
+        </Link>
+      </div>
     </main>
   );
 }

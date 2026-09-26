@@ -1,5 +1,6 @@
 import { getSmsOverview } from '@/services/sms.service';
 import { isoDay } from '@/lib/dates';
+import Icon from '@/components/ui/Icon';
 import SmsManager from './SmsManager';
 
 export const metadata = { title: 'SMS messages' };
@@ -11,11 +12,17 @@ export default async function SmsPage() {
 
   return (
     <div className="flex max-w-5xl flex-col gap-6">
-      <div>
-        <h1 className="text-[28px] font-semibold leading-9">SMS messages</h1>
-        <p className="mt-1 text-[15px] text-muted">
-          The automatic thank-you and invite messages to first timers, and a record of every send.
-        </p>
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">
+            <Icon name="sms" size={16} />
+            Messages
+          </p>
+          <h1 className="page-title">SMS messages</h1>
+          <p className="page-sub">
+            The automatic thank-you and invite messages to first timers, and a record of every send.
+          </p>
+        </div>
       </div>
       <SmsManager
         status={overview.status}

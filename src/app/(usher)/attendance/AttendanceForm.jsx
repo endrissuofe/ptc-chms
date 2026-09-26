@@ -14,33 +14,15 @@ import {
 } from '@/lib/attendance';
 
 const GROUPS = {
-  men: {
-    label: 'Men',
-    hint: 'Adults',
-    icon: 'man',
-    tint: 'bg-stage-first-bg text-primary',
-    bar: 'bg-primary',
-  },
-  women: {
-    label: 'Women',
-    hint: 'Adults',
-    icon: 'woman',
-    tint: 'bg-stage-regular-bg text-secondary',
-    bar: 'bg-secondary',
-  },
-  teens: {
-    label: 'Teens',
-    hint: 'Ages 13–17',
-    icon: 'school',
-    tint: 'bg-stage-class-bg text-tertiary',
-    bar: 'bg-tertiary',
-  },
+  men: { label: 'Men', hint: 'Adults', icon: 'man', tone: 'tone-primary', bar: 'bg-primary' },
+  women: { label: 'Women', hint: 'Adults', icon: 'woman', tone: 'tone-coral', bar: 'bg-coral' },
+  teens: { label: 'Teens', hint: 'Ages 13–17', icon: 'school', tone: 'tone-teal', bar: 'bg-teal' },
   children: {
     label: 'Children',
     hint: 'Under 13',
     icon: 'child_care',
-    tint: 'bg-stage-second-bg text-ink',
-    bar: 'bg-ink/60',
+    tone: 'tone-violet',
+    bar: 'bg-violet',
   },
 };
 
@@ -75,7 +57,7 @@ export default function AttendanceForm({
 }) {
   if (!services.length) {
     return (
-      <p className="rounded-xl border border-line bg-surface p-5 text-[15px] text-muted">
+      <p className="card text-[15px] text-muted">
         There has been no service in the past week to record. Ask an admin if a service is missing
         from the Services list.
       </p>
@@ -158,161 +140,176 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="flex flex-col gap-1 px-1">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-stage-second-bg px-2.5 py-1 text-[11px] font-semibold">
-            <Icon name="church" size={14} />
+    <div className="flex flex-col gap-5">
+      <div className="page-head">
+        <div>
+          <p className="eyebrow">
+            <Icon name="calendar_today" size={16} />
             {dayLabel.format(new Date(serviceDate))}
-          </span>
-          {savedHere?.savedAt && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted">
-              <Icon name="schedule" size={15} className="text-secondary" />
-              Saved {clock.format(new Date(savedHere.savedAt))}
-            </span>
-          )}
+          </p>
+          <h1 className="page-title">{service.name} attendance</h1>
+          <p className="page-sub">Enter the door count. Tap a number to type it, or use − and +.</p>
         </div>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{service.name} Attendance</h1>
-        <p className="text-[13px] text-muted">
-          Enter the door count. Tap a number to type it, or use − and +.
-        </p>
-      </section>
-
-      <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
-      <ServiceChips
-        services={services}
-        selected={selected}
-        done={saved}
-        onSelect={(key) => {
-          setSelected(key);
-          setStatus({ state: 'idle' });
-        }}
-      />
-
-      <section className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-              Total headcount
-            </p>
-            <div className="mt-0.5 flex items-baseline gap-2">
-              <span className="text-[32px] font-bold leading-9 tabular-nums" aria-live="polite">
-                {total}
-              </span>
-              {change !== null && total > 0 && (
-                <span
-                  className={`flex items-center gap-0.5 text-[13px] font-semibold ${change >= 0 ? 'text-secondary' : 'text-danger'}`}
-                >
-                  <Icon name="trending_up" size={16} className={change < 0 ? '-scale-y-100' : ''} />
-                  {change > 0 ? '+' : ''}
-                  {change}% vs last time
-                </span>
-              )}
-            </div>
-          </div>
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-stage-first-bg text-primary">
-            <Icon name="group" size={22} />
+        {savedHere?.savedAt && (
+          <span className="chip chip-success">
+            <Icon name="schedule" size={15} />
+            Saved {clock.format(new Date(savedHere.savedAt))}
           </span>
-        </div>
-        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-paper" aria-hidden="true">
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
+        <ServiceChips
+          services={services}
+          selected={selected}
+          done={saved}
+          onSelect={(key) => {
+            setSelected(key);
+            setStatus({ state: 'idle' });
+          }}
+        />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
           {COUNT_FIELDS.map((f) => (
-            <div
-              key={f}
-              className={`h-full transition-all duration-300 ${GROUPS[f].bar}`}
-              style={{ width: total ? `${(draft[f] / total) * 100}%` : 0 }}
+            <Counter
+              key={`${selected}-${f}`}
+              group={GROUPS[f]}
+              value={draft[f]}
+              onChange={(v) => update({ [f]: clampCount(v) })}
             />
           ))}
         </div>
-        {previous && (
-          <p className="text-[11px] text-muted">
-            Last time ({dayLabel.format(new Date(previous.serviceDate))}): {previous.total}
-          </p>
-        )}
-        {dirty && total > 0 && isUnusualChange(change) && (
-          <p className="flex items-start gap-1.5 rounded-lg bg-stage-first-bg px-3 py-2 text-[13px] font-semibold text-stage-first-text">
-            <Icon name="error_outline" size={18} />
-            That’s very different from last time — please check the numbers before saving.
-          </p>
-        )}
-      </section>
 
-      <div className="flex flex-col gap-3">
-        {COUNT_FIELDS.map((f) => (
-          <Counter
-            key={`${selected}-${f}`}
-            group={GROUPS[f]}
-            value={draft[f]}
-            onChange={(v) => update({ [f]: clampCount(v) })}
-          />
-        ))}
+        <div className="flex flex-col gap-5 lg:sticky lg:top-[92px] lg:self-start">
+          <section className="card flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="label-caps">Total headcount</p>
+                <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span
+                    className="font-display text-[44px] font-black leading-none tabular-nums"
+                    aria-live="polite"
+                  >
+                    {total}
+                  </span>
+                  {change !== null && total > 0 && (
+                    <span className={`chip ${change >= 0 ? 'chip-success' : 'chip-danger'}`}>
+                      <Icon
+                        name="trending_up"
+                        size={15}
+                        className={change < 0 ? '-scale-y-100' : ''}
+                      />
+                      {change > 0 ? '+' : ''}
+                      {change}% vs last time
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span className="icon-tile tone-primary h-12 w-12">
+                <Icon name="groups" size={24} />
+              </span>
+            </div>
+            <div
+              className="flex h-3 w-full overflow-hidden rounded-full bg-surface-3"
+              aria-hidden="true"
+            >
+              {COUNT_FIELDS.map((f) => (
+                <div
+                  key={f}
+                  className={`h-full transition-all duration-300 ${GROUPS[f].bar}`}
+                  style={{ width: total ? `${(draft[f] / total) * 100}%` : 0 }}
+                />
+              ))}
+            </div>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+              {COUNT_FIELDS.map((f) => (
+                <li key={f} className="flex items-center gap-2">
+                  <span className={`h-3 w-3 rounded ${GROUPS[f].bar}`} />
+                  {GROUPS[f].label}
+                  <strong className="ml-auto tabular-nums">{draft[f]}</strong>
+                </li>
+              ))}
+            </ul>
+            {previous && (
+              <p className="text-[13px] text-muted">
+                Last time ({dayLabel.format(new Date(previous.serviceDate))}):{' '}
+                <strong className="text-ink">{previous.total}</strong>
+              </p>
+            )}
+            {dirty && total > 0 && isUnusualChange(change) && (
+              <p className="alert alert-warning">
+                <Icon name="error_outline" size={19} />
+                That’s very different from last time — please check the numbers before saving.
+              </p>
+            )}
+          </section>
+
+          <section className="card flex flex-col gap-2">
+            <label htmlFor="attendance-note" className="field-label">
+              <span className="flex items-center gap-1.5">
+                <Icon name="edit_note" size={19} className="text-muted" />
+                Note
+              </span>
+              <span className="font-semibold text-muted">Optional</span>
+            </label>
+            <textarea
+              id="attendance-note"
+              rows={3}
+              maxLength={300}
+              value={draft.note}
+              onChange={(e) => update({ note: e.target.value })}
+              placeholder="e.g. Heavy rain, guest minister, Holy Communion Sunday"
+              className="input resize-none"
+            />
+            <p className="flex items-center gap-1 text-[12.5px] text-muted">
+              <Icon name="info" size={15} />
+              Helps the pastors understand changes in attendance.
+            </p>
+          </section>
+
+          {status.state === 'error' && (
+            <p role="alert" className="alert alert-danger">
+              <Icon name="error_outline" size={20} />
+              {status.message}
+            </p>
+          )}
+
+          {status.state === 'saved' && !dirty ? (
+            <div role="status" className="alert alert-success justify-between">
+              <span className="flex items-center gap-2 text-[15px]">
+                <Icon name="check_circle" size={20} filled />
+                {service.name} saved · {total}
+              </span>
+              <Link href="/today" className="font-bold underline underline-offset-2">
+                Back to Today
+              </Link>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={save}
+              disabled={!dirty || total === 0 || status.state === 'saving'}
+              className="btn btn-primary btn-lg w-full"
+            >
+              <Icon
+                name={status.state === 'saving' ? 'sync' : 'how_to_reg'}
+                size={20}
+                className={status.state === 'saving' ? 'animate-spin' : ''}
+              />
+              {status.state === 'saving'
+                ? 'Saving…'
+                : savedHere
+                  ? dirty
+                    ? 'Save correction'
+                    : 'Saved — no changes'
+                  : 'Save attendance'}
+            </button>
+          )}
+        </div>
       </div>
-
-      <section className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4">
-        <div className="flex items-center justify-between">
-          <label
-            htmlFor="attendance-note"
-            className="flex items-center gap-1.5 text-[15px] font-semibold"
-          >
-            <Icon name="edit_note" size={18} className="text-muted" />
-            Note
-          </label>
-          <span className="text-[11px] font-semibold text-muted">Optional</span>
-        </div>
-        <textarea
-          id="attendance-note"
-          rows={3}
-          maxLength={300}
-          value={draft.note}
-          onChange={(e) => update({ note: e.target.value })}
-          placeholder="e.g. Heavy rain, guest minister, Holy Communion Sunday"
-          className="w-full resize-none rounded-lg bg-paper p-3 text-[15px] placeholder:text-muted/70 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-        />
-        <p className="flex items-center gap-1 text-[11px] text-muted">
-          <Icon name="info" size={14} />
-          Helps the pastors understand changes in attendance.
-        </p>
-      </section>
-
-      {status.state === 'error' && (
-        <p role="alert" className="rounded-lg bg-danger-subtle px-4 py-3 text-sm text-danger">
-          {status.message}
-        </p>
-      )}
-
-      {status.state === 'saved' && !dirty ? (
-        <div
-          role="status"
-          className="flex items-center justify-between gap-3 rounded-xl bg-secondary px-4 py-3 text-white"
-        >
-          <span className="flex items-center gap-2 text-[15px] font-semibold">
-            <Icon name="check_circle" size={20} filled />
-            {service.name} saved • {total}
-          </span>
-          <Link href="/today" className="text-[13px] font-semibold underline underline-offset-2">
-            Back to Today
-          </Link>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={save}
-          disabled={!dirty || total === 0 || status.state === 'saving'}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[15px] font-semibold text-white active:bg-primary-dark disabled:opacity-50"
-        >
-          <Icon
-            name={status.state === 'saving' ? 'sync' : 'how_to_reg'}
-            size={20}
-            className={status.state === 'saving' ? 'animate-spin' : ''}
-          />
-          {status.state === 'saving'
-            ? 'Saving…'
-            : savedHere
-              ? dirty
-                ? 'Save correction'
-                : 'Saved — no changes'
-              : 'Save attendance'}
-        </button>
-      )}
     </div>
   );
 }
@@ -320,62 +317,58 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
 function Counter({ group, value, onChange }) {
   const id = `count-${group.label.toLowerCase()}`;
   const step =
-    'flex items-center justify-center rounded-xl bg-paper text-ink active:scale-90 active:bg-stage-second-bg transition';
+    'grid place-items-center rounded-full bg-surface-2 text-ink transition hover:bg-surface-3 active:scale-90';
   return (
-    <div className="flex flex-col gap-2.5 rounded-xl border border-line bg-surface p-4">
+    <div className="card flex flex-col gap-4">
+      <label htmlFor={id} className="flex items-center gap-3">
+        <span className={`icon-tile ${group.tone}`}>
+          <Icon name={group.icon} size={22} />
+        </span>
+        <span className="flex flex-col leading-tight">
+          <span className="font-display text-lg font-extrabold">{group.label}</span>
+          <span className="text-[13px] text-muted">{group.hint}</span>
+        </span>
+      </label>
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={id} className="flex min-w-0 items-center gap-2">
-          <span
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${group.tint}`}
-          >
-            <Icon name={group.icon} size={20} />
-          </span>
-          <span className="flex flex-col">
-            <span className="text-[15px] font-semibold">{group.label}</span>
-            <span className="text-[11px] font-semibold text-muted">{group.hint}</span>
-          </span>
-        </label>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label={`One fewer ${group.label.toLowerCase()}`}
-            onClick={() => onChange(value - 1)}
-            disabled={value === 0}
-            className={`h-12 w-12 disabled:opacity-40 ${step}`}
-          >
-            <Icon name="remove" size={22} />
-          </button>
-          <input
-            id={id}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            autoComplete="off"
-            value={value}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => onChange(e.target.value.replace(/\D/g, '') || 0)}
-            className={`h-12 w-[4.5rem] rounded-lg bg-transparent text-center font-bold tabular-nums focus:bg-paper focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-              value >= 1000 ? 'text-[22px]' : 'text-[32px]'
-            }`}
-          />
-          <button
-            type="button"
-            aria-label={`One more ${group.label.toLowerCase()}`}
-            onClick={() => onChange(value + 1)}
-            className={`h-12 w-12 ${step}`}
-          >
-            <Icon name="add" size={22} />
-          </button>
-        </div>
+        <button
+          type="button"
+          aria-label={`One fewer ${group.label.toLowerCase()}`}
+          onClick={() => onChange(value - 1)}
+          disabled={value === 0}
+          className={`h-12 w-12 shrink-0 disabled:opacity-40 ${step}`}
+        >
+          <Icon name="remove" size={24} />
+        </button>
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="off"
+          value={value}
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, '') || 0)}
+          className={`h-14 w-full min-w-0 rounded-tile bg-transparent text-center font-display font-black tabular-nums focus:bg-surface-2 focus:outline-none focus:ring-4 focus:ring-primary/20 ${
+            value >= 1000 ? 'text-[30px]' : 'text-[40px]'
+          }`}
+        />
+        <button
+          type="button"
+          aria-label={`One more ${group.label.toLowerCase()}`}
+          onClick={() => onChange(value + 1)}
+          className={`h-12 w-12 shrink-0 ${step}`}
+        >
+          <Icon name="add" size={24} />
+        </button>
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-center gap-2">
         {[5, 10].map((n) => (
           <button
             key={n}
             type="button"
             aria-label={`Add ${n} ${group.label.toLowerCase()}`}
             onClick={() => onChange(value + n)}
-            className={`h-9 px-3 text-[13px] font-semibold ${step}`}
+            className="btn btn-soft btn-sm"
           >
             +{n}
           </button>

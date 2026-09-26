@@ -1,9 +1,16 @@
 /**
- * Material Symbols icons, as used in the Stitch designs.
+ * Material Symbols (Rounded, light weight) — close to the template's line icons.
  * The font is trimmed to ICON_NAMES (about 18 KB) to stay light on weak church Wi-Fi,
  * so add a name here before using a new icon.
  */
 export const ICON_NAMES = [
+  'menu',
+  'settings',
+  'home',
+  'expand_more',
+  'logout',
+  'dark_mode',
+  'light_mode',
   'account_balance_wallet',
   'add',
   'add_card',
@@ -130,14 +137,14 @@ export const ICON_NAMES = [
 
 /** Google Fonts needs the names sorted; FILL is kept as an axis for filled icons. */
 export const ICON_FONT_URL =
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0' +
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,350,0..1,0' +
   `&icon_names=${[...ICON_NAMES].sort().join(',')}&display=block`;
 
 export default function Icon({ name, size = 20, filled = false, className = '' }) {
   return (
     <span
       aria-hidden="true"
-      className={`material-symbols-outlined shrink-0 select-none leading-none ${className}`}
+      className={`material-symbols-rounded shrink-0 select-none leading-none ${className}`}
       style={{ fontSize: size, fontVariationSettings: filled ? "'FILL' 1" : undefined }}
     >
       {name}

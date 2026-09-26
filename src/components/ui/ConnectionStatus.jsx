@@ -21,18 +21,18 @@ export function useOnline() {
   );
 }
 
-/** Small pill for the mobile header. */
+/** Small pill for the top bar. */
 export function OnlineBadge() {
   const online = useOnline();
   return online ? (
-    <span className="inline-flex items-center gap-1 rounded-full bg-stage-regular-bg px-2 py-0.5 text-[11px] font-semibold text-stage-regular-text">
-      <span className="h-1.5 w-1.5 rounded-full bg-secondary" />
-      Online
+    <span className="chip chip-success">
+      <span className="h-1.5 w-1.5 rounded-full bg-success" />
+      <span className="max-sm:sr-only">Online</span>
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-full bg-danger-subtle px-2 py-0.5 text-[11px] font-semibold text-danger">
-      <span className="h-1.5 w-1.5 rounded-full bg-danger" />
-      Offline
+    <span className="chip chip-danger">
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-danger" />
+      <span className="max-sm:sr-only">Offline</span>
     </span>
   );
 }
@@ -46,16 +46,16 @@ export function SyncStrip() {
   return (
     <div
       role="status"
-      className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm"
+      className="flex items-center gap-2.5 rounded-tile border border-line bg-surface px-4 py-3 text-sm shadow-soft"
     >
       {online ? (
         <>
-          <Icon name="check_circle" size={18} filled className="text-secondary" />
+          <Icon name="check_circle" size={19} filled className="text-success" />
           <span>Connected — entries save straight to the church system</span>
         </>
       ) : (
         <>
-          <Icon name="cloud_off" size={18} className="text-danger" />
+          <Icon name="cloud_off" size={19} className="text-danger" />
           <span>No connection — entries can’t be saved until data returns</span>
         </>
       )}
