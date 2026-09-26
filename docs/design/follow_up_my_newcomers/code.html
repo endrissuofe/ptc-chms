@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@100..900&family=Public+Sans:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#F6F3EC;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-bright": "#fbf8ff", "on-secondary-container": "#227064", "surface-container-highest": "#dde1ff", "stage-second-timer-bg": "#ECEEF5", "tertiary-fixed-dim": "#dfb8f7", "inverse-on-surface": "#efefff", "on-error": "#ffffff", "primary-container": "#b5541c", "stage-first-timer-text": "#B5541C", "on-tertiary-container": "#fef2ff", "surface": "#fbf8ff", "outline-variant": "#ddc1b5", "secondary-fixed": "#a6f1e1", "secondary": "#196a5e", "surface-variant": "#dde1ff", "canvas-paper": "#F6F3EC", "stage-inclass-text": "#543866", "primary-fixed-dim": "#ffb693", "tertiary-container": "#85639c", "surface-container-low": "#f3f2ff", "border-warm": "#E4DED2", "surface-dim": "#d4d8f6", "background": "#fbf8ff", "on-tertiary": "#ffffff", "on-secondary": "#ffffff", "tertiary-fixed": "#f3daff", "surface-tint": "#9e4309", "primary-fixed": "#ffdbcc", "on-primary-fixed": "#351000", "error": "#ba1a1a", "primary": "#953d01", "tertiary": "#6c4b82", "on-primary": "#ffffff", "stage-first-timer-bg": "#FDF2EC", "on-primary-fixed-variant": "#7a3000", "on-tertiary-fixed-variant": "#59396f", "on-background": "#151a30", "outline": "#897268", "stage-second-timer-text": "#1D2238", "text-muted": "#5B6070", "inverse-surface": "#2a2f46", "inverse-primary": "#ffb693", "surface-white": "#FFFFFF", "on-surface": "#151a30", "surface-container-high": "#e4e7ff", "stage-regular-text": "#17564D", "stage-inclass-bg": "#F3EDF7", "on-error-container": "#93000a", "stage-member-bg": "#1F6E62", "surface-container-lowest": "#ffffff", "on-primary-container": "#fff3ef", "on-secondary-fixed-variant": "#005046", "danger-red": "#C83226", "stage-regular-bg": "#E8F4F1", "on-surface-variant": "#56423a", "secondary-fixed-dim": "#8bd4c5", "stage-member-text": "#FFFFFF", "error-container": "#ffdad6", "secondary-container": "#a6f1e1", "on-tertiary-fixed": "#2b0b40", "on-secondary-fixed": "#00201b", "surface-container": "#ececff", "danger-red-subtle": "#FDEDEC" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xl": "2rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter-desktop": "1.5rem", "gutter": "1rem", "space-md": "1rem", "margin": "1rem", "margin-desktop": "2.5rem", "space-2xl": "3rem", "space-lg": "1.5rem" }, fontFamily: { "counter-display": ["Public Sans"], "headline-xl-mobile": ["Noto Serif"], "headline-xl": ["Noto Serif"], "label-sm": ["Public Sans"], "headline-md": ["Noto Serif"], "headline-lg": ["Noto Serif"], "label-lg": ["Public Sans"], "body-lg": ["Public Sans"], "headline-lg-mobile": ["Noto Serif"], "body-md": ["Public Sans"], "body-sm": ["Public Sans"], "label-md": ["Public Sans"], "headline-sm": ["Noto Serif"] }, fontSize: { "counter-display": ["32px", { lineHeight: "36px", fontWeight: "700" }], "headline-xl-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }], "headline-xl": ["36px", { lineHeight: "44px", fontWeight: "600" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.5px", fontWeight: "600" }], "headline-md": ["22px", { lineHeight: "28px", fontWeight: "600" }], "headline-lg": ["28px", { lineHeight: "36px", fontWeight: "600" }], "label-lg": ["15px", { lineHeight: "20px", fontWeight: "600" }], "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }], "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }], "body-md": ["15px", { lineHeight: "22px", fontWeight: "400" }], "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }], "label-md": ["13px", { lineHeight: "18px", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "26px", fontWeight: "600" }] } } } };</script></head><body class="bg-canvas-paper text-stage-second-timer-text font-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-canvas-paper/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="PTC Chapel logo" class="h-10 w-10 object-contain shrink-0" src="../assets/ptc-logo.png"/><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-headline-sm text-headline-sm text-stage-second-timer-text tracking-tight">PTC Chapel</span><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span></div><span class="font-label-sm text-label-sm text-text-muted">Follow Up</span></div></div><div class="flex items-center gap-space-xs"><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center rounded-full text-stage-second-timer-text hover:bg-stage-second-timer-bg transition-colors"><span class="material-symbols-outlined text-[22px]">notifications</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-canvas-paper"><div class="flex flex-col w-full px-margin pb-6 gap-space-md">
+<!-- Pastoral Header & Welcome Snippet -->
+<div class="flex flex-col gap-space-xs mt-2">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-stage-second-timer-text tracking-tight">
+          Follow-Up Ministry
+        </h1>
+<p class="font-body-sm text-body-sm text-text-muted">
+          Assigned to Sis. Deborah • 12 active contacts
+        </p>
+</div>
+<div class="relative w-12 h-12 rounded-full overflow-hidden shadow-sm shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait photo of Sister Deborah Adeyemi, a warm Nigerian church ministry leader in subtle elegant yellow ochre attire, gentle smile, natural soft indoor light, editorial church community style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0e5Zu5OQ6H5-kyTqRz52TRimiQTPfwhYUKH0_mztiFfhBxeFvJR404icQhJ30QaVI72XSMvrC7piFIObB8e3Zdc6wp5tKJcus0ejQudnYBX1qSG_pKifz5dYpSak_iRhaGPvjKn9osfzmfVb614BGUqvvktBxicKsAd5gmFNY5E-ygZFKu8CHTV_-wFkHgzF4tRbuHXJfyzn2CU2-nGRfcHh5h3R8D9XfM3wx5HtfG6GIMBlOTa3T"/>
+</div>
+</div>
+</div>
+<!-- Metric Summary Bento Chips -->
+<div class="grid grid-cols-3 gap-2">
+<div class="bg-surface-white rounded-xl p-3 shadow-sm flex flex-col justify-between">
+<div class="flex items-center gap-1 text-primary-container">
+<span class="material-symbols-outlined text-[18px]">phone_in_talk</span>
+<span class="font-label-sm text-label-sm tracking-wider uppercase">To Call</span>
+</div>
+<div class="mt-1">
+<span class="font-counter-display text-counter-display text-primary-container">4</span>
+<span class="font-body-sm text-body-sm text-text-muted block -mt-1">Today</span>
+</div>
+</div>
+<div class="bg-surface-white rounded-xl p-3 shadow-sm flex flex-col justify-between">
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[18px]">task_alt</span>
+<span class="font-label-sm text-label-sm tracking-wider uppercase">Contacted</span>
+</div>
+<div class="mt-1">
+<span class="font-counter-display text-counter-display text-secondary">8</span>
+<span class="font-body-sm text-body-sm text-text-muted block -mt-1">This week</span>
+</div>
+</div>
+<div class="bg-surface-white rounded-xl p-3 shadow-sm flex flex-col justify-between">
+<div class="flex items-center gap-1 text-tertiary">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+<span class="font-label-sm text-label-sm tracking-wider uppercase">Response</span>
+</div>
+<div class="mt-1">
+<span class="font-counter-display text-counter-display text-stage-second-timer-text">85%</span>
+<span class="font-body-sm text-body-sm text-text-muted block -mt-1">Engagement</span>
+</div>
+</div>
+</div>
+<!-- Segmented Control Tabs -->
+<div class="bg-stage-second-timer-bg p-1 rounded-xl flex items-center gap-1" id="tabGroup">
+<button class="tab-btn flex-1 py-2 rounded-lg font-label-md text-label-md text-stage-second-timer-text bg-surface-white shadow-sm transition-all text-center" type="button">
+      To Call (4)
+    </button>
+<button class="tab-btn flex-1 py-2 rounded-lg font-label-md text-label-md text-text-muted hover:text-stage-second-timer-text transition-all text-center" type="button">
+      Called (8)
+    </button>
+<button class="tab-btn flex-1 py-2 rounded-lg font-label-md text-label-md text-text-muted hover:text-stage-second-timer-text transition-all text-center" type="button">
+      All (12)
+    </button>
+</div>
+<!-- Search and Quick Filter Row -->
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span>
+<input class="w-full h-12 bg-surface-white rounded-xl pl-10 pr-3 font-body-md text-body-md text-stage-second-timer-text placeholder:text-text-muted shadow-sm focus:outline-none" id="newcomerSearch" placeholder="Search name, phone or tag..." type="search"/>
+</div>
+<button aria-label="Filter records" class="h-12 w-12 rounded-xl bg-surface-white flex items-center justify-center text-stage-second-timer-text shadow-sm active:bg-stage-second-timer-bg transition-colors shrink-0" type="button">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+</div>
+<!-- Shepherding Newcomer Contact Cards List -->
+<div class="flex flex-col gap-space-md" id="cardsContainer">
+<!-- Card 1: Chinedu Okafor -->
+<div class="bg-surface-white rounded-xl p-4 shadow-sm flex flex-col gap-3 relative transition-all">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm text-stage-second-timer-text truncate">
+              Chinedu Okafor
+            </h2>
+<span class="bg-stage-second-timer-bg text-stage-second-timer-text font-label-sm text-label-sm px-2.5 py-0.5 rounded-full shrink-0">
+              Second Timer
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">church</span>
+            Visited today (27 Oct) • 2nd visit • 1st Service
+          </p>
+</div>
+<button aria-label="More actions for Chinedu" class="w-8 h-8 rounded-full flex items-center justify-center text-text-muted hover:bg-stage-second-timer-bg transition-colors shrink-0">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Pastoral Note & Prayer Request Insight -->
+<div class="bg-canvas-paper/70 rounded-lg p-2.5 flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-tertiary">
+<span class="material-symbols-outlined text-[16px]">volunteer_activism</span>
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider">Pastoral Note</span>
+</div>
+<p class="font-body-sm text-body-sm text-stage-second-timer-text">
+          Requested prayer for family; interested in Believers' Class.
+        </p>
+</div>
+<!-- Last Contact Status -->
+<div class="flex items-center justify-between text-text-muted">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">mark_chat_read</span>
+<span class="font-body-sm text-body-sm">SMS sent today 6:00 PM</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary-container flex items-center gap-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container inline-block"></span>
+          Priority Today
+        </span>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-2 pt-1">
+<a class="h-11 rounded-lg bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:opacity-90 transition-opacity" href="https://wa.me/2348030000001?text=Hello%20Chinedu,%20thank%20you%20for%20joining%20us%20today%20at%20PTC%20Chapel!" target="_blank">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+<span>WhatsApp</span>
+</a>
+<a class="h-11 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:bg-primary transition-colors" href="tel:+2348030000001">
+<span class="material-symbols-outlined text-[20px]">call</span>
+<span>Call</span>
+</a>
+</div>
+</div>
+<!-- Card 2: Grace Amadi -->
+<div class="bg-surface-white rounded-xl p-4 shadow-sm flex flex-col gap-3 relative transition-all">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm text-stage-second-timer-text truncate">
+              Grace Amadi
+            </h2>
+<span class="bg-stage-first-timer-bg text-stage-first-timer-text font-label-sm text-label-sm px-2.5 py-0.5 rounded-full shrink-0">
+              First Timer
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">church</span>
+            Visited last Sunday (20 Oct) • 2nd Service
+          </p>
+</div>
+<button aria-label="More actions for Grace" class="w-8 h-8 rounded-full flex items-center justify-center text-text-muted hover:bg-stage-second-timer-bg transition-colors shrink-0">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Quick Context Note -->
+<div class="bg-canvas-paper/70 rounded-lg p-2.5 flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-primary-container">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider">Fellowship Locality</span>
+</div>
+<p class="font-body-sm text-body-sm text-stage-second-timer-text">
+          New to the area (Agungi). Needs house fellowship direction.
+        </p>
+</div>
+<!-- Overdue Contact Warning Note -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 bg-danger-red-subtle px-2 py-1 rounded-md text-danger-red">
+<span class="material-symbols-outlined text-[16px]">alarm_on</span>
+<span class="font-label-sm text-label-sm">Overdue • 4 days since Sunday</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-muted">Unanswered</span>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-2 pt-1">
+<a class="h-11 rounded-lg bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:opacity-90 transition-opacity" href="https://wa.me/2348030000002?text=Good%20day%20Grace,%20wishing%20you%20a%20blessed%20week%20from%20PTC%20Chapel!" target="_blank">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+<span>WhatsApp</span>
+</a>
+<a class="h-11 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:bg-primary transition-colors" href="tel:+2348030000002">
+<span class="material-symbols-outlined text-[20px]">call</span>
+<span>Call</span>
+</a>
+</div>
+</div>
+<!-- Card 3: Tunde Bakare -->
+<div class="bg-surface-white rounded-xl p-4 shadow-sm flex flex-col gap-3 relative transition-all">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm text-stage-second-timer-text truncate">
+              Tunde Bakare
+            </h2>
+<span class="bg-stage-first-timer-bg text-stage-first-timer-text font-label-sm text-label-sm px-2.5 py-0.5 rounded-full shrink-0">
+              First Timer
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">church</span>
+            Visited 20 Oct • 1st Service
+          </p>
+</div>
+<button aria-label="More actions for Tunde" class="w-8 h-8 rounded-full flex items-center justify-center text-text-muted hover:bg-stage-second-timer-bg transition-colors shrink-0">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Quick Note -->
+<div class="bg-canvas-paper/70 rounded-lg p-2.5 flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px]">diversity_3</span>
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider">Family Background</span>
+</div>
+<p class="font-body-sm text-body-sm text-stage-second-timer-text">
+          Attended with family (wife + 2 children).
+        </p>
+</div>
+<!-- Contact Status -->
+<div class="flex items-center justify-between text-text-muted">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-text-muted">phone_missed</span>
+<span class="font-body-sm text-body-sm">No answer on Tuesday</span>
+</div>
+<span class="font-label-sm text-label-sm text-text-muted">Retry evening</span>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-2 pt-1">
+<a class="h-11 rounded-lg bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:opacity-90 transition-opacity" href="https://wa.me/2348030000003?text=Good%20day%20Bro%20Tunde,%20we%20hope%20the%20family%20is%20well!" target="_blank">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+<span>WhatsApp</span>
+</a>
+<a class="h-11 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:bg-primary transition-colors" href="tel:+2348030000003">
+<span class="material-symbols-outlined text-[20px]">call</span>
+<span>Call</span>
+</a>
+</div>
+</div>
+<!-- Card 4: Folake Adeleke -->
+<div class="bg-surface-white rounded-xl p-4 shadow-sm flex flex-col gap-3 relative transition-all">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h2 class="font-headline-sm text-headline-sm text-stage-second-timer-text truncate">
+              Folake Adeleke
+            </h2>
+<span class="bg-stage-regular-bg text-stage-regular-text font-label-sm text-label-sm px-2.5 py-0.5 rounded-full shrink-0">
+              Regular
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-text-muted flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">verified</span>
+            6 visits since 15 Sep • Consistent
+          </p>
+</div>
+<button aria-label="More actions for Folake" class="w-8 h-8 rounded-full flex items-center justify-center text-text-muted hover:bg-stage-second-timer-bg transition-colors shrink-0">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Quick Note -->
+<div class="bg-canvas-paper/70 rounded-lg p-2.5 flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-stage-inclass-text">
+<span class="material-symbols-outlined text-[16px]">school</span>
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider">Discipleship Pathway</span>
+</div>
+<p class="font-body-sm text-body-sm text-stage-second-timer-text">
+          Ready for Believers' Class registration.
+        </p>
+</div>
+<!-- Last Contact Status -->
+<div class="flex items-center justify-between text-text-muted">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">chat_bubble</span>
+<span class="font-body-sm text-body-sm">Replied to Sunday welcome</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Warm lead</span>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-2 pt-1">
+<a class="h-11 rounded-lg bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:opacity-90 transition-opacity" href="https://wa.me/2348030000004?text=Peace%20be%20unto%20you%20Folake,%20regarding%20the%20foundation%20class..." target="_blank">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+<span>WhatsApp</span>
+</a>
+<a class="h-11 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm active:bg-primary transition-colors" href="tel:+2348030000004">
+<span class="material-symbols-outlined text-[20px]">call</span>
+<span>Call</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Bottom Sync Status & Bulk SMS Pastoral Note -->
+<div class="bg-surface-white rounded-xl p-4 shadow-sm flex items-center justify-between gap-3 mt-1">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">cloud_done</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-stage-second-timer-text">
+          ChMS Synced • Offline Safe
+        </span>
+<span class="font-body-sm text-body-sm text-text-muted">
+          BulkSMS dispatch scheduled: 6:00 PM
+        </span>
+</div>
+</div>
+<button class="text-primary-container font-label-md text-label-md hover:underline flex items-center gap-1 shrink-0 p-1" id="manualSyncBtn" title="Tap to sync now" type="button">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+<span>Sync</span>
+</button>
+</div>
+</div>
+<script>
+  (function() {
+    // Segmented tab switching delight
+    const tabs = document.querySelectorAll('#tabGroup .tab-btn');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.classList.remove('bg-surface-white', 'text-stage-second-timer-text', 'shadow-sm');
+          t.classList.add('text-text-muted');
+        });
+        tab.classList.add('bg-surface-white', 'text-stage-second-timer-text', 'shadow-sm');
+        tab.classList.remove('text-text-muted');
+      });
+    });
+
+    // Client-side quick filtering micro-interaction
+    const searchInput = document.getElementById('newcomerSearch');
+    const cards = document.querySelectorAll('#cardsContainer > div');
+
+    searchInput?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(query)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+
+    // Sync button rotation animation feedback
+    const syncBtn = document.getElementById('manualSyncBtn');
+    syncBtn?.addEventListener('click', () => {
+      const icon = syncBtn.querySelector('.material-symbols-outlined');
+      if (icon) {
+        icon.classList.add('animate-spin');
+        setTimeout(() => {
+          icon.classList.remove('animate-spin');
+        }, 850);
+      }
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-white/95 backdrop-blur-xl shadow-[0_-4px_16px_rgba(29,34,56,0.06)]" data-active-classes="text-primary-container font-semibold"><div class="flex items-center justify-around h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[64px] h-12 text-text-muted hover:text-stage-second-timer-text transition-colors" data-path="today" href="#"><span class="material-symbols-outlined text-[22px]">dashboard</span><span class="font-label-sm text-label-sm mt-0.5">Today</span></a><a class="flex flex-col items-center justify-center min-w-[64px] h-12 text-text-muted hover:text-stage-second-timer-text transition-colors" data-path="attendance" href="#"><span class="material-symbols-outlined text-[22px]">pin</span><span class="font-label-sm text-label-sm mt-0.5">Attendance</span></a><a class="flex flex-col items-center justify-center min-w-[64px] h-12 text-text-muted hover:text-stage-second-timer-text transition-colors" data-path="newcomers" href="#"><span class="material-symbols-outlined text-[22px]">person_add</span><span class="font-label-sm text-label-sm mt-0.5">Newcomers</span></a><a aria-current="page" class="flex flex-col items-center justify-center min-w-[64px] h-12 transition-colors text-primary-container font-semibold" data-path="follow-up" href="#"><span class="material-symbols-outlined text-[22px]">call</span><span class="font-label-sm text-label-sm mt-0.5">Follow-Up</span></a></div></nav></body></html>

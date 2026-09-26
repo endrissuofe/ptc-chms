@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400..700;1,400..700&amp;family=Public+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface":"#fbf8ff","outline-variant":"#ddc1b5","danger-red-subtle":"#FDEDEC","secondary":"#196a5e","surface-container-high":"#e4e7ff","on-tertiary-fixed":"#2b0b40","on-primary-container":"#fff3ef","on-tertiary":"#ffffff","on-secondary":"#ffffff","surface-container":"#ececff","secondary-fixed":"#a6f1e1","surface-bright":"#fbf8ff","stage-second-timer-bg":"#ECEEF5","border-warm":"#E4DED2","stage-first-timer-bg":"#FDF2EC","on-error":"#ffffff","on-tertiary-container":"#fef2ff","secondary-container":"#a6f1e1","secondary-fixed-dim":"#8bd4c5","text-muted":"#5B6070","on-secondary-fixed-variant":"#005046","primary":"#953d01","tertiary-container":"#85639c","surface-container-lowest":"#ffffff","stage-first-timer-text":"#B5541C","inverse-primary":"#ffb693","tertiary":"#6c4b82","tertiary-fixed-dim":"#dfb8f7","error-container":"#ffdad6","on-primary-fixed-variant":"#7a3000","on-secondary-fixed":"#00201b","on-secondary-container":"#227064","surface-tint":"#9e4309","canvas-paper":"#F6F3EC","outline":"#897268","danger-red":"#C83226","primary-container":"#b5541c","stage-inclass-bg":"#F3EDF7","surface-dim":"#d4d8f6","primary-fixed-dim":"#ffb693","stage-member-text":"#FFFFFF","on-surface":"#151a30","error":"#ba1a1a","surface-container-low":"#f3f2ff","on-background":"#151a30","background":"#fbf8ff","stage-regular-bg":"#E8F4F1","stage-second-timer-text":"#1D2238","inverse-on-surface":"#efefff","stage-regular-text":"#17564D","surface-white":"#FFFFFF","stage-inclass-text":"#543866","on-error-container":"#93000a","on-surface-variant":"#56423a","on-tertiary-fixed-variant":"#59396f","inverse-surface":"#2a2f46","on-primary-fixed":"#351000","primary-fixed":"#ffdbcc","stage-member-bg":"#1F6E62","tertiary-fixed":"#f3daff","surface-variant":"#dde1ff","surface-container-highest":"#dde1ff","on-primary":"#ffffff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-md":"1rem","margin-desktop":"2.5rem","gutter":"1rem","space-lg":"1.5rem","space-2xl":"3rem","space-xs":"0.25rem","gutter-desktop":"1.5rem","margin":"1rem","space-sm":"0.5rem","space-xl":"2rem"},fontFamily:{"headline-md":["Noto Serif"],"body-lg":["Public Sans"],"headline-xl-mobile":["Noto Serif"],"label-md":["Public Sans"],"body-md":["Public Sans"],"label-sm":["Public Sans"],"counter-display":["Public Sans"],"headline-lg":["Noto Serif"],"headline-lg-mobile":["Noto Serif"],"headline-xl":["Noto Serif"],"body-sm":["Public Sans"],"label-lg":["Public Sans"],"headline-sm":["Noto Serif"]},fontSize:{"headline-md":["22px",{"lineHeight":"28px","fontWeight":"600"}],"body-lg":["18px",{"lineHeight":"28px","fontWeight":"400"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"600"}],"label-md":["13px",{"lineHeight":"18px","fontWeight":"600"}],"body-md":["15px",{"lineHeight":"22px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.5px","fontWeight":"600"}],"counter-display":["32px",{"lineHeight":"36px","fontWeight":"700"}],"headline-lg":["28px",{"lineHeight":"36px","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"600"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"label-lg":["15px",{"lineHeight":"20px","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"26px","fontWeight":"600"}]}}}};</script></head><body class="bg-canvas-paper text-on-surface font-body-md text-body-md"><aside class="fixed left-0 top-0 h-screen w-64 bg-stage-second-timer-text text-surface-white z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.06)]"><div class="flex flex-col"><div class="h-20 flex items-center gap-3 px-space-lg bg-stage-second-timer-text/50"><img alt="PTC Chapel logo" class="h-11 w-11 object-contain shrink-0" src="../assets/ptc-logo.png"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-surface-white leading-tight">PTC Chapel</span><span class="font-label-sm text-label-sm text-surface-variant/80 tracking-wider uppercase">Church Management</span></div></div><div class="px-space-md py-space-sm"><div class="px-space-md py-space-xs mb-space-xs"><span class="font-label-sm text-label-sm text-surface-variant/60 uppercase tracking-wider">Pastoral Ministry</span></div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-bold rounded-lg shadow-sm"><a class="flex items-center gap-3 px-space-md py-space-sm rounded-lg text-surface-white/80 hover:bg-surface-white/10 hover:text-surface-white transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-lg">dashboard</span><span class="font-label-lg text-label-lg">Dashboard</span></a><a class="flex items-center gap-3 px-space-md py-space-sm rounded-lg text-surface-white/80 hover:bg-surface-white/10 hover:text-surface-white transition-colors" data-path="first-timers" href="#"><span class="material-symbols-outlined text-lg">group_add</span><span class="font-label-lg text-label-lg">First Timers</span></a><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm transition-colors bg-primary-container text-on-primary font-bold rounded-lg shadow-sm" data-path="prayer-requests" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-lg text-tertiary-fixed">volunteer_activism</span><span class="font-label-lg text-label-lg">Prayer Requests</span></div><span class="px-2 py-0.5 rounded-full bg-tertiary/60 text-surface-white font-label-sm text-label-sm">Pastors</span></a><a class="flex items-center gap-3 px-space-md py-space-sm rounded-lg text-surface-white/80 hover:bg-surface-white/10 hover:text-surface-white transition-colors" data-path="sms-messages" href="#"><span class="material-symbols-outlined text-lg">sms</span><span class="font-label-lg text-label-lg">SMS Messages</span></a></nav></div><div class="px-space-md py-space-sm"><div class="px-space-md py-space-xs mb-space-xs"><span class="font-label-sm text-label-sm text-surface-variant/60 uppercase tracking-wider">Future Modules</span></div><nav class="flex flex-col gap-1"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-surface-white/60 hover:bg-surface-white/10 hover:text-surface-white transition-colors" data-path="modules" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-lg">extension</span><span class="font-label-lg text-label-lg">Coming Later</span></div><span class="px-2 py-0.5 rounded bg-surface-white/10 text-surface-variant font-label-sm text-label-sm">Ph. 2</span></a></nav></div></div><div class="p-space-md bg-stage-second-timer-text/70"><div class="p-space-md rounded-lg bg-surface-white/5 flex flex-col gap-space-xs"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-surface-variant/80 uppercase tracking-wider">SMS Credits</span><span class="font-label-sm text-label-sm text-secondary-fixed font-bold">7,496 Units</span></div><div class="flex items-center gap-2 text-surface-white/70"><span class="material-symbols-outlined text-sm text-secondary-fixed">network_check</span><span class="font-body-sm text-body-sm">BulkSMS Nigeria Active</span></div></div></div></aside><div class="pl-64 flex flex-col min-h-screen"><header class="fixed top-0 left-64 right-0 h-20 bg-surface-white/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-3"><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface font-bold whitespace-nowrap">RCCG Peculiar Treasure Chapel</span><span class="font-label-sm text-label-sm text-text-muted">Church Management System</span></div></div><div class="hidden xl:flex items-center gap-2 px-space-md py-1.5 rounded-full bg-stage-regular-bg text-stage-regular-text"><span class="h-2 w-2 rounded-full bg-secondary animate-pulse"></span><span class="font-label-sm text-label-sm font-semibold">Active Gathering: 1st Service Completed • 2nd Service in Progress</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><button class="flex items-center gap-2 px-space-md py-2 rounded-lg bg-canvas-paper hover:bg-border-warm text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-lg text-primary">person_search</span><span class="font-label-md text-label-md">Quick Lookup</span></button><button class="flex items-center gap-2 px-space-md py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors shadow-sm" type="button"><span class="material-symbols-outlined text-lg">send</span><span class="font-label-md text-label-md font-semibold">Send Broadcast</span></button></div><div class="h-8 w-px bg-border-warm"></div><div class="flex items-center gap-3"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0bXZhhaxKFZjVzR-PKU8l0j8GJ_qz5Cgloq2UvpBKkI9zc4HqgNfjDF0pY8Um63-yS0puBFKxwt4FSHBU0u8YFbpM7pRbehgBxwcUhIDW5_j8YI7MQqCgAJJVpUzXIazbWYkw9iQMG-0vEP8L2QQEow21HJcaz1f6Qa5oQU508VsM4xSTH9Y0fWl0jGRfcclm3XYWSC32wrDvjAzkRNKUmJCXHaUtVTivCIK4K4-CQNDyahGdtPAL"/><div class="flex flex-col text-right"><span class="font-label-md text-label-md text-on-surface font-semibold">Pastor-in-Charge</span><span class="font-label-sm text-label-sm text-primary font-medium">Senior Pastor</span></div></div></div></header><main class="w-full pt-20 px-space-xl py-space-xl flex-1 bg-canvas-paper"><div class="flex flex-col w-full gap-space-lg">
+<!-- Confidential Access Alert Banner -->
+<section class="w-full bg-stage-second-timer-text text-surface-white rounded-xl p-space-md shadow-md relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-40 h-40 bg-tertiary/20 rounded-full blur-2xl pointer-events-none"></div>
+<div class="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-3">
+<div class="p-2.5 rounded-lg bg-tertiary/30 text-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-fixed font-bold">Pastoral Care Sanctuary Record</span>
+<span class="px-2 py-0.5 rounded-full bg-danger-red/20 text-danger-red text-[11px] font-semibold tracking-wide uppercase">Strictly Confidential</span>
+</div>
+<p class="font-body-sm text-body-sm text-surface-white/80 mt-0.5">
+            Restricted to Pastor in Charge, Assistant Pastors, and Ordained Intercessory Ministers. All counseling inputs &amp; prayer petitions are end-to-end encrypted.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0 bg-surface-white/10 px-space-md py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-secondary-fixed text-lg">verified_user</span>
+<div class="flex flex-col text-right">
+<span class="font-label-sm text-label-sm text-surface-white/70">Authenticated Clergy Seat</span>
+<span class="font-label-md text-label-md text-surface-white font-semibold">Pastor-in-Charge / Pastoral Board</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Title, Scripture Anchor & Sanctuary Metrics -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-stretch">
+<!-- Title & Scriptural Anchor (7 cols) -->
+<div class="lg:col-span-7 bg-surface-white rounded-xl p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 text-stage-first-timer-text">
+<span class="material-symbols-outlined text-lg">volunteer_activism</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">Sanctuary Intercession Altar</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-stage-second-timer-text font-bold tracking-tight">
+          Pastoral Prayer Requests &amp; Intercession Registry
+        </h1>
+<p class="font-body-md text-body-md text-text-muted mt-1">
+          Review, intercede over, and coordinate pastoral visitation for newcomers, parishioners, and seekers from recent Sunday gatherings.
+        </p>
+</div>
+<!-- Weekly Scripture Focus Strip -->
+<div class="mt-space-md pt-space-md bg-canvas-paper/70 rounded-lg p-space-md flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-full bg-stage-inclass-bg flex items-center justify-center shrink-0 text-stage-inclass-text">
+<span class="material-symbols-outlined text-xl">auto_stories</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-stage-inclass-text font-bold">Weekly Sanctuary Prayer Focus</span>
+<p class="font-headline-sm text-headline-sm italic text-on-surface line-clamp-2 text-sm leading-snug">
+            “And the prayer of faith shall save the sick, and the Lord shall raise him up; and if he have committed sins, they shall be forgiven him.”
+          </p>
+<span class="font-label-sm text-label-sm text-text-muted font-semibold mt-0.5">James 5:15 (KJV)</span>
+</div>
+</div>
+</div>
+<!-- Quick Metric Cards (5 cols) -->
+<div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<!-- Metric 1: New / Unreviewed -->
+<div class="bg-surface-white rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-stage-first-timer-text font-bold">Unreviewed</span>
+<span class="w-2.5 h-2.5 rounded-full bg-stage-first-timer-text animate-ping"></span>
+</div>
+<div class="my-2">
+<span class="font-counter-display text-counter-display text-stage-second-timer-text font-bold">12</span>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">New Requests</p>
+</div>
+<div class="flex items-center gap-1 text-stage-first-timer-text font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>Awaiting Pastor</span>
+</div>
+</div>
+<!-- Metric 2: Interceded -->
+<div class="bg-surface-white rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Interceded</span>
+<span class="material-symbols-outlined text-secondary text-base">check_circle</span>
+</div>
+<div class="my-2">
+<span class="font-counter-display text-counter-display text-secondary font-bold">24</span>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">Prayed Over</p>
+</div>
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">done_all</span>
+<span>Sanctuary &amp; Vestry</span>
+</div>
+</div>
+<!-- Metric 3: Needs Pastoral Visit -->
+<div class="bg-surface-white rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary font-bold">Visitations</span>
+<span class="material-symbols-outlined text-tertiary text-base">local_hospital</span>
+</div>
+<div class="my-2">
+<span class="font-counter-display text-counter-display text-stage-second-timer-text font-bold">05</span>
+<p class="font-body-sm text-body-sm text-text-muted mt-0.5">Scheduled Visits</p>
+</div>
+<div class="flex items-center gap-1 text-tertiary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-sm">home_pin</span>
+<span>Home &amp; Ward Care</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Filter & Search Controls Bar -->
+<section class="w-full bg-surface-white rounded-xl p-space-md shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-md">
+<!-- Filter Tabs -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="filterTabs">
+<button class="filter-btn active flex items-center gap-2 px-space-md py-2 rounded-lg bg-stage-second-timer-text text-surface-white font-label-md text-label-md font-semibold transition-all" type="button">
+<span>All Requests</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-white/20 text-xs">41</span>
+</button>
+<button class="filter-btn flex items-center gap-2 px-space-md py-2 rounded-lg bg-canvas-paper hover:bg-stage-first-timer-bg text-on-surface font-label-md text-label-md transition-all" type="button">
+<span>New / Unreviewed</span>
+<span class="px-2 py-0.5 rounded-full bg-stage-first-timer-bg text-stage-first-timer-text font-bold text-xs">12</span>
+</button>
+<button class="filter-btn flex items-center gap-2 px-space-md py-2 rounded-lg bg-canvas-paper hover:bg-stage-regular-bg text-on-surface font-label-md text-label-md transition-all" type="button">
+<span>Prayed For</span>
+<span class="px-2 py-0.5 rounded-full bg-stage-regular-bg text-stage-regular-text font-semibold text-xs">24</span>
+</button>
+<button class="filter-btn flex items-center gap-2 px-space-md py-2 rounded-lg bg-canvas-paper hover:bg-stage-inclass-bg text-on-surface font-label-md text-label-md transition-all" type="button">
+<span>Needs Visit</span>
+<span class="px-2 py-0.5 rounded-full bg-stage-inclass-bg text-stage-inclass-text font-semibold text-xs">5</span>
+</button>
+<button class="filter-btn flex items-center gap-2 px-space-md py-2 rounded-lg bg-canvas-paper hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-all" type="button">
+<span>Follow-Up Check</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-semibold text-xs">8</span>
+</button>
+</div>
+<!-- Search & Quick Batch Actions -->
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="relative w-full md:w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">search</span>
+<input class="w-full h-11 pl-10 pr-4 bg-canvas-paper rounded-lg text-body-sm font-body-sm text-on-surface placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all" id="prayerSearch" placeholder="Search requester, theme (healing, job), or phone..." type="text"/>
+</div>
+<button class="h-11 px-3.5 rounded-lg bg-canvas-paper hover:bg-border-warm text-on-surface flex items-center gap-1.5 transition-colors" title="Print Vestry Intercession Roll" type="button">
+<span class="material-symbols-outlined text-lg">print</span>
+<span class="hidden xl:inline font-label-md text-label-md">Export Roll</span>
+</button>
+</div>
+</section>
+<!-- Grid of Confidential Prayer Request Cards -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-space-lg" id="prayerCardsGrid">
+<!-- Card 1: Chinedu Okafor (Family & Childbirth) -->
+<article class="bg-surface-white rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative">
+<!-- Pastoral Accent Strip (Purple left border design system token) -->
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary"></div>
+<div class="p-space-lg pl-6 flex flex-col gap-space-md">
+<!-- Card Header: Profile, Stage badge, Confidentiality indicator -->
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-11 h-11 rounded-full bg-stage-second-timer-bg text-stage-second-timer-text font-headline-sm flex items-center justify-center font-bold shrink-0">
+              CO
+            </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-stage-second-timer-text font-bold truncate">Chinedu Okafor</h3>
+</div>
+<span class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">call</span> +234 803 456 7890
+              </span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-stage-second-timer-bg text-stage-second-timer-text font-label-sm text-label-sm font-semibold shrink-0">
+            Second Timer
+          </span>
+</div>
+<!-- Meta: Source & Category Tag -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<span class="inline-flex items-center gap-1 text-xs text-text-muted font-body-sm">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+            Sunday 27 Oct 2024 • 1st Service Slip #04
+          </span>
+<span class="px-2.5 py-0.5 rounded-full bg-stage-inclass-bg text-stage-inclass-text font-label-sm text-label-sm font-semibold">
+            Family &amp; Childbirth
+          </span>
+</div>
+<!-- Full Prayer Point Copy (Warm quotation container) -->
+<div class="bg-canvas-paper/90 rounded-xl p-space-md relative">
+<span class="material-symbols-outlined text-primary/30 text-2xl absolute top-2 right-2 select-none">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface italic relative z-10 leading-relaxed pr-6">
+            “Safe delivery for my wife who is in her 36th week, and supernatural spiritual stamina in the new week for our young home.”
+          </p>
+</div>
+<!-- Pastoral Confidentiality Note & Shepherd Status -->
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-md rounded-lg text-xs">
+<div class="flex items-center gap-1.5 text-tertiary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">shield</span>
+<span>Pastoral Team Exclusive</span>
+</div>
+<span class="text-text-muted font-body-sm">Follow-up minister: <strong class="text-on-surface">Bro. Kingsley</strong> (General only)</span>
+</div>
+</div>
+<!-- Action Controls Footer -->
+<div class="bg-canvas-paper/60 p-space-md pl-6 flex flex-col gap-2">
+<div class="grid grid-cols-2 gap-2">
+<button class="prayer-action-btn flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">check</span>
+<span>Mark Prayed Over</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-surface-white hover:bg-stage-first-timer-bg text-stage-first-timer-text font-label-md text-label-md transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">phone_in_talk</span>
+<span>Call Requester</span>
+</button>
+</div>
+<div class="flex items-center justify-between gap-2 pt-1">
+<button class="text-tertiary hover:text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">note_add</span>
+<span>Add Counseling Note</span>
+</button>
+<button class="text-text-muted hover:text-stage-second-timer-text font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">schedule_send</span>
+<span>Send Scriptural SMS</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 2: Grace Amadi (Career Transition & Relocation) -->
+<article class="bg-surface-white rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-stage-first-timer-text"></div>
+<div class="p-space-lg pl-6 flex flex-col gap-space-md">
+<!-- Header -->
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-11 h-11 rounded-full bg-stage-first-timer-bg text-stage-first-timer-text font-headline-sm flex items-center justify-center font-bold shrink-0">
+              GA
+            </div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-stage-second-timer-text font-bold truncate">Grace Amadi</h3>
+<span class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">call</span> +234 812 000 0106
+              </span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-stage-first-timer-bg text-stage-first-timer-text font-label-sm text-label-sm font-semibold shrink-0">
+            First Timer
+          </span>
+</div>
+<!-- Meta -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<span class="inline-flex items-center gap-1 text-xs text-text-muted font-body-sm">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+            Sunday 27 Oct 2024 • 2nd Service Slip #12
+          </span>
+<span class="px-2.5 py-0.5 rounded-full bg-stage-regular-bg text-stage-regular-text font-label-sm text-label-sm font-semibold">
+            Career Breakthrough
+          </span>
+</div>
+<!-- Prayer Point -->
+<div class="bg-canvas-paper/90 rounded-xl p-space-md relative">
+<span class="material-symbols-outlined text-primary/30 text-2xl absolute top-2 right-2 select-none">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface italic relative z-10 leading-relaxed pr-6">
+            “Praying for divine guidance on career transition and settling peacefully in Lagos after relocating from Port Harcourt. Seeking Christian accommodation.”
+          </p>
+</div>
+<!-- Pastoral Confidentiality Note & Shepherd Status -->
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-md rounded-lg text-xs">
+<div class="flex items-center gap-1.5 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">groups</span>
+<span>Assigned: Sis. Ronke (Welfare)</span>
+</div>
+<span class="text-stage-first-timer-text font-label-sm text-label-sm font-bold">Unreviewed</span>
+</div>
+</div>
+<!-- Action Controls Footer -->
+<div class="bg-canvas-paper/60 p-space-md pl-6 flex flex-col gap-2">
+<div class="grid grid-cols-2 gap-2">
+<button class="prayer-action-btn flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">check</span>
+<span>Mark Prayed Over</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-surface-white hover:bg-stage-first-timer-bg text-stage-first-timer-text font-label-md text-label-md transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">chat</span>
+<span>Send Welcome SMS</span>
+</button>
+</div>
+<div class="flex items-center justify-between gap-2 pt-1">
+<button class="text-tertiary hover:text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">note_add</span>
+<span>Add Counseling Note</span>
+</button>
+<button class="text-secondary hover:text-on-secondary-container font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">handshake</span>
+<span>Connect to Welfare</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 3: Folake Adeleke (Healing & Hospital Visit Flagged) -->
+<article class="bg-surface-white rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-danger-red"></div>
+<div class="p-space-lg pl-6 flex flex-col gap-space-md">
+<!-- Header -->
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-11 h-11 rounded-full bg-stage-regular-bg text-stage-regular-text font-headline-sm flex items-center justify-center font-bold shrink-0">
+              FA
+            </div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-stage-second-timer-text font-bold truncate">Folake Adeleke</h3>
+<span class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">call</span> +234 802 884 1902
+              </span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-stage-regular-bg text-stage-regular-text font-label-sm text-label-sm font-semibold shrink-0">
+            Regular Member
+          </span>
+</div>
+<!-- Meta -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<span class="inline-flex items-center gap-1 text-xs text-text-muted font-body-sm">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+            Sunday 20 Oct 2024 • Vestry Direct Note
+          </span>
+<span class="px-2.5 py-0.5 rounded-full bg-danger-red-subtle text-danger-red font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">local_hospital</span>
+            Healing &amp; Surgery
+          </span>
+</div>
+<!-- Prayer Point -->
+<div class="bg-canvas-paper/90 rounded-xl p-space-md relative">
+<span class="material-symbols-outlined text-primary/30 text-2xl absolute top-2 right-2 select-none">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface italic relative z-10 leading-relaxed pr-6">
+            “Healing for my aged mother hospitalized at LASUTH Ikeja Ward 4, and supernatural peace for our entire household during the upcoming surgery.”
+          </p>
+</div>
+<!-- Pastoral Confidentiality Note & Shepherd Status -->
+<div class="flex items-center justify-between py-1 bg-danger-red-subtle px-space-md rounded-lg text-xs">
+<div class="flex items-center gap-1.5 text-danger-red font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-sm">emergency</span>
+<span>Hospitalized (LASUTH Ikeja)</span>
+</div>
+<span class="text-stage-second-timer-text font-body-sm font-semibold">Visit Pending (Tue 4pm)</span>
+</div>
+</div>
+<!-- Action Controls Footer -->
+<div class="bg-canvas-paper/60 p-space-md pl-6 flex flex-col gap-2">
+<div class="grid grid-cols-2 gap-2">
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-stage-second-timer-text text-surface-white font-label-md text-label-md hover:bg-stage-second-timer-text/90 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">directions_car</span>
+<span>Assign Visitation</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-secondary text-surface-white font-label-md text-label-md hover:bg-secondary/90 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">call</span>
+<span>Call Family</span>
+</button>
+</div>
+<div class="flex items-center justify-between gap-2 pt-1">
+<button class="text-tertiary hover:text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+<span>View Medical Notes (Locked)</span>
+</button>
+<span class="text-secondary font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">done</span>
+            Interceded (2x)
+          </span>
+</div>
+</div>
+</article>
+<!-- Card 4: Bro. David Adeleke (Spiritual Growth & Believers' Class) -->
+<article class="bg-surface-white rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-stage-member-bg"></div>
+<div class="p-space-lg pl-6 flex flex-col gap-space-md">
+<!-- Header -->
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-11 h-11 rounded-full bg-stage-member-bg text-stage-member-text font-headline-sm flex items-center justify-center font-bold shrink-0">
+              DA
+            </div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-stage-second-timer-text font-bold truncate">Bro. David Adeleke</h3>
+<span class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">call</span> +234 701 445 9012
+              </span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-stage-inclass-bg text-stage-inclass-text font-label-sm text-label-sm font-semibold shrink-0">
+            Believers' Class
+          </span>
+</div>
+<!-- Meta -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<span class="inline-flex items-center gap-1 text-xs text-text-muted font-body-sm">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+            Sunday 27 Oct 2024 • 1st Service Slip #19
+          </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">
+            Spiritual Growth
+          </span>
+</div>
+<!-- Prayer Point -->
+<div class="bg-canvas-paper/90 rounded-xl p-space-md relative">
+<span class="material-symbols-outlined text-primary/30 text-2xl absolute top-2 right-2 select-none">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface italic relative z-10 leading-relaxed pr-6">
+            “Baptism of the Holy Spirit with the evidence of speaking in tongues. Also praying for victory over recurring financial setbacks in my consulting firm.”
+          </p>
+</div>
+<!-- Pastoral Confidentiality Note & Shepherd Status -->
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-md rounded-lg text-xs">
+<div class="flex items-center gap-1.5 text-stage-regular-text font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">school</span>
+<span>Teacher: Pastor Bimbo (Class 2)</span>
+</div>
+<span class="text-secondary font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">done</span> Prayed Over
+          </span>
+</div>
+</div>
+<!-- Action Controls Footer -->
+<div class="bg-canvas-paper/60 p-space-md pl-6 flex flex-col gap-2">
+<div class="grid grid-cols-2 gap-2">
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-stage-regular-bg text-stage-regular-text font-label-md text-label-md font-semibold hover:bg-stage-regular-bg/80 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">done_all</span>
+<span>Interceded Again</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-surface-white hover:bg-canvas-paper text-on-surface font-label-md text-label-md transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">forum</span>
+<span>WhatsApp Encouragement</span>
+</button>
+</div>
+<div class="flex items-center justify-between gap-2 pt-1">
+<button class="text-tertiary hover:text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">lock</span>
+<span>Vestry Counseling Record</span>
+</button>
+<span class="text-text-muted font-body-sm text-xs">Updated 2 days ago</span>
+</div>
+</div>
+</article>
+<!-- Card 5: Ngozi Eze (Marital Peace & Restoration) -->
+<article class="bg-surface-white rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary"></div>
+<div class="p-space-lg pl-6 flex flex-col gap-space-md">
+<!-- Header -->
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-11 h-11 rounded-full bg-stage-second-timer-bg text-stage-second-timer-text font-headline-sm flex items-center justify-center font-bold shrink-0">
+              NE
+            </div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-stage-second-timer-text font-bold truncate">Ngozi Eze</h3>
+<span class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">call</span> +234 816 772 3180
+              </span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-stage-second-timer-bg text-stage-second-timer-text font-label-sm text-label-sm font-semibold shrink-0">
+            Second Timer
+          </span>
+</div>
+<!-- Meta -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<span class="inline-flex items-center gap-1 text-xs text-text-muted font-body-sm">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+            Sunday 20 Oct 2024 • Card #09
+          </span>
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-semibold">
+            Marital Restoration
+          </span>
+</div>
+<!-- Prayer Point -->
+<div class="bg-canvas-paper/90 rounded-xl p-space-md relative">
+<span class="material-symbols-outlined text-primary/30 text-2xl absolute top-2 right-2 select-none">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface italic relative z-10 leading-relaxed pr-6">
+            “Seeking peace and reconciliation in my marriage. Requesting discrete counseling with Pastor &amp; Mummy Pastor at the church office this coming Thursday.”
+          </p>
+</div>
+<!-- Pastoral Confidentiality Note & Shepherd Status -->
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-md rounded-lg text-xs">
+<div class="flex items-center gap-1.5 text-danger-red font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-sm">shield_person</span>
+<span>Strictly Senior Pastors Only</span>
+</div>
+<span class="text-stage-first-timer-text font-label-sm text-label-sm font-semibold">Appointment Pending</span>
+</div>
+</div>
+<!-- Action Controls Footer -->
+<div class="bg-canvas-paper/60 p-space-md pl-6 flex flex-col gap-2">
+<div class="grid grid-cols-2 gap-2">
+<button class="prayer-action-btn flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">check</span>
+<span>Mark Prayed Over</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-stage-second-timer-text text-surface-white font-label-md text-label-md hover:bg-stage-second-timer-text/90 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">event</span>
+<span>Schedule Session</span>
+</button>
+</div>
+<div class="flex items-center justify-between gap-2 pt-1">
+<button class="text-tertiary hover:text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">lock_clock</span>
+<span>Counseling Log</span>
+</button>
+<button class="text-text-muted hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">call_made</span>
+<span>Direct Call</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Card 6: Babatunde Olawale (Academic & Visa Approval) -->
+<article class="bg-surface-white rounded-xl shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary"></div>
+<div class="p-space-lg pl-6 flex flex-col gap-space-md">
+<!-- Header -->
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-11 h-11 rounded-full bg-stage-regular-bg text-stage-regular-text font-headline-sm flex items-center justify-center font-bold shrink-0">
+              BO
+            </div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-stage-second-timer-text font-bold truncate">Babatunde Olawale</h3>
+<span class="font-body-sm text-body-sm text-text-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">call</span> +234 809 112 5590
+              </span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-stage-first-timer-bg text-stage-first-timer-text font-label-sm text-label-sm font-semibold shrink-0">
+            First Timer
+          </span>
+</div>
+<!-- Meta -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<span class="inline-flex items-center gap-1 text-xs text-text-muted font-body-sm">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+            Sunday 27 Oct 2024 • 1st Service Slip #28
+          </span>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-semibold">
+            Travel &amp; Visa Favor
+          </span>
+</div>
+<!-- Prayer Point -->
+<div class="bg-canvas-paper/90 rounded-xl p-space-md relative">
+<span class="material-symbols-outlined text-primary/30 text-2xl absolute top-2 right-2 select-none">format_quote</span>
+<p class="font-body-md text-body-md text-on-surface italic relative z-10 leading-relaxed pr-6">
+            “Postgraduate visa interview at the UK Embassy next Tuesday. Believing God for supernatural favor, complete document approval, and tuition settlement.”
+          </p>
+</div>
+<!-- Pastoral Confidentiality Note & Shepherd Status -->
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-md rounded-lg text-xs">
+<div class="flex items-center gap-1.5 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span>Interceded at 6:00 AM Matins</span>
+</div>
+<span class="text-text-muted font-body-sm">Shepherd notified</span>
+</div>
+</div>
+<!-- Action Controls Footer -->
+<div class="bg-canvas-paper/60 p-space-md pl-6 flex flex-col gap-2">
+<div class="grid grid-cols-2 gap-2">
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-stage-regular-bg text-stage-regular-text font-label-md text-label-md font-semibold hover:bg-stage-regular-bg/80 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">check</span>
+<span>Interceded ✓</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-surface-white hover:bg-canvas-paper text-on-surface font-label-md text-label-md transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">sms</span>
+<span>Send Prayer Text</span>
+</button>
+</div>
+<div class="flex items-center justify-between gap-2 pt-1">
+<button class="text-tertiary hover:text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">note_add</span>
+<span>Add Pastoral Note</span>
+</button>
+<span class="text-text-muted font-body-sm text-xs">Next check: Mon 28 Oct</span>
+</div>
+</div>
+</article>
+</section>
+<!-- Confidential Pastoral Entry Modal (Toggled via JS when clicking Add Note) -->
+<div class="fixed inset-0 bg-stage-second-timer-text/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" id="counselingModal">
+<div class="bg-surface-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden border border-border-warm flex flex-col animate-in fade-in zoom-in-95 duration-200">
+<div class="p-space-lg bg-stage-second-timer-text text-surface-white flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed">lock</span>
+<h4 class="font-headline-sm text-headline-sm">Confidential Clergy Log</h4>
+</div>
+<button class="text-surface-white/70 hover:text-surface-white" id="closeModalBtn" type="button">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-space-lg flex flex-col gap-space-md">
+<div class="p-space-sm rounded-lg bg-stage-inclass-bg text-stage-inclass-text text-xs flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">shield</span>
+<span>Entries logged here are never shown to ushers or follow-up phone callers.</span>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-text-muted uppercase mb-1">Requester</label>
+<input class="w-full bg-canvas-paper h-10 px-3 rounded-lg text-body-sm font-semibold text-on-surface focus:outline-none" id="modalRequesterName" readonly="" type="text" value="Selected Parishioner"/>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-text-muted uppercase mb-1">Pastoral Observations &amp; Intercessory Direction</label>
+<textarea class="w-full p-3 rounded-lg bg-surface-white border border-border-warm text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="Enter pastoral notes, scripture applied, or home visitation directives..." rows="4"></textarea>
+</div>
+<div class="flex items-center justify-between">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="accent-primary h-4 w-4" type="checkbox"/>
+<span class="font-label-sm text-label-sm text-on-surface">Keep strictly locked to Pastor-in-Charge</span>
+</label>
+</div>
+</div>
+<div class="p-space-md bg-canvas-paper flex justify-end gap-2">
+<button class="px-4 py-2 rounded-lg bg-surface-white text-on-surface font-label-md text-label-md" id="cancelModalBtn" type="button">Cancel</button>
+<button class="px-4 py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors" id="saveModalBtn" type="button">Save Sanctuary Record</button>
+</div>
+</div>
+</div>
+<!-- Client-side Interactive Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Mark as Prayed Over micro-interaction
+      const prayerButtons = document.querySelectorAll('.prayer-action-btn');
+      prayerButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const originalText = btn.innerHTML;
+          btn.classList.remove('bg-primary-container', 'text-on-primary', 'hover:bg-primary');
+          btn.classList.add('bg-stage-regular-bg', 'text-stage-regular-text', 'font-semibold');
+          btn.innerHTML = `<span class="material-symbols-outlined text-base">done_all</span><span>Interceded ✓</span>`;
+          btn.disabled = true;
+        });
+      });
+
+      // 2. Filter tabs active toggle
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterButtons.forEach(b => {
+            b.classList.remove('bg-stage-second-timer-text', 'text-surface-white');
+            b.classList.add('bg-canvas-paper', 'text-on-surface');
+          });
+          btn.classList.remove('bg-canvas-paper', 'text-on-surface');
+          btn.classList.add('bg-stage-second-timer-text', 'text-surface-white');
+        });
+      });
+
+      // 3. Search query filter simulation
+      const searchInput = document.getElementById('prayerSearch');
+      const cards = document.querySelectorAll('#prayerCardsGrid article');
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        cards.forEach(card => {
+          const cardText = card.innerText.toLowerCase();
+          if (cardText.includes(query)) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+
+      // 4. Modal Open/Close handling
+      const modal = document.getElementById('counselingModal');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const cancelModalBtn = document.getElementById('cancelModalBtn');
+      const saveModalBtn = document.getElementById('saveModalBtn');
+      const modalRequesterInput = document.getElementById('modalRequesterName');
+
+      document.querySelectorAll('button:has(.material-symbols-outlined)').forEach(btn => {
+        if (btn.innerText.includes('Counseling Note') || btn.innerText.includes('Pastoral Note')) {
+          btn.addEventListener('click', (e) => {
+            const article = btn.closest('article');
+            const name = article ? article.querySelector('h3').innerText : 'Selected Parishioner';
+            modalRequesterInput.value = name;
+            modal.classList.remove('hidden');
+          });
+        }
+      });
+
+      const hideModal = () => modal.classList.add('hidden');
+      closeModalBtn.addEventListener('click', hideModal);
+      cancelModalBtn.addEventListener('click', hideModal);
+      saveModalBtn.addEventListener('click', () => {
+        hideModal();
+      });
+    });
+  </script>
+</div></main></div></body></html>

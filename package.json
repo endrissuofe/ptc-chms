@@ -1,0 +1,63 @@
+{
+  "name": "ptc-chms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PTC Chapel church management system \u2014 attendance, first timers and follow-up",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "seed": "node scripts/seed.mjs",
+    "migrate": "node scripts/migrate.mjs",
+    "db:up": "docker compose up -d mongo mongo-express",
+    "db:down": "docker compose down",
+    "prepare": "husky",
+    "sms:check": "node scripts/sms-check.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
+    "mongoose": "^8.19.0",
+    "next": "15.5.26",
+    "next-auth": "^4.24.15",
+    "pino": "^10.3.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^3.2.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "autoprefixer": "^10.4.21",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.37.0",
+    "eslint-config-next": "15.5.26",
+    "@eslint/eslintrc": "^3.3.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4",
+    "mongodb-memory-server": "^11.3.0",
+    "pino-pretty": "^13.1.2",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "3.4.19",
+    "vitest": "^3.2.4"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

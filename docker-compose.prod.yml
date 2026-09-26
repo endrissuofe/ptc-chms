@@ -1,0 +1,24 @@
+# Production overrides for a single server (VPS) running the same stack.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Mongo Express is not started in production, and MongoDB is not exposed to the internet.
+
+services:
+  mongo:
+    ports: !reset []
+
+  mongo-express:
+    profiles: ['tools']
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    volumes: !reset []
+    environment:
+      NODE_ENV: production
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
