@@ -23,44 +23,52 @@ const headers = {
   Accept: 'application/json',
 };
 
-const balRes = await fetch(`${BASE}/balance`, { headers });
-const bal = await balRes.json().catch(() => ({}));
-if (!balRes.ok) {
-  console.error(
-    `Could not connect (${bal?.code || balRes.status}): ${bal?.error?.message || bal?.message || 'unknown error'}`,
-  );
-  process.exit(1);
-}
-console.log('Connected. Balance:', bal?.data);
-
-const target = process.argv[2];
-if (target) {
-  let digits = target.replace(/\D/g, '');
-  if (digits.startsWith('234')) digits = digits.slice(3);
-  if (digits.startsWith('0')) digits = digits.slice(1);
-  if (!/^[789][01]\d{8}$/.test(digits)) {
-    console.error('That is not a valid Nigerian phone number.');
-    process.exit(1);
-  }
-  const res = await fetch(`${BASE}/sms`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      from,
-      to: `234${digits}`,
-      body: 'Test from PTC Chapel church management system. If you got this, SMS is working.',
-      gateway,
-    }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (res.ok && data?.status === 'success') {
-    console.log(
-      `Sent. Message id ${data.data?.message_id}, cost ${data.data?.cost} ${data.data?.currency ?? ''}`,
-    );
-  } else {
+// Exit by setting exitCode, not process.exit(): on Windows, exiting while a request is
+// still closing crashes Node with "Assertion failed … async.c".
+async function main() {
+  const balRes = await fetch(`${BASE}/balance`, { headers });
+  const bal = await balRes.json().catch(() => ({}));
+  if (!balRes.ok) {
     console.error(
-      `Failed (${data?.code || res.status}): ${data?.error?.message || data?.message || 'unknown error'}`,
+      `Could not connect (${bal?.code || balRes.status}): ${bal?.error?.message || bal?.message || 'unknown error'}`,
     );
-    process.exit(1);
+    process.exitCode = 1;
+    return;
+  }
+  console.log('Connected. Balance:', bal?.data);
+
+  const target = process.argv[2];
+  if (target) {
+    let digits = target.replace(/\D/g, '');
+    if (digits.startsWith('234')) digits = digits.slice(3);
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    if (!/^[789][01]\d{8}$/.test(digits)) {
+      console.error('That is not a valid Nigerian phone number.');
+      process.exitCode = 1;
+      return;
+    }
+    const res = await fetch(`${BASE}/sms`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        from,
+        to: `234${digits}`,
+        body: 'Test from PTC Chapel church management system. If you got this, SMS is working.',
+        gateway,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data?.status === 'success') {
+      console.log(
+        `Sent. Message id ${data.data?.message_id}, cost ${data.data?.cost} ${data.data?.currency ?? ''}`,
+      );
+    } else {
+      console.error(
+        `Failed (${data?.code || res.status}): ${data?.error?.message || data?.message || 'unknown error'}`,
+      );
+      process.exitCode = 1;
+    }
   }
 }
+
+await main();
