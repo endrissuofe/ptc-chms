@@ -4,10 +4,13 @@ import { ROLES } from '@/lib/roles';
 import { updateServiceSchema } from '@/lib/validators/churchService';
 import { updateService } from '@/services/churchService.service';
 
-/** Admin renames, retimes, or switches a service on/off: { name?, startTime?, active? } */
+/**
+ * Change a service: { name?, startTime?, active?, days? (regular), date? (special) }.
+ * Admin: any service. Pastor: special services only (checked in the service layer).
+ */
 export const PATCH = handler(async (req, { params }) => {
-  await requireRole(ROLES.ADMIN);
+  const user = await requireRole(ROLES.ADMIN, ROLES.PASTOR);
   const { key } = await params;
   const changes = updateServiceSchema.parse(await req.json());
-  return NextResponse.json(await updateService(key, changes));
+  return NextResponse.json(await updateService(key, changes, user));
 });

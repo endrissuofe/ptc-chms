@@ -1,20 +1,46 @@
 import { describe, it, expect } from 'vitest';
 import {
+  describeSchedule,
+  describeServiceTimes,
   formatServiceTime,
+  isHeldOn,
+  nextServiceDay,
+  recentServiceDays,
   serviceKeyFromName,
+  servicesOn,
   sortServices,
   suggestedService,
-  describeServiceTimes,
 } from '@/lib/church';
 
-const svc = (key, startTime, order) => ({ key, name: key, startTime, order, active: true });
+const regular = (key, startTime, days) => ({
+  key,
+  name: key,
+  kind: 'regular',
+  days,
+  startTime,
+  active: true,
+});
+const special = (key, startTime, date) => ({
+  key,
+  name: key,
+  kind: 'special',
+  date: new Date(`${date}T00:00:00Z`),
+  startTime,
+  active: true,
+});
+const day = (iso) => new Date(`${iso}T00:00:00Z`);
+
+const sundayService = regular('sunday', '08:00', [0]);
+const midweek = regular('midweek', '18:30', [3]);
+const thanksgiving = special('thanksgiving', '10:00', '2026-09-26');
+const all = [midweek, sundayService, thanksgiving];
 
 describe('formatServiceTime', () => {
   it('turns 24-hour times into church-notice times', () => {
     expect(formatServiceTime('08:00')).toBe('8:00 AM');
     expect(formatServiceTime('00:15')).toBe('12:15 AM');
     expect(formatServiceTime('12:00')).toBe('12:00 PM');
-    expect(formatServiceTime('17:30')).toBe('5:30 PM');
+    expect(formatServiceTime('18:30')).toBe('6:30 PM');
   });
 });
 
@@ -26,15 +52,52 @@ describe('serviceKeyFromName', () => {
   });
 });
 
-describe('sortServices', () => {
-  it('orders by the admin order, then start time', () => {
-    const list = [svc('b', '10:00', 2), svc('c', '07:00', 2), svc('a', '09:00', 1)];
-    expect(sortServices(list).map((s) => s.key)).toEqual(['a', 'c', 'b']);
+describe('which services are held on a day', () => {
+  it('matches regular services by weekday and special ones by date', () => {
+    expect(isHeldOn(sundayService, day('2026-09-27'))).toBe(true);
+    expect(isHeldOn(sundayService, day('2026-09-23'))).toBe(false);
+    expect(isHeldOn(midweek, day('2026-09-23'))).toBe(true);
+    expect(isHeldOn(thanksgiving, day('2026-09-26'))).toBe(true);
+    expect(isHeldOn(thanksgiving, day('2026-10-03'))).toBe(false);
+    expect(isHeldOn({ ...sundayService, active: false }, day('2026-09-27'))).toBe(false);
+  });
+
+  it('lists a day’s services in start-time order', () => {
+    const second = regular('second', '10:00', [0]);
+    const first = regular('first', '07:30', [0]);
+    expect(servicesOn([second, midweek, first], day('2026-09-27')).map((s) => s.key)).toEqual([
+      'first',
+      'second',
+    ]);
+    expect(sortServices([second, first]).map((s) => s.key)).toEqual(['first', 'second']);
+  });
+
+  it('finds the service days in the past week, newest first', () => {
+    expect(
+      recentServiceDays(all, day('2026-09-27')).map((d) => d.toISOString().slice(0, 10)),
+    ).toEqual(['2026-09-27', '2026-09-26', '2026-09-23', '2026-09-20']);
+  });
+
+  it('finds the next service day', () => {
+    const next = nextServiceDay(all, day('2026-09-28'));
+    expect(next.serviceDate.toISOString().slice(0, 10)).toBe('2026-09-30');
+    expect(next.services.map((s) => s.key)).toEqual(['midweek']);
+    expect(nextServiceDay([], day('2026-09-28'))).toBeNull();
+  });
+});
+
+describe('describeSchedule', () => {
+  it('says when a service is held', () => {
+    expect(describeSchedule(sundayService)).toBe('Sundays · 8:00 AM');
+    expect(describeSchedule(regular('x', '18:30', [3, 0]))).toBe(
+      'Sundays and Wednesdays · 6:30 PM',
+    );
+    expect(describeSchedule(thanksgiving)).toBe('Sat, 26 Sept 2026 · 10:00 AM');
   });
 });
 
 describe('suggestedService', () => {
-  const two = [svc('first', '07:30', 1), svc('second', '09:30', 2)];
+  const two = [regular('first', '07:30', [0]), regular('second', '09:30', [0])];
 
   it('picks the first service whose headcount is still missing', () => {
     expect(suggestedService(two, {})).toBe('first');
@@ -44,19 +107,23 @@ describe('suggestedService', () => {
 
   it('stays on the last service once all are recorded, and copes with one or none', () => {
     expect(suggestedService(two, { first: true, second: true })).toBe('second');
-    expect(suggestedService([svc('sunday', '08:00', 1)], { sunday: true })).toBe('sunday');
+    expect(suggestedService([sundayService], { sunday: true })).toBe('sunday');
     expect(suggestedService([], {})).toBeNull();
   });
 });
 
 describe('describeServiceTimes', () => {
   it('writes one, two or more service times as a sentence', () => {
-    expect(describeServiceTimes([svc('sunday', '08:00', 1)])).toBe('Service starts at 8:00 AM.');
-    expect(describeServiceTimes([svc('b', '09:30', 2), svc('a', '07:30', 1)])).toBe(
+    expect(describeServiceTimes([sundayService])).toBe('Service starts at 8:00 AM.');
+    expect(describeServiceTimes([regular('b', '09:30', [0]), regular('a', '07:30', [0])])).toBe(
       'Services start at 7:30 AM and 9:30 AM.',
     );
     expect(
-      describeServiceTimes([svc('a', '07:00', 1), svc('b', '09:00', 2), svc('c', '11:00', 3)]),
+      describeServiceTimes([
+        regular('a', '07:00', [0]),
+        regular('b', '09:00', [0]),
+        regular('c', '11:00', [0]),
+      ]),
     ).toBe('Services start at 7:00 AM, 9:00 AM and 11:00 AM.');
   });
 });

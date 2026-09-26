@@ -33,7 +33,8 @@ export async function getDashboard({ today = new Date() } = {}) {
   const cameBack = everyone - (byStage[STAGES.FIRST_TIMER] || 0) - (byStage[STAGES.LOST] || 0);
 
   return {
-    lastSunday: trend[trend.length - 1] || null,
+    // Midweek and special services are in the trend too; this headline is Sundays only.
+    lastSunday: trend.findLast((t) => new Date(t.serviceDate).getUTCDay() === 0) || null,
     trend,
     firstTimersThisMonth,
     secondVisitRate: everyone ? Math.round((cameBack / everyone) * 1000) / 10 : 0,

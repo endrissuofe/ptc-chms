@@ -2,6 +2,8 @@ import Icon from '@/components/ui/Icon';
 import { SyncStrip } from '@/components/ui/ConnectionStatus';
 import { getSession } from '@/lib/auth';
 import { getUsherToday } from '@/services/today.service';
+import Link from 'next/link';
+import { formatServiceTime } from '@/lib/church';
 import ServicePanel from './ServicePanel';
 
 export const metadata = { title: 'Today' };
@@ -22,6 +24,12 @@ const clock = new Intl.DateTimeFormat('en-GB', {
 });
 // Service dates are stored as midnight UTC of the Lagos day, so read them back in UTC.
 const shortWeekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short' });
+const serviceDay = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'UTC',
+  weekday: 'long',
+  day: 'numeric',
+  month: 'short',
+});
 
 export default async function TodayPage() {
   const [session, today] = await Promise.all([getSession(), getUsherToday()]);
@@ -47,13 +55,17 @@ export default async function TodayPage() {
         </span>
       </section>
 
-      <ServicePanel
-        services={today.services}
-        attendance={today.attendance}
-        firstTimers={today.firstTimers}
-        recentInitials={today.recentInitials}
-        lastCardTime={today.lastCardAt ? clock.format(today.lastCardAt) : null}
-      />
+      {today.services.length ? (
+        <ServicePanel
+          services={today.services}
+          attendance={today.attendance}
+          firstTimers={today.firstTimers}
+          recentInitials={today.recentInitials}
+          lastCardTime={today.lastCardAt ? clock.format(today.lastCardAt) : null}
+        />
+      ) : (
+        <NoServiceToday next={today.nextServiceDay} />
+      )}
 
       <section className="flex flex-col gap-1">
         <h2 className="px-1 font-sans text-[11px] font-semibold uppercase tracking-wider text-muted">
@@ -131,5 +143,30 @@ function Metric({ icon, iconClass, value, valueClass = 'text-ink', label, footno
         {footnote}
       </span>
     </div>
+  );
+}
+
+/** No service today: say when the next one is, and point to late entry for recent services. */
+function NoServiceToday({ next }) {
+  return (
+    <section className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5">
+      <div className="flex items-center gap-2">
+        <Icon name="event" size={20} className="text-primary" />
+        <h2 className="text-lg font-semibold">No service today</h2>
+      </div>
+      {next && (
+        <p className="text-[15px]">
+          Next: <strong>{serviceDay.format(new Date(next.serviceDate))}</strong> —{' '}
+          {next.services.map((s) => `${s.name} ${formatServiceTime(s.startTime)}`).join(', ')}
+        </p>
+      )}
+      <Link
+        href="/attendance"
+        className="flex min-h-[44px] items-center justify-between rounded-lg bg-paper px-4 text-[15px] font-semibold"
+      >
+        Enter a count from the past week
+        <Icon name="arrow_forward" size={20} className="text-primary" />
+      </Link>
+    </section>
   );
 }

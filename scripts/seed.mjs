@@ -44,17 +44,15 @@ async function main() {
     await db.collection(c).deleteMany({});
   }
 
-  // One Sunday service for now; admins add more under Services.
+  // Regular services: Sunday and midweek (Wednesday). Admins add more under Services.
   const SERVICE = 'sunday';
-  await db.collection('churchservices').insertOne({
-    key: SERVICE,
-    name: 'Sunday Service',
-    startTime: '08:00',
-    order: 1,
-    active: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+  const MIDWEEK = 'midweek';
+  await db.collection('churchservices').insertMany(
+    [
+      { key: SERVICE, name: 'Sunday Service', kind: 'regular', days: [0], startTime: '08:00' },
+      { key: MIDWEEK, name: 'Midweek Service', kind: 'regular', days: [3], startTime: '18:30' },
+    ].map((svc) => ({ ...svc, active: true, createdAt: new Date(), updatedAt: new Date() })),
+  );
 
   const hash = (p) => bcrypt.hashSync(p, 10);
   const users = await db.collection('users').insertMany([
@@ -196,6 +194,18 @@ async function main() {
     children: 47 + (i % 3),
     createdAt: new Date(),
   }));
+  const wednesdays = ['2026-09-02', '2026-09-09', '2026-09-16', '2026-09-23'];
+  rows.push(
+    ...wednesdays.map((w, i) => ({
+      serviceDate: day(w),
+      service: MIDWEEK,
+      men: 31 + i,
+      women: 48 + i,
+      teens: 9,
+      children: 6,
+      createdAt: new Date(),
+    })),
+  );
   await db.collection('attendances').insertMany(rows);
 
   console.log(

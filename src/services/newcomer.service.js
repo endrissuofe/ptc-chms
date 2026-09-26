@@ -39,7 +39,7 @@ export async function recomputeStage(personId, today = new Date()) {
  */
 export async function createFromCard(input, user) {
   await connectDB();
-  await requireActiveService(input.service);
+  await requireActiveService(input.service, input.serviceDate, user);
   const phone = normalizePhone(input.phone);
   const serviceDate = toServiceDate(input.serviceDate);
 
@@ -90,7 +90,7 @@ export async function createFromCard(input, user) {
 /** Records that a known person came back. Safe to call twice for the same service. */
 export async function recordReturningVisit({ personId, service, serviceDate }, user) {
   await connectDB();
-  await requireActiveService(service);
+  await requireActiveService(service, serviceDate, user);
   const day = toServiceDate(serviceDate);
   await Visit.updateOne(
     { person: personId, serviceDate: day, service },

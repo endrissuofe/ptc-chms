@@ -1,9 +1,11 @@
 import { connectDB } from '@/lib/db';
 import { toServiceDate, lagosDateParts } from '@/lib/dates';
+import { totalCount } from '@/lib/attendance';
 import { Attendance, Visit } from '@/models';
+import { nextServiceDay, servicesOn } from '@/lib/church';
 import { listServices } from './churchService.service';
 
-const headcount = (a) => a.men + a.women + a.teens + a.children;
+const headcount = totalCount;
 
 /**
  * Everything the usher Today screen shows. Only counts and initials —
@@ -13,7 +15,7 @@ export async function getUsherToday({ today = new Date() } = {}) {
   await connectDB();
   const day = toServiceDate(today);
 
-  const [services, rows, previous, cardVisits, returning] = await Promise.all([
+  const [allServices, rows, previous, cardVisits, returning] = await Promise.all([
     listServices(),
     Attendance.find({ serviceDate: day }).lean(),
     Attendance.findOne({ serviceDate: { $lt: day } })
@@ -25,6 +27,9 @@ export async function getUsherToday({ today = new Date() } = {}) {
       .lean(),
     Visit.countDocuments({ serviceDate: day, source: 'returning' }),
   ]);
+
+  const services = servicesOn(allServices, day);
+  const next = services.length ? null : nextServiceDay(allServices, day);
 
   const attendance = Object.fromEntries(
     services.map(({ key }) => {
@@ -49,6 +54,10 @@ export async function getUsherToday({ today = new Date() } = {}) {
   return {
     serviceDate: day,
     services,
+    nextServiceDay: next && {
+      serviceDate: next.serviceDate,
+      services: next.services.map(({ key, name, startTime }) => ({ key, name, startTime })),
+    },
     isSunday: lagosDateParts(today).weekday === 'Sun',
     attendance,
     headcountToday: rows.reduce((sum, r) => sum + headcount(r), 0),

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { serviceKey } from './churchService';
+import { MAX_COUNT } from '../attendance';
 
-const count = z.coerce.number().int().min(0).max(20000);
+const count = z.coerce.number().int().min(0).max(MAX_COUNT);
 
 export const attendanceSchema = z.object({
   serviceDate: z.coerce.date(),

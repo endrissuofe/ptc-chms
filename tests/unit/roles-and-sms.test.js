@@ -14,9 +14,9 @@ describe('route access', () => {
     expect(canAccess('/dashboard', ROLES.USHER)).toBe(false);
   });
 
-  it('keeps service settings to admins', () => {
+  it('keeps service settings to admins and pastors', () => {
     expect(canAccess('/services', ROLES.ADMIN)).toBe(true);
-    expect(canAccess('/services', ROLES.PASTOR)).toBe(false);
+    expect(canAccess('/services', ROLES.PASTOR)).toBe(true);
     expect(canAccess('/services', ROLES.USHER)).toBe(false);
   });
 

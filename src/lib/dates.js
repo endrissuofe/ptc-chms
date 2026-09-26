@@ -35,3 +35,14 @@ export function addDays(date, days) {
 export function isoDay(date) {
   return new Date(date).toISOString().slice(0, 10);
 }
+
+/** "2026-11-14" -> the service-date key for that Lagos day (midnight UTC). */
+export function dayFromIso(iso) {
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+/** Whole days from `from` to `to`, both service dates. */
+export function daysBetween(from, to) {
+  return Math.round((new Date(to) - new Date(from)) / 86400000);
+}

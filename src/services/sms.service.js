@@ -61,8 +61,10 @@ export async function runScheduledSend(templateKey, { today = new Date() } = {})
   const from = process.env.SMS_SENDER_ID || 'PTCChapel';
   const runKey = `${templateKey}:${isoDay(toServiceDate(today))}`;
   const people = await RECIPIENTS[templateKey](today);
-  // {ServiceTimes} comes from the active services, e.g. "Service starts at 8:00 AM."
-  const serviceTimes = describeServiceTimes(await listServices());
+  // {ServiceTimes}: tomorrow's services (the invite goes out the day before), e.g.
+  // "Service starts at 8:00 AM."
+  const tomorrow = addDays(toServiceDate(today), 1);
+  const serviceTimes = describeServiceTimes(await listServices({ on: tomorrow }));
 
   const result = { templateKey, runKey, total: people.length, sent: 0, failed: 0, alreadySent: 0 };
 

@@ -34,6 +34,17 @@ const MIGRATIONS = [
       await db.collection('churchservices').createIndex({ key: 1 }, { unique: true });
     },
   },
+  {
+    id: '003-service-schedules',
+    async up(db) {
+      // Services created before schedules existed were Sunday services.
+      await db
+        .collection('churchservices')
+        .updateMany({ kind: { $exists: false } }, { $set: { kind: 'regular', days: [0] } });
+      await db.collection('churchservices').updateMany({}, { $unset: { order: '' } });
+      await db.collection('churchservices').createIndex({ kind: 1, date: 1 });
+    },
+  },
 ];
 
 async function main() {
