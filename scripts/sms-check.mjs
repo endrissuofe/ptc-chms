@@ -4,8 +4,8 @@
  *   npm run sms:check                      -> shows your balance only (costs nothing)
  *   npm run sms:check -- 08031234567       -> also sends ONE test SMS to that number
  *
- * Checks the provider named by SMS_PROVIDER (termii or bulksmsnigeria); with SMS_PROVIDER=mock
- * it checks Termii if TERMII_API_KEY is set, otherwise BulkSMS Nigeria.
+ * Checks the provider named by SMS_PROVIDER (bulksmslive, termii or bulksmsnigeria); with
+ * SMS_PROVIDER=mock it checks whichever of those has a key in .env, in that order.
  * Uses the same endpoints and settings as src/lib/sms/.
  */
 import 'dotenv/config';
@@ -37,6 +37,41 @@ const PROVIDERS = {
       return res.ok && data?.message_id
         ? { ok: true, text: `message id ${data.message_id} (channel ${channel})` }
         : { ok: false, text: data?.message || `HTTP ${res.status}` };
+    },
+  },
+  bulksmslive: {
+    label: 'BulkSMSLive',
+    keyName: 'BULKSMSLIVE_API_KEY',
+    headers: (key) => ({
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Accept: 'application/json',
+    }),
+    async balance(key) {
+      const res = await fetch('https://api.bulksmslive.com/v2/app/balance', {
+        method: 'POST',
+        headers: this.headers(key),
+      });
+      const data = await res.json().catch(() => ({}));
+      return res.ok && Number(data?.status) === 1
+        ? { ok: true, text: `${data.balance ?? JSON.stringify(data)} units` }
+        : { ok: false, text: `${data?.status ?? res.status}: ${data?.msg || data?.message || ''}` };
+    },
+    async send(key, to) {
+      const res = await fetch('https://api.bulksmslive.com/v2/app/sendsms', {
+        method: 'POST',
+        headers: this.headers(key),
+        body: new URLSearchParams({
+          message: TEST_TEXT,
+          sender_name: from,
+          recipients: to,
+          forcednd: process.env.BULKSMSLIVE_FORCEDND === '0' ? '0' : '1',
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      return res.ok && Number(data?.status) === 1
+        ? { ok: true, text: `message id ${data.msgid}, ${data.units} units used` }
+        : { ok: false, text: `${data?.status ?? res.status}: ${data?.msg || data?.message || ''}` };
     },
   },
   bulksmsnigeria: {
@@ -85,7 +120,13 @@ const PROVIDERS = {
 async function main() {
   const chosen = process.env.SMS_PROVIDER;
   const name =
-    chosen && chosen !== 'mock' ? chosen : process.env.TERMII_API_KEY ? 'termii' : 'bulksmsnigeria';
+    chosen && chosen !== 'mock'
+      ? chosen
+      : process.env.BULKSMSLIVE_API_KEY
+        ? 'bulksmslive'
+        : process.env.TERMII_API_KEY
+          ? 'termii'
+          : 'bulksmsnigeria';
   const provider = PROVIDERS[name];
   if (!provider) {
     console.error(`Unknown SMS_PROVIDER "${name}"`);

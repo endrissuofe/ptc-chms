@@ -31,7 +31,10 @@ export default async function SmsPage() {
           {balance && !balance.error && (
             <span className="chip chip-success">
               <Icon name="account_balance_wallet" size={15} />
-              Balance: {naira.format(balance.amount)}
+              Balance:{' '}
+              {balance.currency === 'units'
+                ? `${balance.amount.toLocaleString('en-NG')} units`
+                : naira.format(balance.amount)}
             </span>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { mockProvider } from './mock';
 import { bulkSmsNigeriaProvider } from './bulksmsnigeria';
 import { termiiProvider } from './termii';
+import { bulkSmsLiveProvider } from './bulksmslive';
 
 /**
  * Every SMS in the app goes through here. Change SMS_PROVIDER in .env to switch
@@ -11,6 +12,7 @@ const providers = {
   mock: mockProvider,
   bulksmsnigeria: bulkSmsNigeriaProvider,
   termii: termiiProvider,
+  bulksmslive: bulkSmsLiveProvider,
 };
 
 export function getSmsProvider() {
