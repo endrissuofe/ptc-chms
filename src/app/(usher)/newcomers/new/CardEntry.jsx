@@ -360,10 +360,10 @@ export default function CardEntry({
         <div className="flex flex-col gap-2 rounded-tile bg-violet-soft p-4">
           <label htmlFor="prayerRequest" className={label}>
             <span className="flex items-center gap-1.5 text-violet">
-              <Icon name="lock" size={16} />
+              <Icon name="volunteer_activism" size={16} />
               Prayer request
             </span>
-            <span className="chip bg-surface text-violet">Pastors only</span>
+            <span className="font-semibold text-violet/80">Optional</span>
           </label>
           <textarea
             id="prayerRequest"
@@ -373,12 +373,8 @@ export default function CardEntry({
             onChange={set('prayerRequest')}
             className="input resize-none"
           />
-          <p className="flex justify-between text-[12px] font-semibold text-violet">
-            <span className="flex items-center gap-1">
-              <Icon name="shield" size={14} />
-              Once saved, only the pastors can read it
-            </span>
-            <span>{card.prayerRequest.length} / 1000</span>
+          <p className="text-right text-[12px] font-semibold text-violet">
+            {card.prayerRequest.length} / 1000
           </p>
         </div>
 
@@ -397,7 +393,7 @@ export default function CardEntry({
           </span>
         </label>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-tile border border-line bg-surface-2 p-4">
+        <label className="flex cursor-pointer items-center gap-3 rounded-tile border border-line bg-surface-2 p-4">
           <input
             type="checkbox"
             checked={card.cardUnclear}
@@ -408,9 +404,6 @@ export default function CardEntry({
             <span className="flex items-center gap-1.5 text-[15px] font-semibold">
               <Icon name="flag" size={16} className="text-danger" />
               Card hard to read
-            </span>
-            <span className="block text-[13px] text-muted">
-              Flags it so someone checks the details with them next time.
             </span>
           </span>
         </label>

@@ -130,7 +130,7 @@ export default function MatchReview({
           Confirming records their visit to {serviceName}
           {matches.some((m) => m.stage === STAGES.FIRST_TIMER) &&
             ' and moves a First Timer to Second Timer'}
-          . {card.prayerRequest.trim() && 'The prayer request on this card goes to the pastors. '}
+          . {card.prayerRequest.trim() && 'The prayer request on this card is saved too. '}
           Email and birthday are only added if we didn’t have them.
         </span>
       </p>

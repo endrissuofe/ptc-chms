@@ -5,9 +5,11 @@ import { ROLES } from '@/lib/roles';
 import { prayerStatusSchema } from '@/lib/validators/followup';
 import { PrayerRequest } from '@/models';
 
-/** Pastoral team only. GET ?status=new */
+const PRAYER_ACCESS = [ROLES.PRAYER, ROLES.PASTOR, ROLES.ADMIN];
+
+/** Prayer team, pastors and admins only — never ushers or follow-up. GET ?status=new */
 export const GET = handler(async (req) => {
-  await requireRole(ROLES.PASTOR);
+  await requireRole(...PRAYER_ACCESS);
   await connectDB();
   const status = new URL(req.url).searchParams.get('status');
   const filter = status ? { status } : {};
@@ -21,7 +23,7 @@ export const GET = handler(async (req) => {
 
 /** PATCH ?id=... { status } */
 export const PATCH = handler(async (req) => {
-  const user = await requireRole(ROLES.PASTOR);
+  const user = await requireRole(...PRAYER_ACCESS);
   await connectDB();
   const id = new URL(req.url).searchParams.get('id');
   if (!id) throw new HttpError(400, 'id is required');

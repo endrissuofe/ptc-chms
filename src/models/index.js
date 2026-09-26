@@ -7,3 +7,5 @@ export { default as PrayerRequest } from './PrayerRequest';
 export { default as SmsTemplate } from './SmsTemplate';
 export { default as SmsLog } from './SmsLog';
 export { default as ChurchService } from './ChurchService';
+export { default as Member } from './Member';
+export { default as Broadcast } from './Broadcast';

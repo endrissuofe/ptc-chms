@@ -75,7 +75,7 @@ export default function ServicePanel({
             ) : (
               <span className="chip chip-coral">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-coral-strong" />
-                Door count pending
+                Count pending
               </span>
             )}
           </div>
@@ -84,7 +84,7 @@ export default function ServicePanel({
             <p className="card-sub">
               {count.recorded
                 ? `Tap to correct the ${service.name} count.`
-                : `Enter the men, women, teens and children counted at the door.`}
+                : `Enter the men, women, teens and children counted.`}
             </p>
           </div>
           <span className="btn btn-primary mt-auto self-start">

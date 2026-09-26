@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-/** Door headcount per service — the figures ushers already take. */
+/** Attendance count per service — the figures ushers already take. */
 const attendanceSchema = new mongoose.Schema(
   {
     serviceDate: { type: Date, required: true },

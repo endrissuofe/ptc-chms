@@ -6,7 +6,7 @@
  *
  * It asks for the password (typing is hidden). Reads MONGODB_URI from .env, or from the
  * environment, e.g. PowerShell:  $env:MONGODB_URI = "<Atlas connection string>"
- * Roles: usher, followup, pastor, admin.
+ * Roles: usher, followup, prayer (prayer department), pastor, admin.
  */
 import 'dotenv/config';
 import { parseArgs } from 'node:util';
@@ -14,7 +14,7 @@ import readline from 'node:readline';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const ROLES = ['usher', 'followup', 'pastor', 'admin'];
+const ROLES = ['usher', 'followup', 'prayer', 'pastor', 'admin'];
 const MIN_PASSWORD = 8;
 
 const { values } = parseArgs({

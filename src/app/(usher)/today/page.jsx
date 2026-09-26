@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
-import { SyncStrip } from '@/components/ui/ConnectionStatus';
 import { getSession } from '@/lib/auth';
 import { formatServiceTime } from '@/lib/church';
+import { verseOfTheDay } from '@/lib/verses';
 import { getUsherToday } from '@/services/today.service';
 import ServicePanel from './ServicePanel';
 
@@ -48,7 +48,7 @@ export default async function TodayPage() {
   const firstService = services[0];
 
   return (
-    <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
+    <div className="flex flex-col gap-5 lg:gap-6">
       <Hero
         greeting={greeting()}
         name={name}
@@ -74,7 +74,7 @@ export default async function TodayPage() {
               },
           {
             icon: 'pin',
-            label: 'Door count',
+            label: 'Count',
             value: today.headcountToday,
             sub: today.lastServiceDay
               ? `Last ${shortWeekday.format(today.lastServiceDay.serviceDate)}: ${today.lastServiceDay.total}`
@@ -89,36 +89,7 @@ export default async function TodayPage() {
         ]}
       />
 
-      <div className="flex flex-col gap-5 lg:gap-6">
-        <section className="card flex flex-1 flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <span className="icon-tile tone-violet">
-              <Icon name="sms" size={21} />
-            </span>
-            <div>
-              <h2 className="card-title">Thank-you SMS</h2>
-              <p className="card-sub">
-                {today.isSunday ? (
-                  <>
-                    Goes out at <strong className="text-ink">6:00 PM today</strong> to first timers
-                    entered today who agreed to messages.
-                  </>
-                ) : (
-                  <>
-                    Goes out on <strong className="text-ink">Sundays at 6:00 PM</strong> to that
-                    day’s first timers who agreed to messages.
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-          <div className="mt-auto">
-            <SyncStrip />
-          </div>
-        </section>
-      </div>
-
-      <div className="lg:col-span-3">
+      <div>
         {services.length ? (
           <ServicePanel
             services={services}
@@ -137,8 +108,9 @@ export default async function TodayPage() {
 
 /** The template's gradient greeting card, with glassy tiles for today's figures. */
 function Hero({ greeting: hello, name, stats }) {
+  const verse = verseOfTheDay();
   return (
-    <section className="relative isolate overflow-hidden rounded-card p-6 text-white shadow-[0_18px_40px_-18px_rgba(67,56,202,.65)] sm:p-8 lg:col-span-2 [background:radial-gradient(120%_90%_at_100%_0%,rgba(255,138,112,.38)_0%,transparent_55%),linear-gradient(135deg,#4338ca_0%,#5a4fe6_45%,#7462f0_100%)]">
+    <section className="relative isolate overflow-hidden rounded-card p-6 text-white shadow-[0_18px_40px_-18px_rgba(67,56,202,.65)] sm:p-8 lg:p-10 [background:radial-gradient(120%_90%_at_100%_0%,rgba(255,138,112,.38)_0%,transparent_55%),linear-gradient(135deg,#4338ca_0%,#5a4fe6_45%,#7462f0_100%)]">
       <svg
         viewBox="0 0 320 220"
         aria-hidden="true"
@@ -175,11 +147,10 @@ function Hero({ greeting: hello, name, stats }) {
       <h1 className="mb-2 text-[clamp(1.8rem,1.3rem+2vw,2.7rem)] font-black tracking-[-0.015em] text-white">
         {name ? `${hello}, ${name}` : hello}
       </h1>
-      <p className="mb-6 max-w-[46ch] text-base text-white/90">
-        “For where two or three gather in my name, there am I with them.”{' '}
-        <span className="text-white/70">— Matthew 18:20</span>
+      <p className="mb-6 max-w-[52ch] text-base text-white/90">
+        “{verse.text}” <span className="whitespace-nowrap text-white/70">— {verse.reference}</span>
       </p>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+      <div className="grid max-w-4xl grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {stats.map((s, i) => (
           <div
             key={s.label}

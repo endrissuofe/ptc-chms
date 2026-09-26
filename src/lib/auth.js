@@ -12,7 +12,7 @@ export const authOptions = {
       name: 'PTC Chapel',
       credentials: {
         username: { label: 'Username', type: 'text' },
-        password: { label: 'Password or PIN', type: 'password' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;

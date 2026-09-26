@@ -45,7 +45,7 @@ const pick = (s) => ({ ...Object.fromEntries(COUNT_FIELDS.map((f) => [f, s[f]]))
 const same = (a, b) => JSON.stringify(pick(a)) === JSON.stringify(pick(b));
 
 /**
- * Door headcount for one service on one day. Drafts are kept per service while switching;
+ * Attendance count for one service on one day. Drafts are kept per service while switching;
  * switching day loads that day from the server.
  */
 export default function AttendanceForm({
@@ -148,7 +148,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
             {dayLabel.format(new Date(serviceDate))}
           </p>
           <h1 className="page-title">{service.name} attendance</h1>
-          <p className="page-sub">Enter the door count. Tap a number to type it, or use − and +.</p>
+          <p className="page-sub">Enter the count. Tap a number to type it, or use − and +.</p>
         </div>
         {savedHere?.savedAt && (
           <span className="chip chip-success">
@@ -187,7 +187,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
           <section className="card flex flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="label-caps">Total headcount</p>
+                <p className="label-caps">Total count</p>
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span
                     className="font-display text-[44px] font-black leading-none tabular-nums"
@@ -264,10 +264,6 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
               placeholder="e.g. Heavy rain, guest minister, Holy Communion Sunday"
               className="input resize-none"
             />
-            <p className="flex items-center gap-1 text-[12.5px] text-muted">
-              <Icon name="info" size={15} />
-              Helps the pastors understand changes in attendance.
-            </p>
           </section>
 
           {status.state === 'error' && (

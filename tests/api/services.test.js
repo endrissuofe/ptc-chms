@@ -12,6 +12,8 @@ let svc;
 let sms;
 let todaySvc;
 let churchSvc;
+let memberSvc;
+let broadcastSvc;
 let models;
 
 beforeAll(async () => {
@@ -23,6 +25,8 @@ beforeAll(async () => {
   sms = await import('@/services/sms.service');
   todaySvc = await import('@/services/today.service');
   churchSvc = await import('@/services/churchService.service');
+  memberSvc = await import('@/services/member.service');
+  broadcastSvc = await import('@/services/broadcast.service');
   models = await import('@/models');
   await mongoose.connect(process.env.MONGODB_URI);
   await Promise.all(Object.values(models).map((m) => m.syncIndexes()));
@@ -78,23 +82,6 @@ describe('first-timer cards', () => {
     expect(after.stage).toBe('second_timer');
     const again = await svc.recordReturningVisit(args);
     expect(again.visitCount).toBe(2);
-  });
-});
-
-describe('scheduled SMS', () => {
-  it('thanks only consenting first timers, and a second run sends nothing new', async () => {
-    const today = new Date('2026-09-27T17:00:00Z');
-    await svc.createFromCard(card());
-    await svc.createFromCard(
-      card({ phone: '0901 000 0102', firstName: 'Blessing', smsConsent: false }),
-    );
-
-    const first = await sms.runScheduledSend('sunday_thanks', { today });
-    expect(first.sent).toBe(1);
-
-    const second = await sms.runScheduledSend('sunday_thanks', { today });
-    expect(second.sent).toBe(0);
-    expect(second.alreadySent).toBe(1);
   });
 });
 
@@ -408,49 +395,61 @@ describe('shared phone numbers and returning cards', () => {
   });
 });
 
-describe('SMS screen', () => {
+describe('SMS', () => {
   const sunday = new Date('2026-09-20T09:00:00Z');
-  const tuesday = new Date('2026-09-22T12:00:00Z');
 
-  it('previews who a run reaches, including those who did not agree', async () => {
-    await svc.createFromCard(card({ serviceDate: sunday }));
-    await svc.createFromCard(
+  it('thanks a first timer straight after the card, once, and only if they agreed', async () => {
+    const kemi = await svc.createFromCard(card({ serviceDate: sunday }));
+    const tunde = await svc.createFromCard(
       card({ phone: '0901 000 0102', firstName: 'Tunde', smsConsent: false, serviceDate: sunday }),
     );
-    expect(await sms.previewRun('sunday_thanks', sunday)).toMatchObject({
-      total: 2,
-      consented: 1,
-      noConsent: 1,
-      toSend: 1,
+    const first = await sms.sendCardMessage({
+      personId: kemi._id,
+      templateKey: 'sunday_thanks',
+      serviceDate: sunday,
     });
-  });
-
-  it('sends a missed thank-you once, with belated wording, and the Sunday job then skips it', async () => {
-    await svc.createFromCard(card({ serviceDate: sunday }));
-    const body = 'Hi {FirstName}, thank you for joining us on Sunday.';
-    const first = await sms.sendMissedThanks({ serviceDate: sunday, body }, tuesday);
-    expect(first.sent).toBe(1);
-    const log = await models.SmsLog.findOne().lean();
-    expect(log).toMatchObject({
-      body: 'Hi Kemi, thank you for joining us on Sunday.',
-      run: 'sunday_thanks:2026-09-20',
+    expect(first).toMatchObject({ sent: 1 });
+    const again = await sms.sendCardMessage({
+      personId: kemi._id,
+      templateKey: 'sunday_thanks',
+      serviceDate: sunday,
     });
-
-    const again = await sms.runScheduledSend('sunday_thanks', { today: sunday });
     expect(again).toMatchObject({ sent: 0, alreadySent: 1 });
+    expect(
+      await sms.sendCardMessage({
+        personId: tunde._id,
+        templateKey: 'sunday_thanks',
+        serviceDate: sunday,
+      }),
+    ).toMatchObject({ skipped: true });
+
+    const log = await models.SmsLog.findOne().lean();
+    expect(log.body).toBe(
+      'Hi Kemi, thank you for worshipping with us at RCCG Peculiar Treasure Chapel. You are welcome here, and we look forward to seeing you again. God bless you!',
+    );
+    expect(log).toMatchObject({ recipientKey: `p:${kemi._id}`, name: 'Kemi Adebayo' });
   });
 
-  it('only sends missed thank-yous for recent Sundays', async () => {
-    const body = 'Hi {FirstName}';
-    await expect(
-      sms.sendMissedThanks({ serviceDate: new Date('2026-09-19'), body }, tuesday),
-    ).rejects.toMatchObject({ status: 400 });
-    await expect(
-      sms.sendMissedThanks({ serviceDate: new Date('2026-08-30'), body }, tuesday),
-    ).rejects.toMatchObject({ status: 400 });
-    await expect(
-      sms.sendMissedThanks({ serviceDate: new Date('2026-09-27'), body }, tuesday),
-    ).rejects.toMatchObject({ status: 400 });
+  it('welcomes a returning visitor back, and respects the template switch', async () => {
+    const p = await svc.createFromCard(card({ serviceDate: sunday }));
+    await sms.updateTemplate('welcome_back', { body: 'Welcome back {FirstName}!', enabled: true });
+    const res = await sms.sendCardMessage({
+      personId: p._id,
+      templateKey: 'welcome_back',
+      serviceDate: new Date('2026-09-27T09:00:00Z'),
+    });
+    expect(res.sent).toBe(1);
+    expect((await models.SmsLog.findOne({ template: 'welcome_back' }).lean()).body).toBe(
+      'Welcome back Kemi!',
+    );
+
+    await sms.updateTemplate('welcome_back', { body: 'Welcome back {FirstName}!', enabled: false });
+    const off = await sms.sendCardMessage({
+      personId: p._id,
+      templateKey: 'welcome_back',
+      serviceDate: new Date('2026-10-04T09:00:00Z'),
+    });
+    expect(off).toMatchObject({ skipped: true });
   });
 
   it('sends a test to the admin with their first name and keeps it out of real runs', async () => {
@@ -464,18 +463,6 @@ describe('SMS screen', () => {
     expect(runs[0]).toMatchObject({ test: true, sent: 1 });
   });
 
-  it('groups sends into runs for the history table', async () => {
-    await svc.createFromCard(card({ serviceDate: sunday }));
-    await svc.createFromCard(
-      card({ phone: '0901 000 0102', firstName: 'Tunde', serviceDate: sunday }),
-    );
-    await sms.runScheduledSend('sunday_thanks', { today: sunday });
-    const [run] = await sms.recentRuns();
-    expect(run).toMatchObject({ run: 'sunday_thanks:2026-09-20', total: 2, sent: 2, failed: 0 });
-    const people = await sms.runDetails(run.run);
-    expect(people.map((p) => p.name).sort()).toEqual(['Kemi Adebayo', 'Tunde Adebayo']);
-  });
-
   it('refuses template wording with tags it cannot fill', async () => {
     await expect(
       sms.updateTemplate('sunday_thanks', { body: 'Hi {Firstname}', enabled: true }),
@@ -487,9 +474,111 @@ describe('SMS screen', () => {
     expect(saved).toMatchObject({ body: 'Hi {FirstName}, welcome!', enabled: false });
   });
 
-  it('shows SMS as off while the provider is the mock one', async () => {
-    const overview = await sms.getSmsOverview({ today: tuesday });
-    expect(overview.status).toMatchObject({ provider: 'mock', live: false });
-    expect(overview.templates.map((t) => t.key)).toEqual(['sunday_thanks', 'saturday_invite']);
+  it('shows the three automatic messages and the next Saturday invite', async () => {
+    await svc.createFromCard(card({ serviceDate: sunday }));
+    const overview = await sms.getSmsOverview({ today: new Date('2026-09-22T12:00:00Z') });
+    expect(overview.templates.map((t) => t.key)).toEqual([
+      'sunday_thanks',
+      'welcome_back',
+      'saturday_invite',
+    ]);
+    expect(overview.invite).toMatchObject({ toSend: 1 });
+    expect(overview.live).toBe(false);
+  });
+});
+
+describe('members', () => {
+  const csv =
+    'Name,Phone,Gender,Birthday\n' +
+    'Chinedu Okafor,0803 000 0001,M,14/10\n' +
+    'Ngozi Okafor,0803 000 0001,F,\n' +
+    'Chinedu Okafor,08030000001,M,14/10\n' +
+    'Nobody,123,,\n';
+
+  it('previews an import without saving, then saves new members only once', async () => {
+    const svcM = memberSvc;
+    const preview = await svcM.previewImport(csv);
+    expect(preview.summary).toEqual({ total: 4, new: 2, update: 0, duplicate: 1, invalid: 1 });
+    expect(await models.Member.countDocuments()).toBe(0);
+
+    expect(await svcM.importMembers(csv)).toEqual({ added: 2, updated: 0, skipped: 2 });
+    const again = await svcM.previewImport(csv);
+    expect(again.summary).toMatchObject({ new: 0, update: 2 });
+    expect(await svcM.importMembers(csv)).toMatchObject({ added: 0, updated: 2 });
+    expect(await models.Member.countDocuments()).toBe(2);
+  });
+
+  it('fills a missing birthday on re-import but never overwrites one', async () => {
+    const svcM = memberSvc;
+    await svcM.importMembers('Name,Phone,Birthday\nAda Obi,0805 000 0111,\n');
+    await svcM.importMembers('Name,Phone,Birthday\nAda Obi,0805 000 0111,3 March\n');
+    await svcM.importMembers('Name,Phone,Birthday\nAda Obi,0805 000 0111,9 May\n');
+    expect(await models.Member.findOne().lean()).toMatchObject({ birthDay: 3, birthMonth: 3 });
+  });
+
+  it('finds members by name or phone', async () => {
+    const svcM = memberSvc;
+    await svcM.importMembers(csv);
+    expect((await svcM.listMembers({ q: 'ngozi' })).items.map((m) => m.firstName)).toEqual([
+      'Ngozi',
+    ]);
+    expect((await svcM.listMembers({ q: '0803 000' })).total).toBe(2);
+  });
+});
+
+describe('broadcasts', () => {
+  const memberCsv =
+    'Name,Phone\nChinedu Okafor,0803 000 0001\nNgozi Okafor,0803 000 0001\nAda Obi,0805 000 0111\n';
+
+  async function withMembers() {
+    await memberSvc.importMembers(memberCsv);
+  }
+
+  it('previews people and SMS pages before anything is sent', async () => {
+    await withMembers();
+    const b = broadcastSvc;
+    const preview = await b.previewBroadcast({
+      audience: 'members',
+      body: 'Hi {FirstName}, see you Sunday!',
+    });
+    expect(preview).toMatchObject({ count: 3, pages: 1, units: 3 });
+    expect(preview.sample).toMatch(/^Hi (Chinedu|Ngozi), see you Sunday!$/);
+    expect(await models.SmsLog.countDocuments()).toBe(0);
+  });
+
+  it('sends in batches until done, and never twice to the same person', async () => {
+    await withMembers();
+    const b = broadcastSvc;
+    const { id, total } = await b.createBroadcast({ audience: 'members', body: 'Hi {FirstName}!' });
+    expect(total).toBe(3);
+    let p;
+    do p = await b.sendBroadcastBatch(id);
+    while (!p.done);
+    expect(p).toMatchObject({ total: 3, processed: 3, sent: 3, failed: 0, done: true });
+    expect(await b.sendBroadcastBatch(id)).toMatchObject({ sent: 3, done: true });
+    expect(await models.SmsLog.countDocuments({ run: `broadcast:${id}` })).toBe(3);
+    const [run] = await sms.recentRuns();
+    expect(run).toMatchObject({
+      run: `broadcast:${id}`,
+      sent: 3,
+      broadcast: { audience: 'members' },
+    });
+  });
+
+  it('can reach everyone without doubling someone who is a member and a first timer', async () => {
+    await withMembers();
+    await svc.createFromCard(card({ firstName: 'Ada', lastName: 'Obi', phone: '0805 000 0111' }));
+    await svc.createFromCard(
+      card({ phone: '0901 000 0102', firstName: 'Tunde', lastName: 'Bello' }),
+    );
+    const b = broadcastSvc;
+    expect(await b.audienceCounts()).toEqual({ members: 3, first_timers: 2, everyone: 4 });
+  });
+
+  it('refuses tags a broadcast cannot fill', async () => {
+    const b = broadcastSvc;
+    await expect(
+      b.previewBroadcast({ audience: 'members', body: 'Hi {ServiceTimes}' }),
+    ).rejects.toMatchObject({ status: 400 });
   });
 });

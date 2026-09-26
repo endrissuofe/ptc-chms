@@ -1,10 +1,15 @@
 import mongoose from 'mongoose';
 
+/** Every SMS attempt: automatic messages, broadcasts and tests. */
 const smsLogSchema = new mongoose.Schema(
   {
     person: { type: mongoose.Schema.Types.ObjectId, ref: 'Person' },
+    member: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
+    // Who it was for, whether a first timer ("p:<id>") or a member ("m:<id>").
+    recipientKey: { type: String },
+    name: { type: String },
     template: { type: String },
-    // Which batch this belongs to, e.g. "sunday_thanks:2026-09-27" or "test:2026-09-27".
+    // Which batch this belongs to, e.g. "sunday_thanks:2026-09-27", "broadcast:<id>", "test:…".
     run: { type: String },
     to: { type: String, required: true },
     body: { type: String, required: true },
@@ -18,8 +23,9 @@ const smsLogSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Nobody gets the same run twice (only successful sends count, so failures can be retried).
 smsLogSchema.index(
-  { runKey: 1, person: 1 },
+  { runKey: 1, recipientKey: 1 },
   { unique: true, partialFilterExpression: { runKey: { $type: 'string' } } },
 );
 smsLogSchema.index({ createdAt: -1 });

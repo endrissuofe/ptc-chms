@@ -127,3 +127,15 @@ describe('describeServiceTimes', () => {
     ).toBe('Services start at 7:00 AM, 9:00 AM and 11:00 AM.');
   });
 });
+
+describe('verseOfTheDay', () => {
+  it('gives the same verse all day in Lagos and a different one the next day', async () => {
+    const { verseOfTheDay } = await import('@/lib/verses');
+    const morning = verseOfTheDay(new Date('2026-09-27T06:00:00Z'));
+    const night = verseOfTheDay(new Date('2026-09-27T22:30:00Z')); // 11:30 PM Lagos
+    const nextDay = verseOfTheDay(new Date('2026-09-27T23:30:00Z')); // 00:30 AM Lagos
+    expect(night).toEqual(morning);
+    expect(nextDay).not.toEqual(morning);
+    expect(morning.reference).toMatch(/\d/);
+  });
+});

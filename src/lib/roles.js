@@ -3,6 +3,7 @@ export const ROLES = {
   USHER: 'usher',
   FOLLOWUP: 'followup',
   PASTOR: 'pastor',
+  PRAYER: 'prayer', // prayer department: sees prayer requests only
   ADMIN: 'admin',
 };
 
@@ -17,9 +18,10 @@ export const ROUTE_ACCESS = [
   { prefix: '/newcomers', roles: [ROLES.FOLLOWUP, ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/dashboard', roles: [ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/first-timers', roles: [ROLES.PASTOR, ROLES.ADMIN] },
-  { prefix: '/prayer-requests', roles: [ROLES.PASTOR] },
+  { prefix: '/prayer-requests', roles: [ROLES.PRAYER, ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/sms', roles: [ROLES.ADMIN] },
   { prefix: '/services', roles: [ROLES.ADMIN, ROLES.PASTOR] },
+  { prefix: '/members', roles: [ROLES.ADMIN] },
   { prefix: '/modules', roles: [ROLES.PASTOR, ROLES.ADMIN] },
 ];
 
@@ -28,6 +30,7 @@ export const HOME_BY_ROLE = {
   [ROLES.USHER]: '/today',
   [ROLES.FOLLOWUP]: '/my-newcomers',
   [ROLES.PASTOR]: '/dashboard',
+  [ROLES.PRAYER]: '/prayer-requests',
   [ROLES.ADMIN]: '/dashboard',
 };
 

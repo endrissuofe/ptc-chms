@@ -48,6 +48,8 @@ async function main() {
     'smslogs',
     'smstemplates',
     'churchservices',
+    'members',
+    'broadcasts',
   ]) {
     await db.collection(c).deleteMany({});
   }

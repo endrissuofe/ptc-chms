@@ -54,6 +54,45 @@ const MIGRATIONS = [
       await people.createIndex({ phone: 1 });
     },
   },
+  {
+    id: '005-instant-sms-members-broadcasts',
+    async up(db) {
+      // The thank-you now goes out when the card is saved, so "today" may be wrong.
+      const OLD_THANKS =
+        'Hi {FirstName}, thank you for worshipping with us at RCCG Peculiar Treasure Chapel today. You are welcome here, and we look forward to seeing you again. God bless you!';
+      await db.collection('smstemplates').updateOne(
+        { key: 'sunday_thanks', body: OLD_THANKS },
+        {
+          $set: {
+            name: 'First-timer thank-you',
+            body: 'Hi {FirstName}, thank you for worshipping with us at RCCG Peculiar Treasure Chapel. You are welcome here, and we look forward to seeing you again. God bless you!',
+          },
+        },
+      );
+      await db
+        .collection('smstemplates')
+        .updateOne({ key: 'sunday_thanks' }, { $set: { name: 'First-timer thank-you' } });
+
+      // SMS logs now name who they were for as "p:<person>" or "m:<member>".
+      const logs = db.collection('smslogs');
+      for await (const log of logs.find({
+        recipientKey: { $exists: false },
+        person: { $ne: null },
+      })) {
+        await logs.updateOne({ _id: log._id }, { $set: { recipientKey: `p:${log.person}` } });
+      }
+      if (await logs.indexExists('runKey_1_person_1')) await logs.dropIndex('runKey_1_person_1');
+      await logs.createIndex(
+        { runKey: 1, recipientKey: 1 },
+        { unique: true, partialFilterExpression: { runKey: { $type: 'string' } } },
+      );
+      await logs.createIndex({ run: 1, createdAt: -1 });
+
+      await db.collection('members').createIndex({ phone: 1 });
+      await db.collection('members').createIndex({ lastName: 1, firstName: 1 });
+      await db.collection('broadcasts').createIndex({ createdAt: -1 });
+    },
+  },
 ];
 
 async function main() {

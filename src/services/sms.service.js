@@ -3,18 +3,25 @@ import { HttpError } from '@/lib/api';
 import { getSmsProvider } from '@/lib/sms';
 import { renderTemplate, unknownTags } from '@/lib/sms/templates';
 import { normalizePhone, formatPhone } from '@/lib/phone';
-import { toServiceDate, addDays, isoDay, daysBetween } from '@/lib/dates';
+import { toServiceDate, addDays, isoDay } from '@/lib/dates';
 import { STAGES } from '@/lib/stages';
 import { describeServiceTimes } from '@/lib/church';
 import { logger } from '@/lib/logger';
-import { Person, Visit, SmsTemplate, SmsLog } from '@/models';
+import { Person, SmsTemplate, SmsLog, Broadcast } from '@/models';
 import { listServices } from './churchService.service';
+
+const CHURCH_NAME = () => process.env.CHURCH_NAME || 'RCCG Peculiar Treasure Chapel';
 
 export const DEFAULT_TEMPLATES = [
   {
     key: 'sunday_thanks',
-    name: 'Sunday thank-you',
-    body: 'Hi {FirstName}, thank you for worshipping with us at RCCG Peculiar Treasure Chapel today. You are welcome here, and we look forward to seeing you again. God bless you!',
+    name: 'First-timer thank-you',
+    body: 'Hi {FirstName}, thank you for worshipping with us at RCCG Peculiar Treasure Chapel. You are welcome here, and we look forward to seeing you again. God bless you!',
+  },
+  {
+    key: 'welcome_back',
+    name: 'Welcome back',
+    body: 'Hi {FirstName}, welcome back to RCCG Peculiar Treasure Chapel! We are glad you worshipped with us again. God bless you!',
   },
   {
     key: 'saturday_invite',
@@ -23,9 +30,6 @@ export const DEFAULT_TEMPLATES = [
   },
 ];
 
-/** How far back an admin can send a missed Sunday thank-you. */
-export const CATCH_UP_DAYS = 14;
-
 export async function ensureTemplates() {
   await connectDB();
   for (const t of DEFAULT_TEMPLATES) {
@@ -33,151 +37,167 @@ export async function ensureTemplates() {
   }
 }
 
-/** Is SMS really going out, and does the schedule run? Both are set in the hosting settings. */
+/** Is SMS really going out? Set in the hosting settings, never shown in the app. */
 export function smsStatus() {
   const provider = process.env.SMS_PROVIDER || 'mock';
   return {
     provider,
     live: provider !== 'mock',
-    scheduled: Boolean(process.env.CRON_SECRET),
     senderId: process.env.SMS_SENDER_ID || 'PTCChapel',
   };
 }
 
 /**
- * Who a run is for, before checking consent (so the screen can say how many didn't agree).
- * Sunday: first timers whose cards were entered that day.
- * Saturday: recent first and second timers who haven't become regulars yet.
+ * On the live site, refuse to "send" with the mock provider: nobody would get anything, yet
+ * everyone would be recorded as messaged. Local development can use the mock freely.
  */
-const CANDIDATES = {
-  async sunday_thanks(day) {
-    const personIds = await Visit.distinct('person', { serviceDate: day, source: 'card' });
-    return Person.find({ _id: { $in: personIds } }).lean();
-  },
-  async saturday_invite(day) {
-    return Person.find({
-      stage: { $in: [STAGES.FIRST_TIMER, STAGES.SECOND_TIMER] },
-      lastVisitDate: { $gte: addDays(day, -28) },
-    }).lean();
-  },
-};
-
-const runLabel = (templateKey, day) => `${templateKey}:${isoDay(day)}`;
-
-/** Values for the template tags. ServiceTimes are the next day's services (for the invite). */
-async function tagValues(day) {
-  const serviceTimes = describeServiceTimes(await listServices({ on: addDays(day, 1) }));
-  return (person) => ({
-    FirstName: person.firstName,
-    LastName: person.lastName,
-    ChurchName: process.env.CHURCH_NAME || 'RCCG Peculiar Treasure Chapel',
-    ServiceTimes: serviceTimes,
-  });
+export function requireLiveSms() {
+  if (!smsStatus().live && process.env.NODE_ENV === 'production') {
+    throw new HttpError(409, 'SMS sending isn’t switched on yet');
+  }
 }
 
-/**
- * Sends one batch. Each person gets at most one message per template per day, even if the
- * job runs twice or a catch-up is sent later (the SmsLog runKey index enforces it).
- * @param {object} opts
- * @param {Date} [opts.today]  the day the run is for
- * @param {string} [opts.body]  wording to use instead of the template (catch-up sends)
- * @param {boolean} [opts.manual]  sent by an admin: runs even if the template is switched off
- */
-export async function runScheduledSend(
-  templateKey,
-  { today = new Date(), body, manual = false } = {},
-) {
-  await connectDB();
-  await ensureTemplates();
-  const template = await SmsTemplate.findOne({ key: templateKey }).lean();
-  if (!template) throw new Error(`No template "${templateKey}"`);
-  if (!template.enabled && !manual) {
-    return { templateKey, skipped: true, reason: 'Template turned off' };
-  }
+/** A recipient as the send loop needs it, from a Person (first timer) or Member. */
+export const personRecipient = (p) => ({
+  key: `p:${p._id}`,
+  person: p._id,
+  firstName: p.firstName,
+  lastName: p.lastName,
+  phone: p.phone,
+});
+export const memberRecipient = (m) => ({
+  key: `m:${m._id}`,
+  member: m._id,
+  firstName: m.firstName,
+  lastName: m.lastName,
+  phone: m.phone,
+});
 
+/**
+ * Sends `text` to each recipient, recording every attempt. Anyone already sent this `run`
+ * successfully is skipped, so a run can safely be retried or resumed.
+ */
+export async function deliver({ recipients, text, run, template, extraTags = {} }) {
+  await connectDB();
   const provider = getSmsProvider();
   const from = smsStatus().senderId;
-  const day = toServiceDate(today);
-  const run = runLabel(templateKey, day);
-  const people = (await CANDIDATES[templateKey](day)).filter((p) => p.smsConsent);
-  const valuesFor = await tagValues(day);
-  const text = body ?? template.body;
+  const result = { total: recipients.length, sent: 0, failed: 0, alreadySent: 0 };
 
-  const result = {
-    templateKey,
-    runKey: run,
-    total: people.length,
-    sent: 0,
-    failed: 0,
-    alreadySent: 0,
-  };
-
-  for (const person of people) {
-    if (await SmsLog.exists({ runKey: run, person: person._id })) {
+  for (const r of recipients) {
+    if (await SmsLog.exists({ runKey: run, recipientKey: r.key })) {
       result.alreadySent += 1;
       continue;
     }
-    const message = renderTemplate(text, valuesFor(person));
-    const res = await provider.send({ to: person.phone, body: message, from });
+    const message = renderTemplate(text, {
+      FirstName: r.firstName,
+      LastName: r.lastName,
+      ChurchName: CHURCH_NAME(),
+      ...extraTags,
+    });
+    const res = await provider.send({ to: r.phone, body: message, from });
     try {
       await SmsLog.create({
-        person: person._id,
-        template: templateKey,
+        person: r.person,
+        member: r.member,
+        recipientKey: r.key,
+        name: `${r.firstName} ${r.lastName || ''}`.trim(),
+        template,
         run,
-        to: person.phone,
+        to: r.phone,
         body: message,
         provider: provider.name,
         status: res.ok ? 'sent' : 'failed',
         providerRef: res.providerRef,
         cost: res.cost,
         error: res.error,
-        // Only successful sends block a resend, so failures can be retried.
         runKey: res.ok ? run : undefined,
       });
     } catch (err) {
       if (err?.code !== 11000) throw err;
+      // Someone else recorded this person's message for this run in the meantime.
+      result.alreadySent += 1;
+      continue;
     }
     res.ok ? (result.sent += 1) : (result.failed += 1);
   }
-
-  logger.info(result, 'SMS run finished');
   return result;
 }
 
-/** How many a run for `serviceDate` would reach, how many didn't agree, and who's done already. */
-export async function previewRun(templateKey, serviceDate) {
-  await connectDB();
-  const day = toServiceDate(serviceDate);
-  const people = await CANDIDATES[templateKey](day);
-  const consented = people.filter((p) => p.smsConsent);
-  const alreadySent = await SmsLog.countDocuments({
-    runKey: runLabel(templateKey, day),
-    person: { $in: consented.map((p) => p._id) },
+/**
+ * The instant message after a card: thank-you for a first timer, welcome back for a
+ * returning visitor. At most once per person per template per service day. Never throws —
+ * it runs after the usher's save has already succeeded.
+ */
+export async function sendCardMessage({ personId, templateKey, serviceDate }) {
+  try {
+    await ensureTemplates();
+    const [template, person] = await Promise.all([
+      SmsTemplate.findOne({ key: templateKey }).lean(),
+      Person.findById(personId).lean(),
+    ]);
+    if (!template?.enabled || !person?.smsConsent) return { skipped: true };
+    if (!smsStatus().live && process.env.NODE_ENV === 'production') return { skipped: true };
+    const result = await deliver({
+      recipients: [personRecipient(person)],
+      text: template.body,
+      run: `${templateKey}:${isoDay(toServiceDate(serviceDate))}`,
+      template: templateKey,
+    });
+    logger.info({ templateKey, ...result }, 'Card SMS sent');
+    return result;
+  } catch (err) {
+    logger.error({ err: err.message, templateKey }, 'Card SMS failed');
+    return { error: err.message };
+  }
+}
+
+/** Saturday invite: recent first and second timers who agreed and aren't regulars yet. */
+async function inviteRecipients(day) {
+  const people = await Person.find({
+    stage: { $in: [STAGES.FIRST_TIMER, STAGES.SECOND_TIMER] },
+    lastVisitDate: { $gte: addDays(day, -28) },
+  }).lean();
+  return people;
+}
+
+/** Tomorrow's service times, e.g. "Service starts at 8:00 AM." */
+async function serviceTimesAfter(day) {
+  return describeServiceTimes(await listServices({ on: addDays(day, 1) }));
+}
+
+/** The scheduled Saturday invite (cron). Safe to run twice. */
+export async function runScheduledSend(templateKey, { today = new Date() } = {}) {
+  if (templateKey !== 'saturday_invite') throw new Error(`No schedule for "${templateKey}"`);
+  await ensureTemplates();
+  const template = await SmsTemplate.findOne({ key: templateKey }).lean();
+  if (!template.enabled) return { templateKey, skipped: true, reason: 'Template turned off' };
+
+  const day = toServiceDate(today);
+  const people = (await inviteRecipients(day)).filter((p) => p.smsConsent);
+  const run = `${templateKey}:${isoDay(day)}`;
+  const result = await deliver({
+    recipients: people.map(personRecipient),
+    text: template.body,
+    run,
+    template: templateKey,
+    extraTags: { ServiceTimes: await serviceTimesAfter(day) },
   });
+  logger.info({ templateKey, run, ...result }, 'Scheduled SMS run finished');
+  return { templateKey, runKey: run, ...result };
+}
+
+/** Who the next Saturday invite would reach. */
+export async function previewInvite(saturday) {
+  await connectDB();
+  const day = toServiceDate(saturday);
+  const people = await inviteRecipients(day);
+  const consented = people.filter((p) => p.smsConsent);
   return {
     serviceDate: day,
     total: people.length,
-    consented: consented.length,
+    toSend: consented.length,
     noConsent: people.length - consented.length,
-    alreadySent,
-    toSend: consented.length - alreadySent,
   };
-}
-
-/**
- * Admin sends a Sunday's thank-you after the day (e.g. SMS was off that Sunday).
- * Uses belated wording and counts as that Sunday's run, so nobody is thanked twice.
- */
-export async function sendMissedThanks({ serviceDate, body }, today = new Date()) {
-  const day = toServiceDate(serviceDate);
-  const age = daysBetween(day, toServiceDate(today));
-  if (day.getUTCDay() !== 0) throw new HttpError(400, 'Choose a Sunday');
-  if (age < 1 || age > CATCH_UP_DAYS) {
-    throw new HttpError(400, `Choose a Sunday from the last ${CATCH_UP_DAYS} days`);
-  }
-  const bad = unknownTags('sunday_thanks', body);
-  if (bad.length) throw new HttpError(400, `Unknown tag {${bad[0]}}`);
-  return runScheduledSend('sunday_thanks', { today: day, body, manual: true });
 }
 
 /** Sends one message to the admin's own phone so they can see how it looks. */
@@ -185,23 +205,30 @@ export async function sendTest({ templateKey, phone, body }, user) {
   await ensureTemplates();
   const to = normalizePhone(phone);
   if (!to) throw new HttpError(400, 'Enter a Nigerian mobile number');
-  const template = await SmsTemplate.findOne({ key: templateKey }).lean();
-  if (!template) throw new HttpError(404, 'Template not found');
-  const text = body ?? template.body;
+  let text = body;
+  if (!text) {
+    const template = await SmsTemplate.findOne({ key: templateKey }).lean();
+    if (!template) throw new HttpError(404, 'Template not found');
+    text = template.body;
+  }
   const bad = unknownTags(templateKey, text);
   if (bad.length) throw new HttpError(400, `Unknown tag {${bad[0]}}`);
 
   const day = toServiceDate();
-  // Invites describe the services on the day after they go out; preview with this Sunday's.
-  const previewDay = addDays(day, (6 - day.getUTCDay() + 7) % 7);
-  const valuesFor = await tagValues(templateKey === 'saturday_invite' ? previewDay : day);
+  const saturday = addDays(day, (6 - day.getUTCDay() + 7) % 7);
   const [firstName = 'Friend', ...rest] = (user?.name || 'Friend').split(' ');
-  const message = renderTemplate(text, valuesFor({ firstName, lastName: rest.join(' ') }));
+  const message = renderTemplate(text, {
+    FirstName: firstName,
+    LastName: rest.join(' '),
+    ChurchName: CHURCH_NAME(),
+    ServiceTimes: await serviceTimesAfter(saturday),
+  });
 
   const provider = getSmsProvider();
   const res = await provider.send({ to, body: message, from: smsStatus().senderId });
   await SmsLog.create({
     template: templateKey,
+    name: user?.name ? `${user.name} (test)` : 'Test',
     run: `test:${isoDay(day)}`,
     to,
     body: message,
@@ -212,7 +239,7 @@ export async function sendTest({ templateKey, phone, body }, user) {
     error: res.error,
   });
   if (!res.ok) throw new HttpError(502, `The SMS provider refused it: ${res.error}`);
-  return { ok: true, body: message, live: smsStatus().live };
+  return { ok: true, body: message };
 }
 
 export async function updateTemplate(key, { body, enabled }, user) {
@@ -228,46 +255,126 @@ export async function updateTemplate(key, { body, enabled }, user) {
   return doc;
 }
 
-/** Runs grouped for the history table, newest first. */
+/**
+ * Tries again for everyone in `run` whose message failed and who hasn't been sent it since,
+ * using the exact message they should have got.
+ */
+export async function resendFailed(run) {
+  requireLiveSms();
+  await connectDB();
+  const failed = await SmsLog.find({ run, status: 'failed' }).sort({ createdAt: -1 }).lean();
+  const seen = new Set();
+  const provider = getSmsProvider();
+  const from = smsStatus().senderId;
+  const result = { retried: 0, sent: 0, failed: 0 };
+
+  for (const log of failed) {
+    const key = log.recipientKey || `to:${log.to}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (
+      log.recipientKey &&
+      (await SmsLog.exists({ runKey: run, recipientKey: log.recipientKey }))
+    ) {
+      continue;
+    }
+    result.retried += 1;
+    const res = await provider.send({ to: log.to, body: log.body, from });
+    await SmsLog.create({
+      person: log.person,
+      member: log.member,
+      recipientKey: log.recipientKey,
+      name: log.name,
+      template: log.template,
+      run,
+      to: log.to,
+      body: log.body,
+      provider: provider.name,
+      status: res.ok ? 'sent' : 'failed',
+      providerRef: res.providerRef,
+      cost: res.cost,
+      error: res.error,
+      runKey: res.ok && log.recipientKey ? run : undefined,
+    }).catch((err) => {
+      if (err?.code !== 11000) throw err;
+    });
+    res.ok ? (result.sent += 1) : (result.failed += 1);
+  }
+  return result;
+}
+
+/**
+ * Sends grouped for the history table, newest first. A person counts once per run: a
+ * failure that was later resent successfully shows as sent.
+ */
 export async function recentRuns(limit = 20) {
   await connectDB();
   const rows = await SmsLog.aggregate([
     { $match: { run: { $type: 'string' } } },
+    { $sort: { createdAt: 1 } },
     {
       $group: {
-        _id: '$run',
+        _id: { run: '$run', who: { $ifNull: ['$recipientKey', { $toString: '$_id' }] } },
+        template: { $first: '$template' },
+        provider: { $last: '$provider' },
+        status: { $last: '$status' },
+        cost: { $sum: { $ifNull: ['$cost', 0] } },
+        lastAt: { $max: '$createdAt' },
+      },
+    },
+    {
+      $group: {
+        _id: '$_id.run',
         template: { $first: '$template' },
         provider: { $last: '$provider' },
         total: { $sum: 1 },
         sent: { $sum: { $cond: [{ $eq: ['$status', 'sent'] }, 1, 0] } },
         failed: { $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } },
-        cost: { $sum: { $ifNull: ['$cost', 0] } },
-        lastAt: { $max: '$createdAt' },
+        cost: { $sum: '$cost' },
+        lastAt: { $max: '$lastAt' },
       },
     },
     { $sort: { lastAt: -1 } },
     { $limit: limit },
   ]);
-  return rows.map(({ _id, ...r }) => ({ run: _id, test: _id.startsWith('test:'), ...r }));
+
+  const broadcastIds = rows
+    .filter((r) => r._id.startsWith('broadcast:'))
+    .map((r) => r._id.slice('broadcast:'.length));
+  const broadcasts = broadcastIds.length
+    ? await Broadcast.find({ _id: { $in: broadcastIds } })
+        .select('body audience')
+        .lean()
+    : [];
+  const preview = Object.fromEntries(broadcasts.map((b) => [`broadcast:${b._id}`, b]));
+
+  return rows.map(({ _id, ...r }) => ({
+    run: _id,
+    test: _id.startsWith('test:'),
+    broadcast: preview[_id]
+      ? { audience: preview[_id].audience, body: preview[_id].body.slice(0, 80) }
+      : null,
+    ...r,
+  }));
 }
 
-/** Everyone in one run, for the history table's details. */
+/** Everyone in one run, for the history table's details (latest attempt per person). */
 export async function runDetails(run) {
   await connectDB();
   const logs = await SmsLog.find({ run })
     .sort({ createdAt: 1 })
     .populate('person', 'firstName lastName')
     .lean();
-  return logs.map((l) => ({
-    name: l.person ? `${l.person.firstName} ${l.person.lastName}` : 'Test message',
+  const latest = new Map();
+  for (const l of logs) latest.set(l.recipientKey || String(l._id), l);
+  return [...latest.values()].map((l) => ({
+    name: l.name || (l.person ? `${l.person.firstName} ${l.person.lastName}` : 'Test message'),
     to: formatPhone(l.to),
     status: l.status,
     error: l.error ?? null,
     at: l.createdAt,
   }));
 }
-
-const nextWeekday = (day, weekday) => addDays(day, (weekday - day.getUTCDay() + 7) % 7);
 
 /** Everything the SMS screen shows. */
 export async function getSmsOverview({ today = new Date() } = {}) {
@@ -286,32 +393,22 @@ export async function getSmsOverview({ today = new Date() } = {}) {
     }
   }
 
-  const nextSunday = nextWeekday(day, 0);
-  const nextSaturday = nextWeekday(day, 6);
-  const pastSundays = [7, 14]
-    .map((n) => addDays(nextWeekday(day, 0), -n))
-    .filter((d) => daysBetween(d, day) >= 1 && daysBetween(d, day) <= CATCH_UP_DAYS);
-
-  const [templates, thanks, invite, missed, runs] = await Promise.all([
-    SmsTemplate.find().sort({ key: -1 }).lean(),
-    previewRun('sunday_thanks', nextSunday),
-    previewRun('saturday_invite', nextSaturday),
-    Promise.all(pastSundays.map((d) => previewRun('sunday_thanks', d))),
+  const nextSaturday = addDays(day, (6 - day.getUTCDay() + 7) % 7);
+  const order = Object.fromEntries(DEFAULT_TEMPLATES.map((t, i) => [t.key, i]));
+  const [templates, invite, runs] = await Promise.all([
+    SmsTemplate.find({ key: { $in: DEFAULT_TEMPLATES.map((t) => t.key) } }).lean(),
+    previewInvite(nextSaturday),
     recentRuns(20),
   ]);
 
   return {
-    status,
+    senderId: status.senderId,
+    live: status.live,
     balance,
-    templates: templates.map(({ key, name, body, enabled, updatedAt }) => ({
-      key,
-      name,
-      body,
-      enabled,
-      updatedAt,
-    })),
-    upcoming: { sunday_thanks: thanks, saturday_invite: invite },
-    missedThanks: missed.filter((m) => m.toSend > 0),
+    templates: templates
+      .sort((a, b) => order[a.key] - order[b.key])
+      .map(({ key, name, body, enabled, updatedAt }) => ({ key, name, body, enabled, updatedAt })),
+    invite,
     runs,
   };
 }

@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
 test('usher signs in and lands on Today', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('Username').fill('usher');
-  await page.getByLabel('Password or PIN').fill('1234');
+  await page.getByLabel('Password').fill('1234');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/today/);
 });
@@ -15,7 +15,7 @@ test('usher signs in and lands on Today', async ({ page }) => {
 test('usher cannot open the dashboard', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('Username').fill('usher');
-  await page.getByLabel('Password or PIN').fill('1234');
+  await page.getByLabel('Password').fill('1234');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/today/);

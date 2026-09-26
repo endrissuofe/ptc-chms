@@ -1,17 +1,20 @@
-import { getSmsOverview } from '@/services/sms.service';
-import { isoDay } from '@/lib/dates';
 import Icon from '@/components/ui/Icon';
+import { isoDay } from '@/lib/dates';
+import { getSmsOverview } from '@/services/sms.service';
+import { audienceCounts } from '@/services/broadcast.service';
 import SmsManager from './SmsManager';
 
 export const metadata = { title: 'SMS messages' };
 export const dynamic = 'force-dynamic';
 
+const naira = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' });
+
 export default async function SmsPage() {
-  const overview = await getSmsOverview();
-  const day = (preview) => ({ ...preview, serviceDate: isoDay(preview.serviceDate) });
+  const [overview, counts] = await Promise.all([getSmsOverview(), audienceCounts()]);
+  const balance = overview.balance;
 
   return (
-    <div className="flex max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="page-head">
         <div>
           <p className="eyebrow">
@@ -19,21 +22,25 @@ export default async function SmsPage() {
             Messages
           </p>
           <h1 className="page-title">SMS messages</h1>
-          <p className="page-sub">
-            The automatic thank-you and invite messages to first timers, and a record of every send.
-          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="chip chip-primary">
+            <Icon name="badge" size={15} />
+            From: {overview.senderId}
+          </span>
+          {balance && !balance.error && (
+            <span className="chip chip-success">
+              <Icon name="account_balance_wallet" size={15} />
+              Balance: {naira.format(balance.amount)}
+            </span>
+          )}
         </div>
       </div>
       <SmsManager
-        status={overview.status}
-        balance={overview.balance}
         templates={overview.templates}
-        upcoming={{
-          sunday_thanks: day(overview.upcoming.sunday_thanks),
-          saturday_invite: day(overview.upcoming.saturday_invite),
-        }}
-        missedThanks={overview.missedThanks.map(day)}
+        invite={{ ...overview.invite, serviceDate: isoDay(overview.invite.serviceDate) }}
         runs={overview.runs}
+        audienceCounts={counts}
       />
     </div>
   );
