@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ptc-dev",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set NEXTAUTH_URL=http://localhost:3001&& npx next dev -p 3001"],
+      "port": 3001
+    }
+  ]
+}
