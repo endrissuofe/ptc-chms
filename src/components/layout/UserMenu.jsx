@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import Avatar from '@/components/ui/Avatar';
 import Icon from '@/components/ui/Icon';
 
-/** Account button in the top bar: who is signed in, and Sign out. */
-export default function UserMenu({ name, roleLabel }) {
+/**
+ * Account button in the top bar: who is signed in, Sign out, and (on phones) the screens that
+ * don't fit in the tab bar.
+ */
+export default function UserMenu({ name, roleLabel, more = [] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -51,6 +55,23 @@ export default function UserMenu({ name, roleLabel }) {
             </div>
           </div>
           <div className="my-1 border-t border-line" />
+          {more.length > 0 && (
+            <div className="lg:hidden">
+              {more.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  role="menuitem"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[15px] font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink"
+                >
+                  <Icon name={item.icon} size={19} className="text-muted" />
+                  {item.label}
+                </Link>
+              ))}
+              <div className="my-1 border-t border-line" />
+            </div>
+          )}
           <button
             type="button"
             role="menuitem"

@@ -37,7 +37,11 @@ export default async function AppShell({ children }) {
           </span>
           <OnlineBadge />
           <ThemeToggle />
-          <UserMenu name={name} roleLabel={ROLE_LABELS[role] || ''} />
+          <UserMenu
+            name={name}
+            roleLabel={ROLE_LABELS[role] || ''}
+            more={nav.more.map(({ href, label, icon }) => ({ href, label, icon }))}
+          />
         </div>
       </header>
 

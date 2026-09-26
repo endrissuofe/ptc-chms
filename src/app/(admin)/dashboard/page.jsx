@@ -78,7 +78,7 @@ export default async function DashboardPage() {
       <NeedsAttention n={d.needsAttention} />
 
       <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
-        <section className="card flex flex-col gap-4 lg:col-span-3">
+        <section className="card flex min-w-0 flex-col gap-4 lg:col-span-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
               <h2 className="card-title">Attendance</h2>
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
           <AttendanceChart trend={d.trend} colour={colour} />
         </section>
 
-        <section className="card flex flex-col gap-4 lg:col-span-2">
+        <section className="card flex min-w-0 flex-col gap-4 lg:col-span-2">
           <div>
             <h2 className="card-title">Newcomer journey</h2>
             <p className="card-sub">Everyone who has filled a card, and how far they’ve come</p>

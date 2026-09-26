@@ -119,7 +119,7 @@ export default async function NewcomerPage({ params }) {
       </section>
 
       <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
-        <div className="flex flex-col gap-5 lg:gap-6">
+        <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
           <Journey stage={person.stage} />
           <LogCall personId={String(person._id)} firstName={person.firstName} />
           <section className="card flex flex-col gap-4">
@@ -136,7 +136,7 @@ export default async function NewcomerPage({ params }) {
           </section>
         </div>
 
-        <div className="flex flex-col gap-5 lg:gap-6">
+        <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
           <section className="card flex flex-col gap-3">
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="card-title">Visits</h2>

@@ -46,5 +46,8 @@ export const ROLE_LABELS = {
 export function navFor(role) {
   const items = NAV.filter((i) => i.roles.includes(role));
   const built = items.filter((i) => !i.soon && i.href !== '/modules');
-  return { rail: items, tabs: (built.length ? built : items).slice(0, 5) };
+  const tabs = (built.length ? built : items).slice(0, 5);
+  // Phones only show the tab bar; everything else goes in the account menu.
+  const more = built.filter((i) => !tabs.includes(i));
+  return { rail: items, tabs, more };
 }
