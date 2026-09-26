@@ -74,6 +74,6 @@ export const bulkSmsLiveProvider = {
     const res = await fetch(`${BASE}/balance`, { method: 'POST', headers: headers() });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !succeeded(data)) throw new Error(errorText(data, res.status));
-    return { balance: data.balance ?? data.data?.balance, currency: 'units' };
+    return { balance: data.amount ?? data.balance ?? data.data?.balance, currency: 'units' };
   },
 };

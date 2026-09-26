@@ -77,8 +77,8 @@ describe('BulkSMSLive SMS provider', () => {
   });
 
   it('reads the balance in units', async () => {
-    const fetch = fakeFetch(200, { status: 1, balance: '1250' });
-    expect(await bulkSmsLiveProvider.balance()).toEqual({ balance: '1250', currency: 'units' });
+    const fetch = fakeFetch(200, { status: 1, amount: '458.00' });
+    expect(await bulkSmsLiveProvider.balance()).toEqual({ balance: '458.00', currency: 'units' });
     expect(fetch.mock.calls[0][0]).toBe('https://api.bulksmslive.com/v2/app/balance');
     expect(fetch.mock.calls[0][1].method).toBe('POST');
   });

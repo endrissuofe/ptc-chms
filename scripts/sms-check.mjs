@@ -54,7 +54,7 @@ const PROVIDERS = {
       });
       const data = await res.json().catch(() => ({}));
       return res.ok && Number(data?.status) === 1
-        ? { ok: true, text: `${data.balance ?? JSON.stringify(data)} units` }
+        ? { ok: true, text: `${data.amount ?? data.balance ?? JSON.stringify(data)} units` }
         : { ok: false, text: `${data?.status ?? res.status}: ${data?.msg || data?.message || ''}` };
     },
     async send(key, to) {
