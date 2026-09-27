@@ -13,3 +13,5 @@ export const attendanceSchema = z.object({
   children: count,
   note: z.string().trim().max(300).optional(),
 });
+
+export const removeAttendanceSchema = attendanceSchema.pick({ serviceDate: true, service: true });

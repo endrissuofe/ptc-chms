@@ -2,27 +2,14 @@ import { ROLES } from './roles';
 
 const { USHER, FOLLOWUP, PASTOR, ADMIN, PRAYER } = ROLES;
 
-/**
- * The app's menu, in order. The desktop rail shows every item the role can open
- * (unbuilt ones marked Soon); the phone tab bar shows up to five built ones.
- */
+/** The app's menu, in order. The desktop rail shows every item the role can open. */
 export const NAV = [
-  { href: '/dashboard', label: 'Home', icon: 'home', roles: [PASTOR, ADMIN] },
+  { href: '/dashboard', label: 'Dashboard', icon: 'home', roles: [PASTOR, ADMIN] },
   { href: '/today', label: 'Today', icon: 'dashboard', roles: [USHER, PASTOR, ADMIN] },
   { href: '/attendance', label: 'Attendance', icon: 'pin', roles: [USHER, PASTOR, ADMIN] },
   { href: '/newcomers/new', label: 'Cards', icon: 'person_add', roles: [USHER, PASTOR, ADMIN] },
-  {
-    href: '/my-newcomers',
-    label: 'Follow-up',
-    icon: 'call',
-    roles: [FOLLOWUP, PASTOR, ADMIN],
-  },
-  {
-    href: '/first-timers',
-    label: 'First timers',
-    icon: 'groups',
-    roles: [PASTOR, ADMIN],
-  },
+  { href: '/my-newcomers', label: 'Follow-up', icon: 'call', roles: [FOLLOWUP, PASTOR, ADMIN] },
+  { href: '/first-timers', label: 'First timers', icon: 'groups', roles: [PASTOR, ADMIN] },
   {
     href: '/prayer-requests',
     label: 'Prayer',
@@ -33,8 +20,17 @@ export const NAV = [
   { href: '/members', label: 'Members', icon: 'contacts', roles: [ADMIN] },
   { href: '/services', label: 'Services', icon: 'event', roles: [PASTOR, ADMIN] },
   { href: '/users', label: 'Logins', icon: 'supervisor_account', roles: [ADMIN] },
-  { href: '/modules', label: 'Later', icon: 'extension', roles: [PASTOR, ADMIN] },
 ];
+
+/**
+ * Phone tab bar: the screens each role uses most. Anything else the role can open goes
+ * under a "More" tab, so every screen is reachable on a phone.
+ */
+const PHONE_TABS = {
+  [USHER]: ['/today', '/attendance', '/newcomers/new'],
+  [PASTOR]: ['/dashboard', '/first-timers', '/my-newcomers', '/prayer-requests'],
+  [ADMIN]: ['/dashboard', '/first-timers', '/my-newcomers', '/newcomers/new'],
+};
 
 export const ROLE_LABELS = {
   [USHER]: 'Usher',
@@ -46,9 +42,8 @@ export const ROLE_LABELS = {
 
 export function navFor(role) {
   const items = NAV.filter((i) => i.roles.includes(role));
-  const built = items.filter((i) => !i.soon && i.href !== '/modules');
-  const tabs = (built.length ? built : items).slice(0, 5);
-  // Phones only show the tab bar; everything else goes in the account menu.
-  const more = built.filter((i) => !tabs.includes(i));
+  const wanted = PHONE_TABS[role];
+  const tabs = wanted ? items.filter((i) => wanted.includes(i.href)) : items.slice(0, 5);
+  const more = items.filter((i) => !tabs.includes(i));
   return { rail: items, tabs, more };
 }

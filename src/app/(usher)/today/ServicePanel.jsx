@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Avatar from '@/components/ui/Avatar';
 import Icon from '@/components/ui/Icon';
+import EmptyState from '@/components/ui/EmptyState';
 import { formatServiceTime, suggestedService } from '@/lib/church';
 
 /**
@@ -23,9 +24,9 @@ export default function ServicePanel({
 
   if (!service) {
     return (
-      <p className="card text-sm text-muted">
-        No services are set up yet. Ask an admin to add one under Services.
-      </p>
+      <EmptyState card icon="event" title="No services are set up yet">
+        Ask an admin to add one under Services.
+      </EmptyState>
     );
   }
   const count = attendance[selected];
@@ -33,15 +34,14 @@ export default function ServicePanel({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-black">Your jobs for {service.name}</h2>
+        <h2 className="section-title">{service.name}: what to do</h2>
         {services.length > 1 && (
-          <div role="tablist" aria-label="Service" className="seg-tabs">
+          <div role="group" aria-label="Service" className="seg-tabs">
             {services.map((s) => (
               <button
                 key={s.key}
                 type="button"
-                role="tab"
-                aria-selected={s.key === selected}
+                aria-pressed={s.key === selected}
                 onClick={() => setSelected(s.key)}
                 className="seg-tab"
               >
@@ -61,9 +61,9 @@ export default function ServicePanel({
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         <Link
           href={`/attendance?service=${selected}`}
-          className="card group flex flex-col gap-4 transition hover:-translate-y-0.5 hover:shadow-lift"
+          className="card group flex flex-col gap-4 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary motion-safe:hover:-translate-y-0.5"
         >
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <span className="icon-tile tone-primary h-12 w-12">
               <Icon name="groups" size={24} />
             </span>
@@ -74,20 +74,20 @@ export default function ServicePanel({
               </span>
             ) : (
               <span className="chip chip-coral">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-coral-strong" />
+                <span className="h-1.5 w-1.5 rounded-full bg-coral-ink motion-safe:animate-pulse" />
                 Count pending
               </span>
             )}
           </div>
           <div>
-            <h3 className="text-xl font-black group-hover:text-primary">Record attendance</h3>
+            <h3 className="section-title group-hover:text-primary">Record attendance</h3>
             <p className="card-sub">
               {count.recorded
                 ? `Tap to correct the ${service.name} count.`
                 : `Enter the men, women, teens and children counted.`}
             </p>
           </div>
-          <span className="btn btn-primary mt-auto self-start">
+          <span className={`btn mt-auto self-start ${count.recorded ? 'btn-soft' : 'btn-primary'}`}>
             {count.recorded ? 'Correct the count' : 'Record the count'}
             <Icon name="arrow_forward" size={18} />
           </span>
@@ -95,9 +95,9 @@ export default function ServicePanel({
 
         <Link
           href={`/newcomers/new?service=${selected}`}
-          className="card group flex flex-col gap-4 transition hover:-translate-y-0.5 hover:shadow-lift"
+          className="card group flex flex-col gap-4 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary motion-safe:hover:-translate-y-0.5"
         >
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <span className="icon-tile tone-coral h-12 w-12">
               <Icon name="person_add" size={24} />
             </span>
@@ -107,16 +107,16 @@ export default function ServicePanel({
             </span>
           </div>
           <div>
-            <h3 className="text-xl font-black group-hover:text-primary">Enter first-timer cards</h3>
+            <h3 className="section-title group-hover:text-primary">Enter first-timer cards</h3>
             <p className="card-sub">Type up the paper cards for {service.name}, one by one.</p>
           </div>
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3">
-            <span className="btn btn-coral">
+            <span className={`btn ${count.recorded ? 'btn-primary' : 'btn-soft'}`}>
               <Icon name="add" size={18} />
               Enter a card
             </span>
             {firstTimers > 0 && (
-              <span className="flex items-center gap-2 text-[13px] text-muted">
+              <span className="flex items-center gap-2 text-meta text-muted">
                 <span className="flex -space-x-2">
                   {recentInitials.map((initials, i) => (
                     <Avatar

@@ -23,7 +23,6 @@ export const ROUTE_ACCESS = [
   { prefix: '/services', roles: [ROLES.ADMIN, ROLES.PASTOR] },
   { prefix: '/members', roles: [ROLES.ADMIN] },
   { prefix: '/users', roles: [ROLES.ADMIN] },
-  { prefix: '/modules', roles: [ROLES.PASTOR, ROLES.ADMIN] },
 ];
 
 /** Home screen after sign-in, by role. */

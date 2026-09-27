@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import { HttpError } from '@/lib/api';
 import { normalizePhone } from '@/lib/phone';
+import { searchFilter } from '@/lib/search';
 import { computeStage, STAGES, LOST_AFTER_DAYS } from '@/lib/stages';
 import { MOVE_AFTER_DAYS } from '@/lib/followup';
 import { addDays, toServiceDate } from '@/lib/dates';
@@ -178,21 +179,6 @@ export async function markLostPeople(today = new Date()) {
   );
 }
 
-const escapeRx = (q) => q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-function searchFilter(q) {
-  if (!q?.trim()) return {};
-  const rx = new RegExp(escapeRx(q.trim()), 'i');
-  const digits = q.replace(/\D/g, '').replace(/^(234|0)/, '');
-  return {
-    $or: [
-      { firstName: rx },
-      { lastName: rx },
-      ...(digits.length >= 3 ? [{ phone: new RegExp(digits) }] : []),
-    ],
-  };
-}
-
 /**
  * The views on the First timers screen. Everything except "moved" leaves out people already
  * moved into the Members list.
@@ -222,6 +208,7 @@ export async function listPeople({
   await markLostPeople(today);
   const filter = viewQuery(view, q);
 
+  const search = searchFilter(q);
   const [items, total, byStage, unclear, moved] = await Promise.all([
     Person.find(filter)
       .sort({ firstVisitDate: -1, createdAt: -1 })
@@ -231,11 +218,11 @@ export async function listPeople({
       .lean(),
     Person.countDocuments(filter),
     Person.aggregate([
-      { $match: { movedToMembersAt: null } },
+      { $match: { movedToMembersAt: null, ...search } },
       { $group: { _id: '$stage', count: { $sum: 1 } } },
     ]),
-    Person.countDocuments({ movedToMembersAt: null, cardUnclear: true }),
-    Person.countDocuments({ movedToMembersAt: { $ne: null } }),
+    Person.countDocuments({ movedToMembersAt: null, cardUnclear: true, ...search }),
+    Person.countDocuments({ movedToMembersAt: { $ne: null }, ...search }),
   ]);
 
   const counts = Object.fromEntries(byStage.map((s) => [s._id, s.count]));
@@ -289,7 +276,13 @@ export async function updateDetails(personId, input) {
   for (const key of ['firstName', 'lastName', 'smsConsent', 'cardUnclear']) {
     if (input[key] !== undefined) update[key] = input[key];
   }
-  if (input.phone !== undefined) update.phone = normalizePhone(input.phone);
+  if (input.phone !== undefined) {
+    update.phone = normalizePhone(input.phone);
+    const others = (await findByPhone(update.phone)).filter((m) => m.id !== String(personId));
+    if (others.length && !input.sharedPhoneConfirmed) {
+      throw new HttpError(409, 'Someone else already uses this phone number', { matches: others });
+    }
+  }
   if (input.email !== undefined) update.email = input.email || null;
   if (input.birthDay !== undefined || input.birthMonth !== undefined) {
     update.birthDay = input.birthDay ?? null;

@@ -38,6 +38,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!login|api/auth|api/health|api/cron|_next/static|_next/image|favicon.ico|ptc-logo.png|manifest.webmanifest).*)',
+    '/((?!login|api/auth|api/health|api/cron|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|icons/|robots.txt|ptc-logo.png|manifest.webmanifest).*)',
   ],
 };

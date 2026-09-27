@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
+import Busy from '@/components/ui/Busy';
+import FormAlert from '@/components/ui/FormAlert';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { sendJson } from '@/lib/client-api';
 import StageBadge from '@/components/ui/StageBadge';
 import { formatServiceDate } from '@/lib/format';
 import { MOVE_AFTER_DAYS } from '@/lib/followup';
@@ -14,6 +17,7 @@ import { MOVE_AFTER_DAYS } from '@/lib/followup';
  */
 export default function MoveToMembers({ people }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState(() => new Set());
   const [state, setState] = useState({ kind: 'idle' });
@@ -29,30 +33,28 @@ export default function MoveToMembers({ people }) {
 
   async function move() {
     const n = picked.size;
-    if (!window.confirm(`Move ${n === 1 ? '1 person' : `${n} people`} into the Members list?`))
-      return;
+    const ok = await confirm({
+      title: `Move ${n === 1 ? '1 person' : `${n} people`} into the Members list?`,
+      body: 'They stop being followed up as first timers. Their visits and calls stay linked.',
+      confirmLabel: 'Move to Members',
+      icon: 'group_add',
+    });
+    if (!ok) return;
     setState({ kind: 'busy' });
     try {
-      const res = await fetch('/api/newcomers/move-to-members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: [...picked] }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Could not move them');
-      setState({
-        kind: 'ok',
-        message: `Moved ${data.moved} into Members${data.linked ? ` (${data.linked} were already on the list)` : ''}.`,
-      });
+      const data = await sendJson('/api/newcomers/move-to-members', 'POST', { ids: [...picked] });
       setPicked(new Set());
+      setState({ kind: 'idle' });
+      // Shown by the page, so the message stays even when this box disappears.
+      router.replace(`/first-timers?moved=${data.moved}`, { scroll: false });
       router.refresh();
     } catch (err) {
-      setState({ kind: 'error', message: err.message });
+      setState({ kind: 'error', error: err });
     }
   }
 
   return (
-    <section className="card flex flex-col gap-4 border-l-4 border-l-success">
+    <section className="card flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <span className="icon-tile tone-success h-11 w-11">
           <Icon name="group_add" size={22} />
@@ -64,54 +66,48 @@ export default function MoveToMembers({ people }) {
           </h2>
           <p className="card-sub">First came over {MOVE_AFTER_DAYS} days ago.</p>
         </div>
-        <button type="button" onClick={() => setOpen((o) => !o)} className="btn btn-soft">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls="ready-to-move"
+          className="btn btn-soft"
+        >
           {open ? 'Hide' : 'Review'}
-          <Icon name="expand_more" size={18} className={open ? 'rotate-180' : ''} />
+          <Icon
+            name="expand_more"
+            size={18}
+            className={`transition-transform ${open ? 'rotate-180' : ''}`}
+          />
         </button>
       </div>
 
-      {state.kind === 'ok' && (
-        <p role="status" className="alert alert-success">
-          <Icon name="check_circle" size={19} filled />
-          <span>
-            {state.message}{' '}
-            <Link href="/members" className="underline">
-              See Members
-            </Link>
-          </span>
-        </p>
-      )}
-      {state.kind === 'error' && (
-        <p role="alert" className="alert alert-danger">
-          <Icon name="error_outline" size={19} />
-          {state.message}
-        </p>
-      )}
+      {state.kind === 'error' && <FormAlert error={state.error} />}
 
       {open && (
-        <>
-          <label className="flex items-center gap-3 border-b border-line pb-3 font-bold">
+        <div id="ready-to-move" className="flex flex-col gap-3 motion-safe:animate-fade-in">
+          <label className="check-row font-bold">
             <input
               type="checkbox"
               checked={allPicked}
               onChange={() => setPicked(allPicked ? new Set() : new Set(people.map((p) => p.id)))}
-              className="h-5 w-5"
+              className="checkbox"
             />
             Select all
           </label>
           <ul className="flex max-h-[420px] flex-col gap-1 overflow-y-auto">
             {people.map((p) => (
               <li key={p.id}>
-                <label className="flex cursor-pointer items-center gap-3 rounded-tile px-2 py-2 hover:bg-surface-2">
+                <label className="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-tile px-3 py-2 hover:bg-surface-2">
                   <input
                     type="checkbox"
                     checked={picked.has(p.id)}
                     onChange={() => toggle(p.id)}
-                    className="h-5 w-5"
+                    className="checkbox"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-bold">{p.name}</span>
-                    <span className="block text-[13px] text-muted">
+                    <span className="block break-words font-bold">{p.name}</span>
+                    <span className="block text-meta text-muted">
                       {p.phone} · first came {formatServiceDate(p.firstVisitDate)} · {p.visitCount}{' '}
                       {p.visitCount === 1 ? 'visit' : 'visits'}
                     </span>
@@ -124,15 +120,18 @@ export default function MoveToMembers({ people }) {
           <button
             type="button"
             onClick={move}
-            disabled={picked.size === 0 || state.kind === 'busy'}
+            disabled={picked.size === 0}
+            aria-disabled={state.kind === 'busy'}
             className="btn btn-primary self-start"
           >
-            <Icon name="how_to_reg" size={18} />
-            {state.kind === 'busy'
-              ? 'Moving…'
-              : `Move ${picked.size || ''} to Members`.replace('  ', ' ')}
+            <Busy
+              busy={state.kind === 'busy'}
+              busyLabel="Moving…"
+              icon="how_to_reg"
+              label={picked.size ? `Move ${picked.size} to Members` : 'Tick people to move'}
+            />
           </button>
-        </>
+        </div>
       )}
     </section>
   );

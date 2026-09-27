@@ -1,4 +1,5 @@
 import { connectDB } from '@/lib/db';
+import { searchFilter } from '@/lib/search';
 import { HttpError } from '@/lib/api';
 import { readMemberCsv } from '@/lib/members';
 import { Member } from '@/models';
@@ -88,15 +89,7 @@ export async function importMembers(csvText, user) {
 export async function listMembers({ q, page = 1, limit = 50 } = {}) {
   await connectDB();
   const filter = { active: true };
-  if (q?.trim()) {
-    const rx = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    const digits = q.replace(/\D/g, '').replace(/^0/, '');
-    filter.$or = [
-      { firstName: rx },
-      { lastName: rx },
-      ...(digits.length >= 3 ? [{ phone: new RegExp(digits) }] : []),
-    ];
-  }
+  Object.assign(filter, searchFilter(q));
   const [items, total, all] = await Promise.all([
     Member.find(filter)
       .sort({ firstName: 1, lastName: 1 })

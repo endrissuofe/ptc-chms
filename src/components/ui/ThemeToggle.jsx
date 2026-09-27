@@ -12,11 +12,10 @@ function currentTheme() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-/** Light/dark switch in the top bar. The choice is remembered on this device. */
-export default function ThemeToggle() {
+/** The current theme and a function to flip it. The choice is remembered on this device. */
+export function useTheme() {
   const [theme, setTheme] = useState(null);
   useEffect(() => setTheme(currentTheme()), []);
-
   function toggle() {
     const next = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
@@ -27,13 +26,18 @@ export default function ThemeToggle() {
     }
     setTheme(next);
   }
+  return [theme, toggle];
+}
 
+/** Light/dark switch in the top bar (desktop; phones have it in the account menu). */
+export default function ThemeToggle({ className = '' }) {
+  const [theme, toggle] = useTheme();
   const dark = theme === 'dark';
   return (
     <button
       type="button"
       onClick={toggle}
-      className="icon-btn"
+      className={`icon-btn ${className}`}
       aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
       title={dark ? 'Light theme' : 'Dark theme'}
     >

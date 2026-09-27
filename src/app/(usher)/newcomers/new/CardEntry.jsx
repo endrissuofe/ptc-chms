@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Children, cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import Busy from '@/components/ui/Busy';
+import FormAlert from '@/components/ui/FormAlert';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { DayChips, ServiceChips } from '@/components/usher/ServiceDayPicker';
 import { isValidPhone, normalizePhone } from '@/lib/phone';
 import { MONTHS, birthdayProblem, daysInMonth } from '@/lib/birthday';
+import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 import MatchReview from './MatchReview';
 
 const EMPTY = {
@@ -19,6 +23,9 @@ const EMPTY = {
   smsConsent: false,
   cardUnclear: false,
 };
+const NO_LOOKUP = { phone: null, matches: [], error: false };
+// The order the cursor goes to when something is missing.
+const FIELD_ORDER = ['firstName', 'lastName', 'phone', 'email', 'birthDay'];
 
 const dayLabel = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'UTC',
@@ -27,8 +34,7 @@ const dayLabel = new Intl.DateTimeFormat('en-GB', {
   month: 'short',
 });
 
-const input = 'input';
-const label = 'field-label';
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 async function post(url, body) {
   const res = await fetch(url, {
@@ -68,16 +74,18 @@ export default function CardEntry({
   initialService,
 }) {
   const router = useRouter();
-  const firstNameRef = useRef(null);
+  const confirm = useConfirm();
+  const formRef = useRef(null);
   const [serviceKey, setServiceKey] = useState(initialService);
   const [counts, setCounts] = useState(cardsByService);
   const [card, setCard] = useState(EMPTY);
   const [errors, setErrors] = useState({});
-  const [lookup, setLookup] = useState({ phone: null, matches: [] });
+  const [lookup, setLookup] = useState(NO_LOOKUP);
   const [reviewing, setReviewing] = useState(false);
   const [status, setStatus] = useState({ state: 'idle' }); // idle | saving | error
   const [lastSaved, setLastSaved] = useState(null);
 
+  const saving = status.state === 'saving';
   const service = services.find((s) => s.key === serviceKey);
   const count = counts[serviceKey] ?? 0;
   const phone = normalizePhone(card.phone);
@@ -89,49 +97,72 @@ export default function CardEntry({
     if (!phone || lookup.phone === phone) return undefined;
     const timer = setTimeout(async () => {
       const res = await post('/api/newcomers/lookup', { phone }).catch(() => null);
-      if (res?.ok) setLookup({ phone, matches: res.data.matches });
+      setLookup(
+        res?.ok
+          ? { phone, matches: res.data.matches, error: false }
+          : { phone, matches: [], error: true },
+      );
     }, 350);
     return () => clearTimeout(timer);
   }, [phone, lookup.phone]);
 
-  // Warn before closing the page with a half-typed card.
-  useEffect(() => {
-    if (!started) return undefined;
-    const warn = (e) => e.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [started]);
+  useUnsavedGuard(started && !saving, {
+    title: 'Leave this card?',
+    body: 'The card you are typing hasn’t been saved yet.',
+  });
 
   const set = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setCard((c) => ({ ...c, [field]: value }));
+    setCard((c) => {
+      const next = { ...c, [field]: value };
+      // A day that doesn't exist in the new month (e.g. 31 February) is cleared.
+      if (
+        field === 'birthMonth' &&
+        next.birthDay &&
+        Number(next.birthDay) > daysInMonth(Number(value) || 1)
+      ) {
+        next.birthDay = '';
+      }
+      return next;
+    });
     setErrors((er) => ({ ...er, [field]: undefined }));
-    setStatus({ state: 'idle' });
+    setStatus((s) => (s.state === 'saving' ? s : { state: 'idle' }));
   };
+
+  function focusField(id) {
+    const el = formRef.current?.querySelector(`#${id}`);
+    el?.focus();
+    el?.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+  }
 
   function validate() {
     const found = {};
     if (!card.firstName.trim()) found.firstName = 'First name is required';
     if (!card.lastName.trim()) found.lastName = 'Last name is required';
-    if (!isValidPhone(card.phone))
-      found.phone = 'Enter a Nigerian mobile number, e.g. 0803 123 4567';
+    if (!isValidPhone(card.phone)) {
+      found.phone = 'Enter a Nigerian mobile number, e.g. 0803 000 0000';
+    }
     if (card.email.trim() && !/^\S+@\S+\.\S+$/.test(card.email.trim())) {
       found.email = 'Check the email address';
     }
     const bday = birthdayProblem(Number(card.birthDay), Number(card.birthMonth));
     if (bday) found.birthDay = bday;
     setErrors(found);
-    return Object.keys(found).length === 0;
+    const first = FIELD_ORDER.find((f) => found[f]);
+    if (first) focusField(first);
+    return !first;
   }
 
   function finish(message) {
     setLastSaved(message);
     setCard(EMPTY);
     setErrors({});
+    // Forget the old lookup: the person just saved is now on that number.
+    setLookup(NO_LOOKUP);
     setReviewing(false);
     setStatus({ state: 'idle' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    firstNameRef.current?.focus();
+    window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
+    formRef.current?.querySelector('#firstName')?.focus({ preventScroll: true });
     router.refresh();
   }
 
@@ -147,11 +178,19 @@ export default function CardEntry({
       (res.data.details || []).filter((d) => d.path?.length).map((d) => [d.path[0], d.message]),
     );
     setErrors(fieldErrors);
-    setStatus({ state: 'error', message: res.data.error || 'Could not save. Please try again.' });
+    const first = FIELD_ORDER.find((f) => fieldErrors[f]);
+    if (first) focusField(first);
+    setStatus({
+      state: 'error',
+      message: first
+        ? 'Please check the highlighted fields.'
+        : res.data.error || 'Could not save. Please try again.',
+      signedOut: res.status === 401,
+    });
   }
 
   async function saveNew({ newPersonConfirmed = false } = {}) {
-    if (!validate()) return;
+    if (saving || !validate()) return;
     setStatus({ state: 'saving' });
     const res = await post('/api/newcomers', {
       ...toPayload(card),
@@ -164,7 +203,7 @@ export default function CardEntry({
       setCounts((c) => ({ ...c, [serviceKey]: (c[serviceKey] ?? 0) + 1 }));
       finish(`${card.firstName.trim()} ${card.lastName.trim()} saved as a First Timer`);
     } else if (res?.status === 409 && res.data.details?.matches?.length) {
-      setLookup({ phone, matches: res.data.details.matches });
+      setLookup({ phone, matches: res.data.details.matches, error: false });
       setReviewing(true);
       setStatus(
         newPersonConfirmed
@@ -180,7 +219,7 @@ export default function CardEntry({
   }
 
   async function saveReturning(match) {
-    if (!validate()) return;
+    if (saving || !validate()) return;
     setStatus({ state: 'saving' });
     const { email, birthDay, birthMonth, prayerRequest, smsConsent } = toPayload(card);
     const res = await post('/api/newcomers/returning', {
@@ -193,8 +232,18 @@ export default function CardEntry({
     else failed(res);
   }
 
-  const goToDay = (day) => {
-    if (started && !window.confirm('This card isn’t saved. Leave this day anyway?')) return;
+  const askToLeave = () =>
+    confirm({
+      title: 'Leave this card?',
+      body: 'The card you are typing hasn’t been saved yet.',
+      confirmLabel: 'Leave without saving',
+      cancelLabel: 'Keep typing',
+      tone: 'danger',
+    });
+
+  const goToDay = async (day) => {
+    if (started && !(await askToLeave())) return;
+    setCard(EMPTY);
     router.push(`/newcomers/new?date=${day}&service=${serviceKey}`);
   };
 
@@ -205,7 +254,7 @@ export default function CardEntry({
         card={card}
         serviceDate={serviceDate}
         serviceName={service.name}
-        saving={status.state === 'saving'}
+        saving={saving}
         error={status.state === 'error' ? status.message : null}
         onPick={saveReturning}
         onNewPerson={() => saveNew({ newPersonConfirmed: true })}
@@ -238,22 +287,19 @@ export default function CardEntry({
         </span>
       </div>
 
-      {lastSaved && (
-        <p role="status" className="alert alert-success">
-          <Icon name="check_circle" size={20} filled />
-          {lastSaved}
-        </p>
-      )}
+      {lastSaved && <FormAlert success={lastSaved} />}
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex min-w-0 flex-wrap gap-4">
         <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
         <ServiceChips services={services} selected={serviceKey} onSelect={setServiceKey} />
       </div>
 
       <form
+        ref={formRef}
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
+          if (saving) return;
           if (matches.length && validate()) setReviewing(true);
           else saveNew();
         }}
@@ -262,14 +308,14 @@ export default function CardEntry({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="firstName" label="First name" required error={errors.firstName}>
             <input
-              ref={firstNameRef}
               id="firstName"
               value={card.firstName}
               onChange={set('firstName')}
               autoCapitalize="words"
               autoComplete="off"
+              enterKeyHint="next"
               maxLength={60}
-              className={input}
+              className="input"
             />
           </Field>
           <Field id="lastName" label="Last name" required error={errors.lastName}>
@@ -279,30 +325,40 @@ export default function CardEntry({
               onChange={set('lastName')}
               autoCapitalize="words"
               autoComplete="off"
+              enterKeyHint="next"
               maxLength={60}
-              className={input}
+              className="input"
             />
           </Field>
         </div>
 
-        <Field id="phone" label="Phone number" required error={errors.phone}>
-          <div className="flex gap-2">
-            <span className="flex min-h-[46px] items-center rounded-xl bg-surface-2 px-3.5 text-[15px] font-bold text-ink-2">
-              +234
-            </span>
-            <input
-              id="phone"
-              type="tel"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="0803 000 0000"
-              value={card.phone}
-              onChange={set('phone')}
-              maxLength={17}
-              className={input}
+        <Field
+          id="phone"
+          label="Phone number"
+          required
+          error={errors.phone}
+          after={
+            <PhoneStatus
+              phone={phone}
+              typed={card.phone}
+              lookup={lookup}
+              matches={matches}
+              onRetry={() => setLookup(NO_LOOKUP)}
             />
-          </div>
-          <PhoneStatus phone={phone} typed={card.phone} lookup={lookup} matches={matches} />
+          }
+        >
+          <input
+            id="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="off"
+            enterKeyHint="next"
+            placeholder="e.g. 0803 000 0000"
+            value={card.phone}
+            onChange={set('phone')}
+            maxLength={18}
+            className="input"
+          />
         </Field>
 
         <Field id="email" label="Email" hint="Optional" error={errors.email}>
@@ -312,26 +368,32 @@ export default function CardEntry({
             inputMode="email"
             autoComplete="off"
             autoCapitalize="none"
+            enterKeyHint="next"
             value={card.email}
             onChange={set('email')}
-            className={input}
+            className="input"
           />
         </Field>
 
-        <fieldset className="flex flex-col gap-1.5">
-          <legend className={`${label} w-full`}>
+        <fieldset
+          className="flex flex-col gap-1.5"
+          aria-describedby={errors.birthDay ? 'birthDay-error' : undefined}
+        >
+          <legend className="field-label w-full">
             <span className="flex items-center gap-1.5">
-              <Icon name="cake" size={18} className="text-coral-strong" />
+              <Icon name="cake" size={18} className="text-coral-ink" />
               Birthday
             </span>
             <span className="font-semibold text-muted">Year not needed</span>
           </legend>
           <div className="grid grid-cols-2 gap-3">
             <select
+              id="birthDay"
               aria-label="Birthday day"
+              aria-invalid={errors.birthDay ? true : undefined}
               value={card.birthDay}
               onChange={set('birthDay')}
-              className={input}
+              className="input"
             >
               <option value="">Day</option>
               {Array.from({ length: monthDays }, (_, i) => (
@@ -342,9 +404,10 @@ export default function CardEntry({
             </select>
             <select
               aria-label="Birthday month"
+              aria-invalid={errors.birthDay ? true : undefined}
               value={card.birthMonth}
               onChange={set('birthMonth')}
-              className={input}
+              className="input"
             >
               <option value="">Month</option>
               {MONTHS.map((m, i) => (
@@ -354,16 +417,21 @@ export default function CardEntry({
               ))}
             </select>
           </div>
-          {errors.birthDay && <p className="field-error">{errors.birthDay}</p>}
+          {errors.birthDay && (
+            <p id="birthDay-error" className="field-error">
+              <Icon name="error_outline" size={16} className="mt-px" />
+              {errors.birthDay}
+            </p>
+          )}
         </fieldset>
 
         <div className="flex flex-col gap-2 rounded-tile bg-violet-soft p-4">
-          <label htmlFor="prayerRequest" className={label}>
+          <label htmlFor="prayerRequest" className="field-label">
             <span className="flex items-center gap-1.5 text-violet">
               <Icon name="volunteer_activism" size={16} />
               Prayer request
             </span>
-            <span className="font-semibold text-violet/80">Optional</span>
+            <span className="font-semibold text-violet">Optional</span>
           </label>
           <textarea
             id="prayerRequest"
@@ -373,64 +441,53 @@ export default function CardEntry({
             onChange={set('prayerRequest')}
             className="input resize-none"
           />
-          <p className="text-right text-[12px] font-semibold text-violet">
+          <p className="text-right text-xs font-semibold text-violet">
             {card.prayerRequest.length} / 1000
           </p>
         </div>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-tile border border-line bg-surface-2 p-4">
+        <label className="check-row items-start">
           <input
             type="checkbox"
             checked={card.smsConsent}
             onChange={set('smsConsent')}
-            className="mt-0.5 h-5 w-5 shrink-0 rounded accent-[rgb(var(--primary))]"
+            className="checkbox mt-0.5"
           />
           <span>
-            <span className="block text-[15px] font-semibold">Agreed to receive messages</span>
-            <span className="block text-[13px] text-muted">
+            <span className="block font-semibold">Agreed to receive messages</span>
+            <span className="block text-meta text-muted">
               Tick only if the card is ticked. They’ll get the church’s welcome and invite SMS.
             </span>
           </span>
         </label>
 
-        <label className="flex cursor-pointer items-center gap-3 rounded-tile border border-line bg-surface-2 p-4">
+        <label className="check-row">
           <input
             type="checkbox"
             checked={card.cardUnclear}
             onChange={set('cardUnclear')}
-            className="mt-0.5 h-5 w-5 shrink-0 rounded accent-[rgb(var(--primary))]"
+            className="checkbox"
           />
-          <span>
-            <span className="flex items-center gap-1.5 text-[15px] font-semibold">
-              <Icon name="flag" size={16} className="text-danger" />
-              Card hard to read
-            </span>
+          <span className="flex items-center gap-1.5 font-semibold">
+            <Icon name="flag" size={16} className="text-danger" />
+            Card hard to read
           </span>
         </label>
 
         {status.state === 'error' && (
-          <p role="alert" className="alert alert-danger">
-            {status.message}
-          </p>
+          <FormAlert error={{ message: status.message, signedOut: status.signedOut }} />
         )}
 
         <div className="flex flex-col gap-2.5 sm:flex-row-reverse sm:justify-start">
-          <button
-            type="submit"
-            disabled={status.state === 'saving'}
-            className="btn btn-primary btn-lg"
-          >
-            <Icon
-              name={status.state === 'saving' ? 'sync' : 'add_circle'}
-              size={20}
-              className={status.state === 'saving' ? 'animate-spin' : ''}
-            />
-            {status.state === 'saving' ? 'Saving…' : 'Save & next card'}
+          <button type="submit" aria-disabled={saving} className="btn btn-primary btn-lg">
+            <Busy busy={saving} icon="add_circle" label="Save & next card" size={20} />
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (started && !window.confirm('This card isn’t saved. Finish anyway?')) return;
+            disabled={saving}
+            onClick={async () => {
+              if (started && !(await askToLeave())) return;
+              setCard(EMPTY);
               router.push('/today');
             }}
             className="btn btn-ghost btn-lg"
@@ -444,19 +501,37 @@ export default function CardEntry({
   );
 }
 
-function Field({ id, label: text, required, hint, error, children }) {
+/**
+ * A labelled field. The input inside gets aria-invalid and is linked to its error, so screen
+ * readers read the problem; `after` sits between the input and the error (e.g. phone status).
+ */
+function Field({ id, label: text, required, hint, error, after, children }) {
+  const errorId = `${id}-error`;
+  const input = Children.only(children);
   return (
     <div className="flex flex-col">
-      <label htmlFor={id} className={label}>
+      <label htmlFor={id} className="field-label">
         <span>
           {text}
-          {required && <span className="ml-0.5 text-coral-strong">*</span>}
+          {required && (
+            <span aria-hidden="true" className="ml-0.5 text-coral-ink">
+              *
+            </span>
+          )}
         </span>
         {hint && <span className="font-semibold text-muted">{hint}</span>}
       </label>
-      {children}
+      {isValidElement(input)
+        ? cloneElement(input, {
+            'aria-invalid': error ? true : undefined,
+            'aria-describedby': error ? errorId : undefined,
+            'aria-required': required || undefined,
+          })
+        : input}
+      {after}
       {error && (
-        <p id={`${id}-error`} className="field-error">
+        <p id={errorId} className="field-error">
+          <Icon name="error_outline" size={16} className="mt-px" />
           {error}
         </p>
       )}
@@ -465,19 +540,36 @@ function Field({ id, label: text, required, hint, error, children }) {
 }
 
 /** Live feedback under the phone field: invalid, checking, new number, or already known. */
-function PhoneStatus({ phone, typed, lookup, matches }) {
+function PhoneStatus({ phone, typed, lookup, matches, onRetry }) {
   const digits = typed.replace(/\D/g, '');
   if (!phone) {
     return digits.length >= 10 ? (
-      <p className="field-error">That doesn’t look like a Nigerian mobile number</p>
+      <p className="field-hint font-semibold text-danger">
+        That doesn’t look like a Nigerian mobile number
+      </p>
     ) : null;
   }
   if (lookup.phone !== phone) {
-    return <p className="mt-1.5 text-[13px] text-muted">Checking church records…</p>;
+    return (
+      <p className="field-hint flex items-center gap-1.5">
+        <Icon name="sync" size={15} className="motion-safe:animate-spin" />
+        Checking church records…
+      </p>
+    );
+  }
+  if (lookup.error) {
+    return (
+      <p className="field-hint flex flex-wrap items-center gap-x-2">
+        Couldn’t check the records right now — you can still save.
+        <button type="button" onClick={onRetry} className="tap-link text-primary">
+          Try again
+        </button>
+      </p>
+    );
   }
   if (!matches.length) {
     return (
-      <p className="mt-1.5 flex items-center gap-1 text-[13px] font-bold text-success">
+      <p className="field-hint flex items-center gap-1 font-bold text-success">
         <Icon name="check_circle" size={16} />
         New number
       </p>
@@ -485,9 +577,12 @@ function PhoneStatus({ phone, typed, lookup, matches }) {
   }
   const names = matches.map((m) => `${m.firstName} ${m.lastName}`).join(', ');
   return (
-    <p className="alert alert-warning mt-2">
+    <p className="alert alert-info mt-2">
       <Icon name="contact_phone" size={18} />
-      Already in our records: {names}. Save to check if this is a returning visitor.
+      <span>
+        Already in our records: <strong>{names}</strong>. Press Save to check if this is a returning
+        visitor.
+      </span>
     </p>
   );
 }

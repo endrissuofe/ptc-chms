@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
+import EmptyState from '@/components/ui/EmptyState';
+import StatCard from '@/components/ui/StatCard';
 import { formatServiceDay } from '@/lib/format';
 import { getDashboard } from '@/services/dashboard.service';
 
@@ -29,11 +31,14 @@ export default async function DashboardPage() {
             Overview
           </p>
           <h1 className="page-title">Dashboard</h1>
+          <p className="page-sub">
+            How attendance and first timers are doing, and what needs attention this week.
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        <Headline
+        <StatCard
           icon="groups"
           tone="tone-primary"
           label="Last Sunday"
@@ -48,29 +53,29 @@ export default async function DashboardPage() {
               : 'No count recorded yet'
           }
         />
-        <Headline
+        <StatCard
           icon="person_add"
           tone="tone-coral"
           label={`First timers in ${monthName.format(new Date())}`}
           value={d.firstTimersThisMonth}
           sub={`${monthChange >= 0 ? '+' : ''}${monthChange} on last month (${d.firstTimersLastMonth})`}
         />
-        <Headline
+        <StatCard
           icon="repeat"
           tone="tone-teal"
           label="Came back"
           value={d.secondVisitRate == null ? '—' : `${d.secondVisitRate}%`}
           sub="Of first timers visited again"
         />
-        <Headline
+        <StatCard
           icon="how_to_reg"
           tone="tone-success"
-          label="Joined the church"
+          label="Became members"
           value={d.funnel.joined}
           sub={
             d.movedThisMonth
               ? `${d.movedThisMonth} moved to Members this month`
-              : 'Members, from first timers'
+              : 'First timers who joined'
           }
         />
       </div>
@@ -88,7 +93,7 @@ export default async function DashboardPage() {
               {d.services
                 .filter((s) => d.trend.some((t) => t.byService[s.key]))
                 .map((s) => (
-                  <span key={s.key} className="flex items-center gap-1.5 text-[13px] font-bold">
+                  <span key={s.key} className="flex items-center gap-1.5 text-meta font-bold">
                     <span className={`h-2.5 w-2.5 rounded-full ${colour[s.key]}`} />
                     {s.name}
                   </span>
@@ -100,35 +105,18 @@ export default async function DashboardPage() {
 
         <section className="card flex min-w-0 flex-col gap-4 lg:col-span-2">
           <div>
-            <h2 className="card-title">Newcomer journey</h2>
+            <h2 className="card-title">First-timer journey</h2>
             <p className="card-sub">Everyone who has filled a card, and how far they’ve come</p>
           </div>
           <Funnel f={d.funnel} />
         </section>
       </div>
 
-      <p className="text-[13px] text-muted">
+      <p className="text-meta text-muted">
         {d.callsThisWeek === 1 ? '1 follow-up call' : `${d.callsThisWeek} follow-up calls`} logged
         in the last 7 days
         {d.reachRate != null && ` · ${d.reachRate}% of people called were reached (30 days)`}.
       </p>
-    </div>
-  );
-}
-
-function Headline({ icon, tone, label, value, sub }) {
-  return (
-    <div className="card flex flex-col gap-1 !p-4 sm:!p-5">
-      <span className="flex items-start justify-between gap-2">
-        <span className="label-caps">{label}</span>
-        <span className={`icon-tile h-9 w-9 ${tone}`}>
-          <Icon name={icon} size={18} />
-        </span>
-      </span>
-      <span className="font-display text-[2.1rem] font-black leading-none tabular-nums">
-        {value}
-      </span>
-      <span className="text-[13px] text-muted">{sub}</span>
     </div>
   );
 }
@@ -182,13 +170,13 @@ function NeedsAttention({ n }) {
   }
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="card-title">Needs attention</h2>
-      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <h2 className="section-title">Needs attention</h2>
+      <ul className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
         {items.map((i) => (
           <li key={i.href + i.icon}>
             <Link
               href={i.href}
-              className="card flex h-full flex-col gap-3 !p-4 transition hover:shadow-lift sm:!p-5"
+              className="card card-compact flex h-full flex-col gap-3 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary"
             >
               <span className={`icon-tile h-10 w-10 ${i.tone}`}>
                 <Icon name={i.icon} size={20} />
@@ -197,7 +185,7 @@ function NeedsAttention({ n }) {
                 <span className="block font-display text-lg font-black leading-snug">
                   {i.title}
                 </span>
-                <span className="block text-[13px] text-muted">{i.sub}</span>
+                <span className="block text-meta text-muted">{i.sub}</span>
               </span>
               <span className="inline-flex items-center gap-1 text-sm font-bold text-primary">
                 {i.action}
@@ -215,9 +203,13 @@ function NeedsAttention({ n }) {
 function AttendanceChart({ trend, colour }) {
   if (!trend.length) {
     return (
-      <p className="py-10 text-center text-muted">
-        No counts yet. They appear here once the ushers record attendance.
-      </p>
+      <EmptyState
+        icon="insights"
+        title="No counts yet"
+        action={{ href: '/attendance', label: 'Record attendance', icon: 'pin' }}
+      >
+        The chart fills in once the ushers record attendance.
+      </EmptyState>
     );
   }
   const max = Math.max(...trend.map((t) => t.total), 1);
@@ -231,9 +223,9 @@ function AttendanceChart({ trend, colour }) {
             aria-label={`${formatServiceDay(t.serviceDate)}: ${t.total}`}
             className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
           >
-            <span className="text-[11.5px] font-bold tabular-nums text-ink-2">{t.total}</span>
+            <span className="text-2xs font-bold tabular-nums text-ink-2">{t.total}</span>
             <div
-              className="flex w-full max-w-[44px] flex-col-reverse overflow-hidden rounded-t-[10px]"
+              className="flex w-full max-w-[44px] flex-col-reverse overflow-hidden rounded-t-control"
               style={{ height: `${Math.max((t.total / max) * 100, 2)}%` }}
             >
               {Object.entries(t.byService).map(([key, n]) => (
@@ -249,10 +241,12 @@ function AttendanceChart({ trend, colour }) {
         ))}
       </div>
       <div className="flex gap-1.5 sm:gap-2.5">
-        {trend.map((t) => (
+        {trend.map((t, i) => (
           <span
             key={String(t.serviceDate)}
-            className="min-w-0 flex-1 truncate text-center text-[11px] text-muted"
+            className={`min-w-0 flex-1 text-center text-2xs text-muted ${
+              (trend.length - 1 - i) % 2 ? 'max-sm:invisible' : ''
+            }`}
           >
             {formatServiceDay(t.serviceDate).replace(/^\w+ /, '')}
           </span>
@@ -268,10 +262,16 @@ function Funnel({ f }) {
     { label: 'Came back', n: f.cameBack, bar: 'bg-primary' },
     { label: 'Regular (3+ visits)', n: f.regular, bar: 'bg-teal' },
     { label: 'Believers’ Class', n: f.believersClass, bar: 'bg-violet' },
-    { label: 'Joined the church', n: f.joined, bar: 'bg-success' },
+    { label: 'Became members', n: f.joined, bar: 'bg-success' },
   ];
   if (!f.received) {
-    return <p className="py-10 text-center text-muted">No first timers yet.</p>;
+    return (
+      <EmptyState
+        icon="person_add"
+        title="No first timers yet"
+        action={{ href: '/newcomers/new', label: 'Enter a card', icon: 'add' }}
+      />
+    );
   }
   return (
     <ol className="flex flex-col gap-3">
@@ -279,7 +279,7 @@ function Funnel({ f }) {
         const pct = Math.round((s.n / f.received) * 100);
         return (
           <li key={s.label} className="flex flex-col gap-1.5">
-            <span className="flex items-baseline justify-between gap-2 text-[14px]">
+            <span className="flex items-baseline justify-between gap-2 text-sm">
               <span className="font-bold">
                 <span className="mr-2 text-muted">{i + 1}</span>
                 {s.label}

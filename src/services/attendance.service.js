@@ -24,6 +24,17 @@ export async function recordAttendance(input, user) {
   return doc.toJSON();
 }
 
+/** Removes a count saved on the wrong service or day. Same date rules as saving. */
+export async function removeAttendance({ service, serviceDate }, user) {
+  await connectDB();
+  await requireActiveService(service, serviceDate, user);
+  const { deletedCount } = await Attendance.deleteOne({
+    serviceDate: toServiceDate(serviceDate),
+    service,
+  });
+  return { removed: deletedCount };
+}
+
 /**
  * Totals per service day for the dashboard chart, newest last.
  * byService is keyed by service key, e.g. { sunday: 180 } or { first: 120, second: 90 }.

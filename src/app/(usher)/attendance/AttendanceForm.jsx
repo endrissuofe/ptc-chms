@@ -1,9 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import Busy from '@/components/ui/Busy';
+import EmptyState from '@/components/ui/EmptyState';
+import FormAlert from '@/components/ui/FormAlert';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { sendJson } from '@/lib/client-api';
+import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 import { DayChips, ServiceChips } from '@/components/usher/ServiceDayPicker';
 import {
   COUNT_FIELDS,
@@ -57,10 +63,9 @@ export default function AttendanceForm({
 }) {
   if (!services.length) {
     return (
-      <p className="card text-[15px] text-muted">
-        There has been no service in the past week to record. Ask an admin if a service is missing
-        from the Services list.
-      </p>
+      <EmptyState card icon="event" title="No service in the past week to record">
+        Ask an admin if a service is missing from the Services list.
+      </EmptyState>
     );
   }
   return (
@@ -76,6 +81,7 @@ export default function AttendanceForm({
 
 function CountForm({ serviceDate, serviceDays, services, byService, initialService }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [selected, setSelected] = useState(initialService);
   const [saved, setSaved] = useState(() =>
     Object.fromEntries(services.map((s) => [s.key, byService[s.key].saved])),
@@ -96,46 +102,80 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
   const previous = byService[selected].previous;
   const change = percentChange(total, previous?.total);
 
-  // Warn before leaving with numbers that haven't been saved (weak Wi-Fi, accidental back).
-  useEffect(() => {
-    if (!anyDirty) return undefined;
-    const warn = (e) => e.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [anyDirty]);
+  const busy = status.state === 'saving' || status.state === 'removing';
 
-  const goToDay = (day) => {
-    if (anyDirty && !window.confirm('You have numbers that aren’t saved. Leave this day anyway?')) {
+  // Ask before leaving with numbers that haven't been saved (tab bar, back, closing the page).
+  useUnsavedGuard(anyDirty && !busy, {
+    title: 'Leave without saving?',
+    body: 'You have numbers that aren’t saved yet.',
+  });
+
+  const goToDay = async (day) => {
+    if (
+      anyDirty &&
+      !(await confirm({
+        title: 'Leave this day?',
+        body: 'You have numbers that aren’t saved yet.',
+        confirmLabel: 'Leave without saving',
+        cancelLabel: 'Keep editing',
+        tone: 'danger',
+      }))
+    ) {
       return;
     }
+    setDrafts(Object.fromEntries(services.map((s) => [s.key, saved[s.key] ?? EMPTY])));
     router.push(`/attendance?date=${day}`);
   };
 
   const update = (changes) => {
-    setStatus({ state: 'idle' });
+    setStatus((s) => (s.state === 'saving' ? s : { state: 'idle' }));
     setDrafts((d) => ({ ...d, [selected]: { ...d[selected], ...changes } }));
   };
 
+  const failed = (err) =>
+    setStatus({
+      state: 'error',
+      error: navigator.onLine
+        ? err
+        : { message: 'No connection. Your numbers are still here — try again when data returns.' },
+    });
+
   async function save() {
+    if (busy) return;
     setStatus({ state: 'saving' });
     try {
-      const res = await fetch('/api/attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serviceDate, service: selected, ...pick(draft) }),
+      const data = await sendJson('/api/attendance', 'POST', {
+        serviceDate,
+        service: selected,
+        ...pick(draft),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Could not save. Please try again.');
       setSaved((s) => ({ ...s, [selected]: { ...pick(draft), savedAt: data.updatedAt } }));
       setStatus({ state: 'saved' });
       router.refresh();
     } catch (err) {
-      setStatus({
-        state: 'error',
-        message: navigator.onLine
-          ? err.message
-          : 'No connection. Your numbers are still here — tap Save again when data returns.',
-      });
+      failed(err);
+    }
+  }
+
+  async function remove() {
+    if (busy) return;
+    const ok = await confirm({
+      title: `Remove the ${service.name} count?`,
+      body: 'Use this if the count was saved on the wrong service or day. You can enter it again afterwards.',
+      confirmLabel: 'Remove count',
+      tone: 'danger',
+      icon: 'remove',
+    });
+    if (!ok) return;
+    setStatus({ state: 'removing' });
+    try {
+      await sendJson('/api/attendance', 'DELETE', { serviceDate, service: selected });
+      setSaved((s) => ({ ...s, [selected]: null }));
+      setDrafts((d) => ({ ...d, [selected]: EMPTY }));
+      setStatus({ state: 'removed' });
+      router.refresh();
+    } catch (err) {
+      failed(err);
     }
   }
 
@@ -158,7 +198,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
         )}
       </div>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex min-w-0 flex-wrap gap-4">
         <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
         <ServiceChips
           services={services}
@@ -190,7 +230,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
                 <p className="label-caps">Total count</p>
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span
-                    className="font-display text-[44px] font-black leading-none tabular-nums"
+                    className="font-display text-stat-lg font-black tabular-nums"
                     aria-live="polite"
                   >
                     {total}
@@ -234,7 +274,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
               ))}
             </ul>
             {previous && (
-              <p className="text-[13px] text-muted">
+              <p className="text-meta text-muted">
                 Last time ({dayLabel.format(new Date(previous.serviceDate))}):{' '}
                 <strong className="text-ink">{previous.total}</strong>
               </p>
@@ -266,20 +306,20 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
             />
           </section>
 
-          {status.state === 'error' && (
-            <p role="alert" className="alert alert-danger">
-              <Icon name="error_outline" size={20} />
-              {status.message}
-            </p>
+          {status.state === 'error' && <FormAlert error={status.error} />}
+          {status.state === 'removed' && (
+            <FormAlert
+              success={`${service.name} count removed. Enter the right numbers when ready.`}
+            />
           )}
 
-          {status.state === 'saved' && !dirty ? (
-            <div role="status" className="alert alert-success justify-between">
-              <span className="flex items-center gap-2 text-[15px]">
+          {savedHere && !dirty ? (
+            <div role="status" className="alert alert-success flex-wrap justify-between">
+              <span className="flex items-center gap-2">
                 <Icon name="check_circle" size={20} filled />
-                {service.name} saved · {total}
+                {status.state === 'saved' ? 'Saved' : 'Already saved'} · {service.name}: {total}
               </span>
-              <Link href="/today" className="font-bold underline underline-offset-2">
+              <Link href="/today" className="tap-link text-success underline underline-offset-2">
                 Back to Today
               </Link>
             </div>
@@ -287,21 +327,38 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
             <button
               type="button"
               onClick={save}
-              disabled={!dirty || total === 0 || status.state === 'saving'}
+              disabled={!dirty || total === 0}
+              aria-disabled={busy}
               className="btn btn-primary btn-lg w-full"
             >
-              <Icon
-                name={status.state === 'saving' ? 'sync' : 'how_to_reg'}
+              <Busy
+                busy={status.state === 'saving'}
+                icon="how_to_reg"
                 size={20}
-                className={status.state === 'saving' ? 'animate-spin' : ''}
+                label={
+                  total === 0
+                    ? 'Enter the count to save'
+                    : savedHere
+                      ? 'Save correction'
+                      : 'Save attendance'
+                }
               />
-              {status.state === 'saving'
-                ? 'Saving…'
-                : savedHere
-                  ? dirty
-                    ? 'Save correction'
-                    : 'Saved — no changes'
-                  : 'Save attendance'}
+            </button>
+          )}
+          {savedHere && (
+            <button
+              type="button"
+              onClick={remove}
+              aria-disabled={busy}
+              className="btn btn-ghost btn-sm self-center"
+            >
+              <Busy
+                busy={status.state === 'removing'}
+                busyLabel="Removing…"
+                icon="remove"
+                label="Remove this count"
+                size={17}
+              />
             </button>
           )}
         </div>
@@ -313,7 +370,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
 function Counter({ group, value, onChange }) {
   const id = `count-${group.label.toLowerCase()}`;
   const step =
-    'grid place-items-center rounded-full bg-surface-2 text-ink transition hover:bg-surface-3 active:scale-90';
+    'grid place-items-center rounded-full bg-surface-2 text-ink transition hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary active:scale-90';
   return (
     <div className="card flex flex-col gap-4">
       <label htmlFor={id} className="flex items-center gap-3">
@@ -322,7 +379,7 @@ function Counter({ group, value, onChange }) {
         </span>
         <span className="flex flex-col leading-tight">
           <span className="font-display text-lg font-extrabold">{group.label}</span>
-          <span className="text-[13px] text-muted">{group.hint}</span>
+          <span className="text-meta text-muted">{group.hint}</span>
         </span>
       </label>
       <div className="flex items-center justify-between gap-2">
@@ -345,7 +402,7 @@ function Counter({ group, value, onChange }) {
           onFocus={(e) => e.target.select()}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '') || 0)}
           className={`h-14 w-full min-w-0 rounded-tile bg-transparent text-center font-display font-black tabular-nums focus:bg-surface-2 focus:outline-none focus:ring-4 focus:ring-primary/20 ${
-            value >= 1000 ? 'text-[30px]' : 'text-[40px]'
+            value >= 1000 ? 'text-2xl' : 'text-stat'
           }`}
         />
         <button
@@ -364,7 +421,7 @@ function Counter({ group, value, onChange }) {
             type="button"
             aria-label={`Add ${n} ${group.label.toLowerCase()}`}
             onClick={() => onChange(value + n)}
-            className="btn btn-soft btn-sm"
+            className="btn btn-soft btn-sm min-w-[64px]"
           >
             +{n}
           </button>

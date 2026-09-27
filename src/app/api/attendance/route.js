@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { handler, requireRole } from '@/lib/api';
 import { ROLES } from '@/lib/roles';
-import { attendanceSchema } from '@/lib/validators/attendance';
-import { recordAttendance, getAttendanceFor, attendanceTrend } from '@/services/attendance.service';
+import { attendanceSchema, removeAttendanceSchema } from '@/lib/validators/attendance';
+import {
+  recordAttendance,
+  removeAttendance,
+  getAttendanceFor,
+  attendanceTrend,
+} from '@/services/attendance.service';
 
 const RECORDERS = [ROLES.USHER, ROLES.PASTOR, ROLES.ADMIN];
 
@@ -23,4 +28,11 @@ export const POST = handler(async (req) => {
   const input = attendanceSchema.parse(await req.json());
   const saved = await recordAttendance(input, user);
   return NextResponse.json(saved, { status: 201 });
+});
+
+/** DELETE { serviceDate, service } — take back a count saved by mistake. */
+export const DELETE = handler(async (req) => {
+  const user = await requireRole(...RECORDERS);
+  const input = removeAttendanceSchema.parse(await req.json());
+  return NextResponse.json(await removeAttendance(input, user));
 });

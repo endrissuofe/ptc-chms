@@ -1,7 +1,8 @@
 /**
  * Design tokens. Values live as CSS variables in src/app/globals.css (light and dark themes);
  * the look follows the "Homeroom" template: indigo + coral on warm paper, Nunito headings,
- * Figtree body, very rounded cards. Change the brand by editing the variables, not these names.
+ * Figtree body, very rounded cards. docs/DESIGN.md describes how to use them.
+ * Change the brand by editing the variables, not these names.
  */
 const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 
@@ -16,14 +17,20 @@ const config = {
         ink: { DEFAULT: v('ink'), 2: v('ink-2') },
         muted: v('muted'),
         line: { DEFAULT: v('line'), 2: v('line-2') },
+        // Form field edges: darker than card lines so empty fields stay visible (3:1).
+        field: v('field-line'),
         primary: {
           DEFAULT: v('primary'),
           strong: v('primary-strong'),
-          dark: v('primary-strong'),
           soft: v('primary-soft'),
           ink: v('primary-ink'),
+          // Solid button fill (indigo with white text in both themes).
+          fill: v('primary-fill'),
+          'fill-hover': v('primary-fill-hover'),
+          'fill-active': v('primary-fill-active'),
         },
         'on-primary': v('on-primary'),
+        'on-primary-fill': v('on-primary-fill'),
         coral: {
           DEFAULT: v('coral'),
           strong: v('coral-strong'),
@@ -33,40 +40,55 @@ const config = {
         'on-coral': v('on-coral'),
         success: { DEFAULT: v('success'), soft: v('success-soft') },
         warning: { DEFAULT: v('warning'), soft: v('warning-soft') },
-        danger: { DEFAULT: v('danger'), subtle: v('danger-soft'), soft: v('danger-soft') },
+        danger: { DEFAULT: v('danger'), soft: v('danger-soft') },
         teal: { DEFAULT: v('teal'), soft: v('teal-soft') },
         violet: { DEFAULT: v('violet'), soft: v('violet-soft') },
-        // Older names used across the screens, mapped onto the palette above.
-        secondary: { DEFAULT: v('teal'), dark: v('teal') },
-        tertiary: v('violet'),
-        stage: {
-          'first-bg': v('coral-soft'),
-          'first-text': v('coral-ink'),
-          'second-bg': v('primary-soft'),
-          'second-text': v('primary-ink'),
-          'regular-bg': v('teal-soft'),
-          'regular-text': v('teal'),
-          'class-bg': v('violet-soft'),
-          'class-text': v('violet'),
-          'member-bg': v('success'),
-          'member-text': v('on-primary'),
-        },
       },
       fontFamily: {
         display: ['Nunito', 'Trebuchet MS', 'system-ui', 'sans-serif'],
-        serif: ['Nunito', 'Trebuchet MS', 'system-ui', 'sans-serif'],
         sans: ['Figtree', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      /*
+       * The type scale (rem, so text grows when someone enlarges it). Use only these:
+       * 2xs 11 · xs 12 · meta 13 · sm 14 · body 15 · base 16 · lg 18 · xl 20 · 2xl 24
+       * · stat 36 (figures) · stat-lg 44 (the big count) · page-title / hero-title (fluid).
+       */
+      fontSize: {
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }],
+        meta: ['0.8125rem', { lineHeight: '1.25rem' }],
+        body: ['0.9375rem', { lineHeight: '1.6' }],
+        stat: ['2.25rem', { lineHeight: '1' }],
+        'stat-lg': ['2.75rem', { lineHeight: '1' }],
+        'page-title': ['clamp(1.75rem, 1.35rem + 1.4vw, 2.25rem)', { lineHeight: '1.15' }],
+        'hero-title': ['clamp(1.85rem, 1.3rem + 2vw, 2.6rem)', { lineHeight: '1.1' }],
       },
       borderRadius: {
         card: '22px',
         tile: '16px',
+        control: '12px',
       },
       boxShadow: {
         soft: '0 1px 2px rgba(30,27,58,.04), 0 4px 14px rgba(30,27,58,.05)',
         lift: '0 2px 6px rgba(30,27,58,.05), 0 14px 34px rgba(30,27,58,.08)',
         pop: '0 24px 60px rgba(30,27,58,.18)',
-        'primary-glow': '0 6px 16px -6px rgb(var(--primary) / .55)',
+        bar: '0 -8px 24px rgba(30,27,58,.06)',
+        hero: '0 18px 40px -18px rgb(var(--hero-from) / .65)',
+        'primary-glow': '0 6px 16px -6px rgb(var(--primary-fill) / .55)',
         'coral-glow': '0 6px 16px -6px rgb(var(--coral-strong) / .6)',
+      },
+      keyframes: {
+        'fade-in': {
+          from: { opacity: '0', transform: 'translateY(4px)' },
+          to: { opacity: '1', transform: 'none' },
+        },
+        'pop-in': {
+          from: { opacity: '0', transform: 'scale(.96)' },
+          to: { opacity: '1', transform: 'none' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in .18s ease-out',
+        'pop-in': 'pop-in .16s ease-out',
       },
     },
   },

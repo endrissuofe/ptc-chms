@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
+import EmptyState from '@/components/ui/EmptyState';
 import Avatar from '@/components/ui/Avatar';
 import StageBadge from '@/components/ui/StageBadge';
 import { formatPhone } from '@/lib/phone';
@@ -16,44 +17,63 @@ const TABS = [
 ];
 
 const EMPTY = {
-  to_call: 'Everyone has been called. Well done!',
-  called: 'Nobody has been called yet.',
-  all: 'No first timers yet. They appear here once the ushers enter the cards.',
+  to_call: {
+    icon: 'task_alt',
+    tone: 'tone-success',
+    title: 'Everyone has been called. Well done!',
+    text: 'New first timers appear here as soon as the ushers enter their cards.',
+  },
+  called: {
+    icon: 'phone_in_talk',
+    tone: 'tone-primary',
+    title: 'Nobody reached since their latest visit',
+    text: 'When you log a call, the person moves here until they visit again.',
+  },
+  all: {
+    icon: 'groups',
+    tone: 'tone-primary',
+    title: 'No first timers yet',
+    text: 'They appear here once the ushers enter the cards.',
+  },
 };
+
+/** Every word must be in the name, or the digits in the phone number. */
+function matches(p, q) {
+  const digits = q.replace(/\D/g, '').replace(/^(234|0)/, '');
+  if (digits.length >= 3 && !/[a-z]/i.test(q)) return p.phone.includes(digits);
+  const name = `${p.firstName} ${p.lastName}`.toLowerCase();
+  return q
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((w) => name.includes(w));
+}
 
 /** The follow-up team's shared list, with Call and WhatsApp buttons on every person. */
 export default function FollowUpList({ lists }) {
   const [tab, setTab] = useState('to_call');
   const [q, setQ] = useState('');
 
-  const shown = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    const digits = q.replace(/\D/g, '').replace(/^(234|0)/, '');
-    if (!needle) return lists[tab];
-    return lists[tab].filter(
-      (p) =>
-        `${p.firstName} ${p.lastName}`.toLowerCase().includes(needle) ||
-        (digits.length >= 3 && p.phone.includes(digits)),
-    );
-  }, [lists, tab, q]);
+  const shown = useMemo(
+    () => (q.trim() ? lists[tab].filter((p) => matches(p, q.trim())) : lists[tab]),
+    [lists, tab, q],
+  );
+  const empty = EMPTY[tab];
 
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div role="tablist" aria-label="Show" className="seg-tabs self-start">
+        <div role="group" aria-label="Show" className="seg-tabs self-start">
           {TABS.map((t) => (
             <button
               key={t.key}
               type="button"
-              role="tab"
-              aria-selected={tab === t.key}
+              aria-pressed={tab === t.key}
               onClick={() => setTab(t.key)}
               className="seg-tab"
             >
               {t.label}
-              <span className="rounded-full bg-surface-3 px-2 py-0.5 font-sans text-xs font-bold text-ink-2">
-                {lists[t.key].length}
-              </span>
+              <span className="seg-count">{lists[t.key].length}</span>
             </button>
           ))}
         </div>
@@ -68,18 +88,32 @@ export default function FollowUpList({ lists }) {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name or phone"
+            enterKeyHint="search"
+            placeholder="Search by name or phone"
             className="input pl-11"
           />
         </label>
       </div>
 
       {shown.length === 0 ? (
-        <p className="card py-10 text-center text-muted">
-          {q ? `Nobody matches “${q}”.` : EMPTY[tab]}
-        </p>
+        q ? (
+          <EmptyState
+            card
+            icon="person_search"
+            title={`Nobody matches “${q}”`}
+            action={
+              <button type="button" onClick={() => setQ('')} className="btn btn-soft btn-sm">
+                Clear search
+              </button>
+            }
+          />
+        ) : (
+          <EmptyState card icon={empty.icon} tone={empty.tone} title={empty.title}>
+            {empty.text}
+          </EmptyState>
+        )
       ) : (
-        <ul className="grid gap-3 lg:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {shown.map((p) => (
             <PersonCard key={p.id} person={p} />
           ))}
@@ -110,7 +144,7 @@ function Status({ person: p }) {
   return (
     <span className="flex flex-wrap gap-1.5">
       {p.toCall && (
-        <span className={`chip ${p.overdue ? 'chip-danger' : 'chip-coral'}`}>
+        <span className={`chip ${p.overdue ? 'chip-danger' : ''}`}>
           <Icon name={p.overdue ? 'alarm' : 'schedule'} size={14} />
           {p.overdue ? `Waiting ${p.days} days` : `Visited ${daysAgo(p.days)}`}
         </span>
@@ -128,20 +162,20 @@ function Status({ person: p }) {
 function PersonCard({ person: p }) {
   const name = `${p.firstName} ${p.lastName}`;
   return (
-    <li className="card flex flex-col gap-4 !p-4 sm:!p-5">
+    <li className="card card-compact flex min-w-0 flex-col gap-4">
       <div className="flex items-start gap-3">
         <Avatar name={name} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link
               href={`/newcomers/${p.id}`}
-              className="truncate font-display text-lg font-black hover:text-primary"
+              className="inline-flex min-h-[44px] min-w-0 items-center break-words font-display text-lg font-black hover:text-primary"
             >
               {name}
             </Link>
             <StageBadge stage={p.stage} />
           </div>
-          <p className="mt-0.5 text-[13px] text-muted">
+          <p className="mt-0.5 text-meta text-muted">
             {formatPhone(p.phone)} · First came {formatServiceDay(p.firstVisitDate)}
             {p.visitCount > 1 && ` · ${plural(p.visitCount, 'visit')}`}
           </p>
@@ -167,18 +201,18 @@ function PersonCard({ person: p }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
+        <a href={telLink(p.phone)} className="btn btn-coral px-3">
+          <Icon name="call" size={18} />
+          Call
+        </a>
         <a
           href={whatsAppLink(p.phone)}
           target="_blank"
           rel="noreferrer"
-          className="btn btn-success"
+          className="btn btn-soft px-3"
         >
           <Icon name="chat" size={18} />
           WhatsApp
-        </a>
-        <a href={telLink(p.phone)} className="btn btn-coral">
-          <Icon name="call" size={18} />
-          Call
         </a>
       </div>
     </li>

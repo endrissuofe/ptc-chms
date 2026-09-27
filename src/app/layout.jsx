@@ -2,12 +2,24 @@ import './globals.css';
 import Providers from '@/components/Providers';
 import { ICON_FONT_URL } from '@/components/ui/Icon';
 import { THEME_SCRIPT } from '@/components/ui/ThemeToggle';
+import { SITE_DESCRIPTION, SITE_NAME } from '@/lib/site';
 
 export const metadata = {
-  title: { default: 'PTC Chapel', template: '%s · PTC Chapel' },
-  description: 'RCCG Peculiar Treasure Chapel — church management',
-  icons: { icon: '/ptc-logo.png' },
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://ptc-chms.vercel.app'),
+  title: { default: SITE_NAME, template: '%s · PTC Chapel' },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   manifest: '/manifest.webmanifest',
+  // Private staff app: keep it out of search results.
+  robots: { index: false, follow: false },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    title: 'PTC Chapel — sign in',
+    description: SITE_DESCRIPTION,
+    images: [{ url: '/icons/icon-512.png', width: 512, height: 512, alt: 'PTC Chapel logo' }],
+  },
+  appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: 'default' },
 };
 
 export const viewport = {
@@ -17,6 +29,8 @@ export const viewport = {
   ],
   width: 'device-width',
   initialScale: 1,
+  // Lets the phone tab bar sit above the iPhone home bar when installed as an app.
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }) {

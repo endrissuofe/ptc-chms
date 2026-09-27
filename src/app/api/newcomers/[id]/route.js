@@ -17,8 +17,10 @@ export const GET = handler(async (_req, { params }) => {
 export const PATCH = handler(async (req, { params }) => {
   await requireRole(ROLES.PASTOR, ROLES.ADMIN);
   const { id } = await params;
-  const { inBelieversClass, isMember, ...details } = personUpdateSchema.parse(await req.json());
-  if (Object.keys(details).length) await updateDetails(id, details);
+  const { inBelieversClass, isMember, sharedPhoneConfirmed, ...details } = personUpdateSchema.parse(
+    await req.json(),
+  );
+  if (Object.keys(details).length) await updateDetails(id, { ...details, sharedPhoneConfirmed });
   const person = await setMilestones(id, { inBelieversClass, isMember });
   return NextResponse.json({ id, stage: person.stage });
 });

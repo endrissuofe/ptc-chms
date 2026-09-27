@@ -110,62 +110,40 @@ export default async function TodayPage() {
 function Hero({ greeting: hello, name, stats }) {
   const verse = verseOfTheDay();
   return (
-    <section className="relative isolate overflow-hidden rounded-card p-6 text-white shadow-[0_18px_40px_-18px_rgba(67,56,202,.65)] sm:p-8 lg:p-10 [background:radial-gradient(120%_90%_at_100%_0%,rgba(255,138,112,.38)_0%,transparent_55%),linear-gradient(135deg,#4338ca_0%,#5a4fe6_45%,#7462f0_100%)]">
+    <section className="hero rounded-card p-6 sm:p-8 lg:p-10">
       <svg
         viewBox="0 0 320 220"
         aria-hidden="true"
-        className="absolute -right-24 -top-16 -z-10 w-[250px] opacity-50 sm:-right-10 sm:-top-5 sm:w-[360px] sm:max-w-[80%] sm:opacity-95"
+        className="pointer-events-none absolute -right-16 -top-10 -z-10 w-[220px] opacity-40 sm:-right-6 sm:-top-4 sm:w-[300px] sm:opacity-70"
       >
-        <circle cx="248" cy="70" r="46" fill="#ffb199" opacity=".85" />
-        <path
-          d="M248 6v10M248 124v10M184 70h10M302 70h10M203 25l7 7M286 108l7 7M203 115l7-7M286 32l7-7"
-          stroke="#ffb199"
-          strokeWidth="5"
-          strokeLinecap="round"
-          opacity=".7"
-        />
+        <circle cx="248" cy="70" r="46" fill="rgb(var(--hero-glow) / .55)" />
         <path
           d="M120 196c26-18 52-18 78 0s52 18 78 0 52-18 78 0"
           fill="none"
-          stroke="rgba(255,255,255,.28)"
+          stroke="rgba(255,255,255,.25)"
           strokeWidth="6"
           strokeLinecap="round"
-        />
-        <path
-          d="M150 170c22-14 44-14 66 0s44 14 66 0 44-14 66 0"
-          fill="none"
-          stroke="rgba(255,255,255,.16)"
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
-        <path
-          d="m118 44 4.5 10 10.5 1.5-7.6 7.3 1.8 10.4-9.2-4.9-9.2 4.9 1.8-10.4-7.6-7.3 10.5-1.5z"
-          fill="#ffd98a"
         />
       </svg>
-      <p className="mb-1.5 text-sm font-bold text-white/80">{longDate.format(new Date())}</p>
-      <h1 className="mb-2 text-[clamp(1.8rem,1.3rem+2vw,2.7rem)] font-black tracking-[-0.015em] text-white">
-        {name ? `${hello}, ${name}` : hello}
-      </h1>
-      <p className="mb-6 max-w-[52ch] text-base text-white/90">
-        “{verse.text}” <span className="whitespace-nowrap text-white/70">— {verse.reference}</span>
+      <p className="mb-1.5 text-sm font-bold text-white/90">{longDate.format(new Date())}</p>
+      <h1 className="hero-title mb-2 break-words">{name ? `${hello}, ${name}` : hello}</h1>
+      <p className="mb-2 max-w-[52ch] text-base font-semibold text-white">
+        Record the count and type up first-timer cards for today’s service.
+      </p>
+      <p className="mb-6 max-w-[52ch] text-white/90">
+        “{verse.text}” <span className="text-white/90">— {verse.reference}</span>
       </p>
       <div className="grid max-w-4xl grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {stats.map((s, i) => (
-          <div
-            key={s.label}
-            className={`flex flex-col gap-0.5 rounded-tile border border-white/20 bg-white/[.13] px-4 py-3.5 backdrop-blur-sm ${
-              i === 0 ? 'col-span-2 sm:col-span-1' : ''
-            }`}
-          >
-            <span className="inline-flex items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-[0.06em] text-white/85">
+          <div key={s.label} className={`tile-glass ${i === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
+            <span className="inline-flex items-center gap-1.5 text-2xs font-bold uppercase tracking-[0.06em] text-white">
               <Icon name={s.icon} size={15} />
               {s.label}
             </span>
-            <span className="line-clamp-2 font-display text-[1.35rem] font-black leading-tight tabular-nums">
+            <span className="break-words font-display text-xl font-black leading-tight tabular-nums">
               {s.value}
             </span>
-            <span className="truncate text-[13px] text-white/85">{s.sub}</span>
+            <span className="text-meta text-white/90">{s.sub}</span>
           </div>
         ))}
       </div>
@@ -187,7 +165,7 @@ function NoServiceToday() {
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Link href="/attendance" className="btn btn-soft">
+        <Link href="/attendance" className="btn btn-primary">
           <Icon name="pin" size={18} />
           Record attendance
         </Link>

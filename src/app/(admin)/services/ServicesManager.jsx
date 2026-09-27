@@ -96,7 +96,7 @@ export default function ServicesManager({ initial, isAdmin, today }) {
         hint="One-off services such as Thanksgiving or a crusade. Ushers see them on the day."
       >
         {upcoming.length === 0 && (
-          <p className="py-2 text-[15px] text-muted">No special services coming up.</p>
+          <p className="py-2 text-body text-muted">No special services coming up.</p>
         )}
         {upcoming.map((s) => (
           <ServiceRow key={s.key} service={s} editable onSave={(c) => save(s.key, c)} />
@@ -151,7 +151,7 @@ function DayPicker({ value, onChange, disabled }) {
               aria-pressed={on}
               disabled={disabled}
               onClick={() => onChange(on ? value.filter((d) => d !== day) : [...value, day].sort())}
-              className={`h-11 w-12 rounded-full font-display text-[13px] font-extrabold transition ${
+              className={`h-11 w-12 rounded-full font-display text-meta font-extrabold transition ${
                 on
                   ? 'bg-primary text-on-primary shadow-primary-glow'
                   : 'border border-line-2 bg-surface text-muted hover:text-ink'
@@ -262,7 +262,7 @@ function ServiceRow({ service, editable, isLastActive = false, onSave }) {
         {editable && (
           <div className="flex items-center gap-2">
             {isLastActive && (
-              <span id={`${service.key}-last`} className="text-[12px] text-muted">
+              <span id={`${service.key}-last`} className="text-xs text-muted">
                 At least one regular service must stay active
               </span>
             )}
@@ -290,7 +290,7 @@ function AddService({ kind, today, onAdd }) {
 
   return (
     <div className="rounded-tile border-[1.5px] border-dashed border-line-2 bg-surface-2/60 p-4">
-      <h3 className="flex items-center gap-2 font-display text-[15px] font-extrabold">
+      <h3 className="flex items-center gap-2 font-display text-body font-extrabold">
         <Icon name="add_circle" size={20} className="text-primary" />
         {isRegular ? 'Add a regular service' : 'Add a special service'}
       </h3>
@@ -351,9 +351,7 @@ function AddService({ kind, today, onAdd }) {
         </button>
       </form>
       {values.startTime && (
-        <p className="mt-2 text-[13px] text-muted">
-          Shows as {formatServiceTime(values.startTime)}
-        </p>
+        <p className="mt-2 text-meta text-muted">Shows as {formatServiceTime(values.startTime)}</p>
       )}
     </div>
   );

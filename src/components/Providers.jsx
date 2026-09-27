@@ -1,7 +1,12 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import { ConfirmProvider } from './ui/ConfirmDialog';
 
 export default function Providers({ children }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <ConfirmProvider>{children}</ConfirmProvider>
+    </SessionProvider>
+  );
 }

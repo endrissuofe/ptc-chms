@@ -12,8 +12,8 @@ export function initials(name = '') {
 export default function Avatar({ name, size = 'md', className = '' }) {
   const sum = [...(name || '')].reduce((n, c) => n + c.charCodeAt(0), 0);
   const sizes = {
-    sm: 'h-[34px] w-[34px] text-[12px]',
-    md: 'h-11 w-11 text-[15px]',
+    sm: 'h-[34px] w-[34px] text-xs',
+    md: 'h-11 w-11 text-body',
     lg: 'h-14 w-14 text-lg',
   };
   return (

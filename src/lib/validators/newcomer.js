@@ -53,6 +53,8 @@ export const personUpdateSchema = cardFields
     cardUnclear: z.boolean(),
     inBelieversClass: z.boolean(),
     isMember: z.boolean(),
+    // The pastor confirmed a family member shares this number.
+    sharedPhoneConfirmed: z.boolean(),
   })
   .partial()
   .superRefine((v, ctx) => {

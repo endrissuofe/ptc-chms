@@ -1,50 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import Busy from '@/components/ui/Busy';
+import FormAlert, { FieldError } from '@/components/ui/FormAlert';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { MONTHS } from '@/lib/birthday';
-
-async function send(url, method, body) {
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.details?.[0]?.message || data.error || 'Could not save');
-  return data;
-}
+import { sendJson } from '@/lib/client-api';
 
 /** Pastors and admins: milestones, move to Members, and correcting the card's details. */
 export default function ManagePerson({ person }) {
   const router = useRouter();
+  const confirm = useConfirm();
+  const editButton = useRef(null);
   const [editing, setEditing] = useState(false);
   const [state, setState] = useState({ kind: 'idle' });
+  // Ticks show straight away; they roll back if saving fails.
+  const [milestones, setMilestones] = useState({
+    inBelieversClass: person.inBelieversClass,
+    isMember: person.isMember,
+  });
+  const [savingField, setSavingField] = useState(null);
 
-  async function run(action, success) {
-    setState({ kind: 'busy' });
+  useEffect(() => {
+    setMilestones({ inBelieversClass: person.inBelieversClass, isMember: person.isMember });
+  }, [person.inBelieversClass, person.isMember]);
+
+  async function toggle(field, value, message) {
+    const before = milestones;
+    setMilestones((m) => ({ ...m, [field]: value }));
+    setSavingField(field);
+    setState({ kind: 'idle' });
     try {
-      await action();
-      setState({ kind: 'ok', message: success });
+      await sendJson(`/api/newcomers/${person.id}`, 'PATCH', { [field]: value });
+      setState({ kind: 'ok', message });
       router.refresh();
-      return true;
     } catch (err) {
-      setState({ kind: 'error', message: err.message });
-      return false;
+      setMilestones(before);
+      setState({ kind: 'error', error: err });
+    } finally {
+      setSavingField(null);
     }
   }
 
-  const toggle = (field, value, message) =>
-    run(() => send(`/api/newcomers/${person.id}`, 'PATCH', { [field]: value }), message);
-
-  const move = () => {
-    if (!window.confirm(`Move ${person.firstName} into the Members list?`)) return;
-    run(
-      () => send('/api/newcomers/move-to-members', 'POST', { ids: [person.id] }),
-      `${person.firstName} is now in the Members list.`,
-    );
-  };
+  async function move() {
+    const ok = await confirm({
+      title: `Move ${person.firstName} into the Members list?`,
+      body: 'They stop being followed up as a first timer. Their visits and calls stay linked.',
+      confirmLabel: 'Move to Members',
+      icon: 'group_add',
+    });
+    if (!ok) return;
+    setState({ kind: 'busy' });
+    try {
+      await sendJson('/api/newcomers/move-to-members', 'POST', { ids: [person.id] });
+      setState({ kind: 'ok', message: `${person.firstName} is now in the Members list.` });
+      router.refresh();
+    } catch (err) {
+      setState({ kind: 'error', error: err });
+    }
+  }
 
   return (
     <section className="card flex flex-col gap-4">
@@ -55,18 +71,24 @@ export default function ManagePerson({ person }) {
 
       <div className="flex flex-col gap-2">
         <Toggle
-          checked={person.inBelieversClass}
-          disabled={state.kind === 'busy'}
+          checked={milestones.inBelieversClass}
+          saving={savingField === 'inBelieversClass'}
           onChange={(v) =>
-            toggle('inBelieversClass', v, v ? 'Marked as in Believers’ Class.' : 'Updated.')
+            toggle(
+              'inBelieversClass',
+              v,
+              v ? 'Marked as in Believers’ Class.' : 'Believers’ Class tick removed.',
+            )
           }
           icon="school"
           label="In Believers’ Class"
         />
         <Toggle
-          checked={person.isMember}
-          disabled={state.kind === 'busy'}
-          onChange={(v) => toggle('isMember', v, v ? 'Marked as a member.' : 'Updated.')}
+          checked={milestones.isMember}
+          saving={savingField === 'isMember'}
+          onChange={(v) =>
+            toggle('isMember', v, v ? 'Marked as a member.' : 'Member tick removed.')
+          }
           icon="verified"
           label="Has become a member"
         />
@@ -76,43 +98,46 @@ export default function ManagePerson({ person }) {
         <button
           type="button"
           onClick={move}
-          disabled={state.kind === 'busy'}
+          aria-disabled={state.kind === 'busy'}
           className="btn btn-soft self-start"
         >
-          <Icon name="group_add" size={18} />
-          Move to Members list
+          <Busy
+            busy={state.kind === 'busy'}
+            busyLabel="Moving…"
+            icon="group_add"
+            label="Move to Members list"
+          />
         </button>
       )}
 
-      {state.kind === 'error' && (
-        <p role="alert" className="alert alert-danger">
-          <Icon name="error_outline" size={19} />
-          {state.message}
-        </p>
-      )}
-      {state.kind === 'ok' && (
-        <p role="status" className="alert alert-success">
-          <Icon name="check_circle" size={19} filled />
-          {state.message}
-        </p>
-      )}
+      {state.kind === 'error' && <FormAlert error={state.error} />}
+      {state.kind === 'ok' && !editing && <FormAlert success={state.message} />}
 
       <div className="border-t border-line pt-4">
         {editing ? (
           <EditDetails
             person={person}
-            busy={state.kind === 'busy'}
-            onCancel={() => setEditing(false)}
-            onSave={async (changes) => {
-              const ok = await run(
-                () => send(`/api/newcomers/${person.id}`, 'PATCH', changes),
-                'Details saved.',
-              );
-              if (ok) setEditing(false);
+            onCancel={() => {
+              setEditing(false);
+              requestAnimationFrame(() => editButton.current?.focus());
+            }}
+            onSaved={(message) => {
+              setEditing(false);
+              setState({ kind: 'ok', message });
+              router.refresh();
+              requestAnimationFrame(() => editButton.current?.focus());
             }}
           />
         ) : (
-          <button type="button" onClick={() => setEditing(true)} className="btn btn-ghost btn-sm">
+          <button
+            ref={editButton}
+            type="button"
+            onClick={() => {
+              setEditing(true);
+              setState({ kind: 'idle' });
+            }}
+            className="btn btn-ghost btn-sm"
+          >
             <Icon name="edit_note" size={17} />
             Correct details
           </button>
@@ -122,72 +147,141 @@ export default function ManagePerson({ person }) {
   );
 }
 
-function Toggle({ checked, onChange, disabled, icon, label }) {
+function Toggle({ checked, onChange, saving, icon, label }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-tile bg-surface-2 px-4 py-3">
+    <label className="check-row">
       <Icon name={icon} size={19} className="text-muted" />
       <span className="flex-1 font-bold">{label}</span>
+      {saving && <Icon name="sync" size={17} className="text-muted motion-safe:animate-spin" />}
       <input
         type="checkbox"
         checked={checked}
-        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-5 w-5 accent-[rgb(var(--primary))]"
+        className="checkbox"
       />
     </label>
   );
 }
 
-function EditDetails({ person, busy, onCancel, onSave }) {
+function EditDetails({ person, onCancel, onSaved }) {
+  const confirm = useConfirm();
+  const form = useRef(null);
   const [f, setF] = useState(person);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
   const set = (key) => (e) =>
     setF((v) => ({
       ...v,
       [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value,
     }));
+  const fields = error?.fields ?? {};
 
-  function submit(e) {
-    e.preventDefault();
-    onSave({
+  useEffect(() => {
+    form.current?.querySelector('input')?.focus();
+  }, []);
+
+  async function submit(e, sharedPhoneConfirmed = false) {
+    e?.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    const body = {
       firstName: f.firstName.trim(),
       lastName: f.lastName.trim(),
-      phone: f.phone,
       email: f.email.trim(),
       birthDay: f.birthDay ? Number(f.birthDay) : null,
       birthMonth: f.birthMonth ? Number(f.birthMonth) : null,
       smsConsent: f.smsConsent,
       cardUnclear: f.cardUnclear,
-    });
+      // Only send the phone if it changed, so the shared-number check runs only when needed.
+      ...(f.phone !== person.phone && { phone: f.phone, sharedPhoneConfirmed }),
+    };
+    try {
+      await sendJson(`/api/newcomers/${person.id}`, 'PATCH', body);
+      onSaved('Details saved.');
+    } catch (err) {
+      setBusy(false);
+      if (err.status === 409 && err.details?.matches) {
+        const names = err.details.matches.map((m) => `${m.firstName} ${m.lastName}`).join(', ');
+        const ok = await confirm({
+          title: 'Someone else uses this number',
+          body: `${names} is on this number too. Is it a shared family phone?`,
+          confirmLabel: 'Yes, it’s shared',
+          cancelLabel: 'Let me check',
+          icon: 'contact_phone',
+        });
+        if (ok) submit(null, true);
+        return;
+      }
+      setError(err);
+      const first = Object.keys(err.fields ?? {})[0];
+      if (first) form.current?.querySelector(`[name="${first}"]`)?.focus();
+    }
   }
 
+  const invalid = (key) =>
+    fields[key] ? { 'aria-invalid': true, 'aria-describedby': `edit-${key}-error` } : {};
+
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3">
+    <form
+      ref={form}
+      onSubmit={submit}
+      onKeyDown={(e) => e.key === 'Escape' && onCancel()}
+      className="flex flex-col gap-4 motion-safe:animate-fade-in"
+    >
+      <h3 className="card-title">Correct details</h3>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="First name">
-          <input value={f.firstName} onChange={set('firstName')} required className="input" />
-        </Field>
-        <Field label="Last name">
-          <input value={f.lastName} onChange={set('lastName')} required className="input" />
-        </Field>
-        <Field label="Phone">
+        <Field label="First name" error={fields.firstName} errorId="edit-firstName-error">
           <input
+            name="firstName"
+            value={f.firstName}
+            onChange={set('firstName')}
+            required
+            className="input"
+            {...invalid('firstName')}
+          />
+        </Field>
+        <Field label="Last name" error={fields.lastName} errorId="edit-lastName-error">
+          <input
+            name="lastName"
+            value={f.lastName}
+            onChange={set('lastName')}
+            required
+            className="input"
+            {...invalid('lastName')}
+          />
+        </Field>
+        <Field label="Phone" error={fields.phone} errorId="edit-phone-error">
+          <input
+            name="phone"
+            type="tel"
+            inputMode="tel"
             value={f.phone}
             onChange={set('phone')}
             required
-            inputMode="tel"
             className="input"
+            {...invalid('phone')}
           />
         </Field>
-        <Field label="Email">
-          <input type="email" value={f.email} onChange={set('email')} className="input" />
+        <Field label="Email" error={fields.email} errorId="edit-email-error">
+          <input
+            name="email"
+            type="email"
+            value={f.email}
+            onChange={set('email')}
+            className="input"
+            {...invalid('email')}
+          />
         </Field>
-        <Field label="Birthday">
-          <div className="grid grid-cols-[5rem_1fr] gap-2">
+        <Field label="Birthday" error={fields.birthDay} errorId="edit-birthDay-error">
+          <div className="grid grid-cols-[5.5rem_1fr] gap-2">
             <select
+              name="birthDay"
               value={f.birthDay}
               onChange={set('birthDay')}
               className="input"
               aria-label="Day"
+              {...invalid('birthDay')}
             >
               <option value="">Day</option>
               {Array.from({ length: 31 }, (_, i) => (
@@ -212,28 +306,28 @@ function EditDetails({ person, busy, onCancel, onSave }) {
           </div>
         </Field>
       </div>
-      <label className="flex items-center gap-2.5 text-[14.5px]">
+      <label className="check-row">
         <input
           type="checkbox"
           checked={f.smsConsent}
           onChange={set('smsConsent')}
-          className="h-5 w-5"
+          className="checkbox"
         />
         Agreed to SMS messages
       </label>
-      <label className="flex items-center gap-2.5 text-[14.5px]">
+      <label className="check-row">
         <input
           type="checkbox"
           checked={f.cardUnclear}
           onChange={set('cardUnclear')}
-          className="h-5 w-5"
+          className="checkbox"
         />
         Card hard to read
       </label>
-      <div className="flex gap-2">
-        <button type="submit" disabled={busy} className="btn btn-primary">
-          <Icon name="save" size={18} />
-          Save
+      {error && !Object.keys(fields).length && <FormAlert error={error} />}
+      <div className="flex flex-wrap gap-2">
+        <button type="submit" aria-disabled={busy} className="btn btn-primary">
+          <Busy busy={busy} icon="save" label="Save details" />
         </button>
         <button type="button" onClick={onCancel} className="btn btn-ghost">
           Cancel
@@ -243,11 +337,12 @@ function EditDetails({ person, busy, onCancel, onSave }) {
   );
 }
 
-function Field({ label, children }) {
+function Field({ label, error, errorId, children }) {
   return (
     <label className="flex flex-col">
       <span className="field-label">{label}</span>
       {children}
+      <FieldError id={errorId}>{error}</FieldError>
     </label>
   );
 }

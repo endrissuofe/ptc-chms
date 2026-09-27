@@ -31,7 +31,7 @@ export default async function MembersPage({ searchParams }) {
           </p>
         </div>
         {list.all > 0 && (
-          <Link href="/sms#broadcast" className="btn btn-coral">
+          <Link href="/sms#broadcast" className="btn btn-soft">
             <Icon name="send" size={18} />
             Send them a message
           </Link>
@@ -78,7 +78,7 @@ export default async function MembersPage({ searchParams }) {
                     <p className="truncate font-display font-extrabold">
                       {m.firstName} {m.lastName}
                     </p>
-                    <p className="text-[13px] text-muted">{formatPhone(m.phone)}</p>
+                    <p className="text-meta text-muted">{formatPhone(m.phone)}</p>
                   </div>
                   <div className="hidden flex-wrap justify-end gap-1.5 sm:flex">
                     {m.source === 'first_timer' && m.person && (
@@ -104,7 +104,7 @@ export default async function MembersPage({ searchParams }) {
 
           {pages > 1 && (
             <div className="flex items-center justify-between gap-2 border-t border-line pt-4">
-              <span className="text-[13px] text-muted">
+              <span className="text-meta text-muted">
                 Page {current} of {pages} · {list.total} {q ? 'found' : 'members'}
               </span>
               <div className="flex gap-2">

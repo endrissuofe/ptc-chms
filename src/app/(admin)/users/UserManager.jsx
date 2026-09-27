@@ -83,7 +83,7 @@ function PasswordField({ value, onChange, label, required }) {
             onChange(suggestPassword());
             setShow(true);
           }}
-          className="text-[13px] font-bold text-primary"
+          className="text-meta font-bold text-primary"
         >
           Suggest one
         </button>
@@ -102,7 +102,7 @@ function PasswordField({ value, onChange, label, required }) {
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-3 py-1.5 text-[13px] font-bold text-muted hover:bg-surface-2"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-3 py-1.5 text-meta font-bold text-muted hover:bg-surface-2"
         >
           {show ? 'Hide' : 'Show'}
         </button>
@@ -134,7 +134,7 @@ function RolePicker({ value, onChange }) {
             <Icon name={r.icon} size={20} className="mt-0.5 text-primary" />
             <span>
               <span className="block font-bold">{r.label}</span>
-              <span className="block text-[13px] text-muted">{r.does}</span>
+              <span className="block text-meta text-muted">{r.does}</span>
             </span>
           </label>
         ))}
@@ -273,7 +273,7 @@ function UserRow({ user: u, isMe, onDone }) {
             {isMe && <span className="chip chip-primary">You</span>}
             {!u.active && <span className="chip chip-danger">Switched off</span>}
           </p>
-          <p className="text-[13px] text-muted">
+          <p className="text-meta text-muted">
             {u.username} ·{' '}
             {u.lastSignInAt ? `Last signed in ${formatMoment(u.lastSignInAt)}` : 'Never signed in'}
           </p>
@@ -310,7 +310,7 @@ function UserRow({ user: u, isMe, onDone }) {
             />
           </label>
           {isMe ? (
-            <p className="text-[13px] text-muted">You can’t change your own role.</p>
+            <p className="text-meta text-muted">You can’t change your own role.</p>
           ) : (
             <RolePicker value={f.role} onChange={(role) => setF((s) => ({ ...s, role }))} />
           )}

@@ -89,10 +89,19 @@ export async function createService(input, user) {
     name: input.name,
     kind: input.kind,
     startTime: input.startTime,
-    ...(input.kind === 'regular' ? { days: input.days } : { date: dayFromIso(input.date) }),
+    ...(input.kind === 'regular' ? { days: input.days } : { date: checkSpecialDate(input.date) }),
     createdBy: user?.id,
   });
   return ChurchService.findById(service._id).select(PUBLIC_FIELDS).lean();
+}
+
+/** Special services: from a week ago (so late entries still work) onwards. */
+function checkSpecialDate(iso, today = new Date()) {
+  const date = dayFromIso(iso);
+  if (daysBetween(date, toServiceDate(today)) > USHER_BACKDATE_DAYS) {
+    throw new HttpError(400, 'Choose a date from the past week or later');
+  }
+  return date;
 }
 
 export async function updateService(key, changes, user) {
@@ -108,7 +117,7 @@ export async function updateService(key, changes, user) {
     if ('date' in update) throw new HttpError(400, 'Regular services repeat on days, not a date');
   } else {
     if ('days' in update) throw new HttpError(400, 'Special services have a date, not days');
-    if (update.date) update.date = dayFromIso(update.date);
+    if (update.date) update.date = checkSpecialDate(update.date);
   }
   if (update.active === false && current.kind === 'regular') {
     const othersActive = await ChurchService.countDocuments({

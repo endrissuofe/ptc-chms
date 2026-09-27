@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Avatar from '@/components/ui/Avatar';
+import Busy from '@/components/ui/Busy';
+import FormAlert from '@/components/ui/FormAlert';
 import Icon from '@/components/ui/Icon';
 import StageBadge from '@/components/ui/StageBadge';
 import { STAGES } from '@/lib/stages';
@@ -30,35 +33,36 @@ export default function MatchReview({
   onBack,
 }) {
   const typedName = `${card.firstName.trim()} ${card.lastName.trim()}`;
+  const heading = useRef(null);
+  const [pressed, setPressed] = useState(null);
+  // Screen readers and keyboards start at the question, not the top of the page.
+  useEffect(() => heading.current?.focus(), []);
   const plural = matches.length > 1;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
-      <button type="button" onClick={onBack} className="btn btn-ghost btn-sm self-start">
+      <button type="button" onClick={onBack} className="tap-link self-start">
         <Icon name="arrow_back" size={18} />
         Back to the card
       </button>
 
       <section className="card flex items-start gap-4 border-coral/40 bg-coral-soft">
-        <span className="icon-tile h-12 w-12 bg-surface text-coral-strong">
+        <span className="icon-tile h-12 w-12 bg-surface text-coral-ink">
           <Icon name="contact_phone" size={24} filled />
         </span>
         <div>
           <p className="eyebrow">Returning visitor?</p>
-          <h1 className="text-2xl font-black">This phone number is already in our records</h1>
-          <p className="mt-1 text-[15px] text-ink-2">
+          <h1 ref={heading} tabIndex={-1} className="section-title outline-none">
+            This phone number is already in our records
+          </h1>
+          <p className="mt-1 text-body text-ink-2">
             The card says <strong className="text-ink">{typedName}</strong>. Is this{' '}
             {plural ? 'one of these people' : 'the same person'} coming back?
           </p>
         </div>
       </section>
 
-      {error && (
-        <p role="alert" className="alert alert-danger">
-          <Icon name="error_outline" size={20} />
-          {error}
-        </p>
-      )}
+      {error && <FormAlert error={{ message: error }} />}
 
       <div className={`grid gap-4 ${plural ? 'md:grid-cols-2' : ''}`}>
         {matches.map((m) => {
@@ -68,7 +72,7 @@ export default function MatchReview({
               <div className="flex items-center gap-3">
                 <Avatar name={`${m.firstName} ${m.lastName}`} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-xl font-black">
+                  <h2 className="section-title break-words">
                     {m.firstName} {m.lastName}
                   </h2>
                   <StageBadge stage={m.stage} />
@@ -92,15 +96,6 @@ export default function MatchReview({
                   </dt>
                   <dd className="mt-1 font-display text-base font-extrabold">{m.visitCount}</dd>
                 </div>
-                {m.assignedTo && (
-                  <div className="col-span-2 rounded-tile bg-primary-soft p-3 text-primary-ink">
-                    <dt className="label-caps flex items-center gap-1 text-primary-ink/80">
-                      <Icon name="assignment_ind" size={14} />
-                      Follow-up worker
-                    </dt>
-                    <dd className="mt-1 font-display text-base font-extrabold">{m.assignedTo}</dd>
-                  </div>
-                )}
               </dl>
 
               {alreadyToday && (
@@ -113,11 +108,18 @@ export default function MatchReview({
               <button
                 type="button"
                 disabled={saving}
-                onClick={() => onPick(m)}
-                className="btn btn-primary btn-lg mt-auto"
+                onClick={() => {
+                  setPressed(m.id);
+                  onPick(m);
+                }}
+                className="btn btn-primary btn-lg mt-auto w-full"
               >
-                <Icon name="how_to_reg" size={20} />
-                Yes, it’s {m.firstName} coming back
+                <Busy
+                  busy={saving && pressed === m.id}
+                  icon="how_to_reg"
+                  label={`Yes, it’s ${m.firstName} coming back`}
+                  size={20}
+                />
               </button>
             </section>
           );
@@ -139,13 +141,20 @@ export default function MatchReview({
         <button
           type="button"
           disabled={saving}
-          onClick={onNewPerson}
+          onClick={() => {
+            setPressed('new');
+            onNewPerson();
+          }}
           className="btn btn-ghost btn-lg w-full sm:w-auto"
         >
-          <Icon name="person_add" size={20} />
-          No, {typedName} is a different person
+          <Busy
+            busy={saving && pressed === 'new'}
+            icon="person_add"
+            label={`No, ${typedName} is a different person`}
+            size={20}
+          />
         </button>
-        <p className="text-[13px] text-muted">For example, a family member using the same phone.</p>
+        <p className="text-meta text-muted">For example, a family member using the same phone.</p>
       </div>
     </div>
   );

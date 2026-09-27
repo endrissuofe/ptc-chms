@@ -72,7 +72,7 @@ export default function MemberImport({ empty }) {
     return (
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" onClick={() => setOpen(true)} className="btn btn-soft">
-          <Icon name="file_download" size={18} />
+          <Icon name="upload_file" size={18} />
           Upload more members (CSV)
         </button>
         {state.kind === 'ok' && (
@@ -92,10 +92,10 @@ export default function MemberImport({ empty }) {
     <section className="card flex flex-col gap-5">
       <div className="flex items-start gap-3">
         <span className="icon-tile tone-primary h-12 w-12">
-          <Icon name="file_download" size={24} />
+          <Icon name="upload_file" size={24} />
         </span>
         <div className="flex-1">
-          <h2 className="text-2xl font-black">Upload your member list</h2>
+          <h2 className="section-title">Upload your member list</h2>
           <p className="card-sub">
             A CSV file with the columns{' '}
             <strong className="text-ink">Name, Phone, Gender, Birthday</strong> (Excel: File → Save
@@ -105,7 +105,14 @@ export default function MemberImport({ empty }) {
         </div>
       </div>
 
-      <input ref={input} type="file" accept=".csv,text/csv" onChange={choose} className="sr-only" />
+      <input
+        ref={input}
+        type="file"
+        accept=".csv,text/csv"
+        onChange={choose}
+        tabIndex={-1}
+        className="sr-only"
+      />
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -155,8 +162,8 @@ export default function MemberImport({ empty }) {
           )}
 
           <div className="max-h-[420px] overflow-auto rounded-tile border border-line">
-            <table className="w-full min-w-[620px] text-left text-sm">
-              <thead className="sticky top-0 bg-surface-2 text-[11px] font-extrabold uppercase tracking-[0.07em] text-muted">
+            <table className="table min-w-[620px]">
+              <thead className="sticky top-0">
                 <tr>
                   <th className="px-4 py-3">Row</th>
                   <th className="px-4 py-3">Name</th>
@@ -169,15 +176,13 @@ export default function MemberImport({ empty }) {
               <tbody className="divide-y divide-line">
                 {shown.map((r) => (
                   <tr key={r.line}>
-                    <td className="px-4 py-2.5 tabular-nums text-muted">{r.line}</td>
-                    <td className="px-4 py-2.5 font-semibold">{r.name || '—'}</td>
-                    <td className="px-4 py-2.5">
-                      {r.phone ? formatPhone(r.phone) : r.phoneRaw || '—'}
-                    </td>
-                    <td className="px-4 py-2.5">
+                    <td className="py-2.5 tabular-nums text-muted">{r.line}</td>
+                    <td className="py-2.5 font-semibold">{r.name || '—'}</td>
+                    <td className="py-2.5">{r.phone ? formatPhone(r.phone) : r.phoneRaw || '—'}</td>
+                    <td className="py-2.5">
                       {r.gender ? (r.gender === 'male' ? 'Male' : 'Female') : '—'}
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="py-2.5">
                       {r.birthDay ? (
                         `${r.birthDay} ${MONTHS[r.birthMonth - 1].slice(0, 3)}`
                       ) : r.birthdayUnread ? (
@@ -186,14 +191,12 @@ export default function MemberImport({ empty }) {
                         '—'
                       )}
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="py-2.5">
                       <span className={`chip ${STATUS[r.status].chip}`}>
                         {STATUS[r.status].label}
                       </span>
                       {r.problems.length > 0 && (
-                        <span className="ml-2 text-[12px] text-danger">
-                          {r.problems.join(', ')}
-                        </span>
+                        <span className="ml-2 text-xs text-danger">{r.problems.join(', ')}</span>
                       )}
                     </td>
                   </tr>
@@ -201,7 +204,7 @@ export default function MemberImport({ empty }) {
               </tbody>
             </table>
             {preview.rows.length > shown.length && (
-              <p className="p-3 text-center text-[13px] text-muted">
+              <p className="p-3 text-center text-meta text-muted">
                 Showing the first {shown.length} of {preview.rows.length} rows.
               </p>
             )}

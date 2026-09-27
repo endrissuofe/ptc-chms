@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import EmptyState from '@/components/ui/EmptyState';
 import Avatar from '@/components/ui/Avatar';
 import StageBadge from '@/components/ui/StageBadge';
 import { getSession } from '@/lib/auth';
@@ -17,7 +18,7 @@ import { listServices } from '@/services/churchService.service';
 import LogCall from './LogCall';
 import ManagePerson from './ManagePerson';
 
-export const metadata = { title: 'Newcomer' };
+export const metadata = { title: 'First-timer profile' };
 export const dynamic = 'force-dynamic';
 
 const JOURNEY = [
@@ -59,7 +60,7 @@ export default async function NewcomerPage({ params }) {
     <div className="flex flex-col gap-5 lg:gap-6">
       <Link
         href={canManage ? '/first-timers' : '/my-newcomers'}
-        className="inline-flex items-center gap-1.5 self-start text-sm font-bold text-muted hover:text-ink"
+        className="tap-link self-start text-sm"
       >
         <Icon name="arrow_back" size={18} />
         {canManage ? 'First timers' : 'Follow-up list'}
@@ -69,9 +70,7 @@ export default async function NewcomerPage({ params }) {
         <div className="flex items-start gap-4">
           <Avatar name={name} size="lg" />
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-[clamp(1.5rem,1.2rem+1.2vw,2rem)] font-black leading-tight">
-              {name}
-            </h1>
+            <h1 className="page-title break-words">{name}</h1>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <StageBadge stage={person.stage} />
               {person.movedToMembersAt && (
@@ -99,14 +98,14 @@ export default async function NewcomerPage({ params }) {
             href={whatsAppLink(person.phone)}
             target="_blank"
             rel="noreferrer"
-            className="btn btn-success"
+            className="btn btn-soft"
           >
             <Icon name="chat" size={18} />
             WhatsApp
           </a>
         </div>
 
-        <dl className="grid gap-x-6 gap-y-3 rounded-tile bg-surface-2 p-4 text-[14.5px] sm:grid-cols-2">
+        <dl className="grid gap-x-6 gap-y-3 rounded-tile bg-surface-2 p-4 sm:grid-cols-2">
           <Detail icon="smartphone" label="Phone" value={formatPhone(person.phone)} />
           <Detail icon="mail" label="Email" value={person.email || '—'} />
           <Detail icon="cake" label="Birthday" value={birthday || '—'} />
@@ -125,7 +124,9 @@ export default async function NewcomerPage({ params }) {
           <section className="card flex flex-col gap-4">
             <h2 className="card-title">History</h2>
             {history.length === 0 ? (
-              <p className="text-sm text-muted">No calls or messages yet.</p>
+              <EmptyState icon="history_toggle_off" title="No calls or messages yet">
+                Log the first call above.
+              </EmptyState>
             ) : (
               <ol className="flex flex-col">
                 {history.map((h) => (
@@ -153,33 +154,37 @@ export default async function NewcomerPage({ params }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold">{formatServiceDay(v.serviceDate)}</p>
-                    <p className="text-[13px] text-muted">
+                    <p className="text-meta text-muted">
                       {serviceName[v.service] || v.service} ·{' '}
                       {v.source === 'card' ? 'Card' : 'Came back'}
                     </p>
                   </div>
-                  {i === visits.length - 1 && <span className="chip chip-coral">First visit</span>}
+                  {i === visits.length - 1 && (
+                    <span className="chip chip-primary">First visit</span>
+                  )}
                 </li>
               ))}
             </ul>
           </section>
 
           {prayerRequests && (
-            <section className="card flex flex-col gap-3 border-l-4 border-l-violet">
-              <div className="flex items-center gap-2">
-                <Icon name="volunteer_activism" size={20} className="text-violet" />
+            <section className="card flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="icon-tile tone-violet h-9 w-9">
+                  <Icon name="volunteer_activism" size={18} />
+                </span>
                 <h2 className="card-title flex-1">Prayer requests</h2>
-                <Link href="/prayer-requests" className="text-sm font-bold text-primary">
+                <Link href="/prayer-requests" className="tap-link text-sm text-primary">
                   All requests
                 </Link>
               </div>
               {prayerRequests.length === 0 ? (
-                <p className="text-sm text-muted">None.</p>
+                <p className="text-muted">No prayer request on their cards.</p>
               ) : (
                 prayerRequests.map((r) => (
                   <figure key={String(r._id)} className="rounded-tile bg-surface-2 p-4">
                     <blockquote className="italic">“{r.text}”</blockquote>
-                    <figcaption className="mt-2 flex flex-wrap items-center gap-2 text-[13px] text-muted">
+                    <figcaption className="mt-2 flex flex-wrap items-center gap-2 text-meta text-muted">
                       {formatServiceDay(r.serviceDate || r.createdAt)}
                       <span className="chip">{PRAYER_STATUSES[r.status]?.label}</span>
                     </figcaption>
@@ -215,10 +220,10 @@ export default async function NewcomerPage({ params }) {
 
 function Detail({ icon, label, value }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
       <Icon name={icon} size={18} className="text-muted" />
-      <dt className="w-20 shrink-0 text-muted">{label}</dt>
-      <dd className="min-w-0 truncate font-bold">{value}</dd>
+      <dt className="min-w-[5rem] text-muted">{label}</dt>
+      <dd className="min-w-0 break-words font-bold">{value}</dd>
     </div>
   );
 }
@@ -247,14 +252,14 @@ function Journey({ stage }) {
                   done
                     ? 'bg-success text-on-primary'
                     : now
-                      ? 'bg-coral text-on-coral shadow-coral-glow'
+                      ? 'bg-primary-fill text-on-primary-fill shadow-primary-glow'
                       : 'bg-surface-2 text-muted'
                 }`}
               >
                 {done ? <Icon name="check" size={18} /> : i + 1}
               </span>
               <span
-                className={`text-[11.5px] font-bold leading-tight ${now ? 'text-coral-ink' : 'text-muted'}`}
+                className={`text-2xs font-bold leading-tight ${now ? 'text-primary-ink' : 'text-muted'}`}
               >
                 {STAGE_LABELS[s]}
               </span>
@@ -287,10 +292,10 @@ function HistoryItem({ entry: { kind, item } }) {
             <span className="font-bold">
               {channel?.label}: {outcome?.label}
             </span>
-            <span className="text-[12.5px] text-muted">{formatMoment(item.createdAt)}</span>
+            <span className="text-xs text-muted">{formatMoment(item.createdAt)}</span>
           </p>
-          {item.note && <p className="mt-0.5 text-[14px]">{item.note}</p>}
-          {who && <p className="mt-0.5 text-[12.5px] text-muted">By {who}</p>}
+          {item.note && <p className="mt-0.5 text-sm">{item.note}</p>}
+          {who && <p className="mt-0.5 text-xs text-muted">By {who}</p>}
         </div>
       </li>
     );
@@ -307,11 +312,11 @@ function HistoryItem({ entry: { kind, item } }) {
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-baseline justify-between gap-x-2">
           <span className="font-bold">SMS: {title}</span>
-          <span className="text-[12.5px] text-muted">{formatMoment(item.createdAt)}</span>
+          <span className="text-xs text-muted">{formatMoment(item.createdAt)}</span>
         </p>
-        <p className="mt-0.5 line-clamp-2 text-[14px] text-ink-2">“{item.body}”</p>
-        <p className={`mt-0.5 text-[12.5px] font-bold ${sent ? 'text-success' : 'text-danger'}`}>
-          {sent ? 'Sent' : `Not delivered${item.error ? `: ${item.error}` : ''}`}
+        <p className="mt-0.5 line-clamp-2 text-sm text-ink-2">“{item.body}”</p>
+        <p className={`mt-0.5 text-xs font-bold ${sent ? 'text-success' : 'text-danger'}`}>
+          {sent ? 'Sent' : 'Not delivered'}
         </p>
       </div>
     </li>
