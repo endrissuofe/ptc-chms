@@ -619,7 +619,7 @@ function RunHistory({ runs }) {
           action={{ href: '#broadcast', label: 'Send a message', icon: 'send' }}
         />
       ) : (
-        <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-soft">
+        <div className="relative overflow-x-auto rounded-card border border-line bg-surface shadow-soft">
           <table className="table min-w-[680px]">
             <thead>
               <tr>

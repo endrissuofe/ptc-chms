@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
 import Avatar from '@/components/ui/Avatar';
+import EmptyState from '@/components/ui/EmptyState';
 import { formatPhone } from '@/lib/phone';
 import { MONTHS } from '@/lib/birthday';
 import { listMembers } from '@/services/member.service';
@@ -27,7 +28,8 @@ export default async function MembersPage({ searchParams }) {
           </p>
           <h1 className="page-title">Members</h1>
           <p className="page-sub">
-            {list.all === 1 ? '1 member' : `${list.all} members`} on the list.
+            The church member list, used for messages to members ·{' '}
+            {list.all === 1 ? '1 member' : `${list.all} members`}
           </p>
         </div>
         {list.all > 0 && (
@@ -53,6 +55,8 @@ export default async function MembersPage({ searchParams }) {
               <input
                 name="q"
                 defaultValue={q}
+                type="search"
+                enterKeyHint="search"
                 placeholder="Search by name or phone"
                 className="input pl-11"
               />
@@ -68,7 +72,11 @@ export default async function MembersPage({ searchParams }) {
           </form>
 
           {list.items.length === 0 ? (
-            <p className="py-6 text-center text-muted">Nobody matches “{q}”.</p>
+            <EmptyState
+              icon="person_search"
+              title={`Nobody matches “${q}”`}
+              action={{ href: '/members', label: 'Clear search' }}
+            />
           ) : (
             <ul className="divide-y divide-line">
               {list.items.map((m) => (
@@ -82,9 +90,14 @@ export default async function MembersPage({ searchParams }) {
                   </div>
                   <div className="hidden flex-wrap justify-end gap-1.5 sm:flex">
                     {m.source === 'first_timer' && m.person && (
-                      <Link href={`/newcomers/${m.person}`} className="chip chip-coral">
-                        <Icon name="person_add" size={14} />
-                        Was a first timer
+                      <Link
+                        href={`/newcomers/${m.person}`}
+                        className="-my-2.5 inline-flex min-h-[44px] items-center"
+                      >
+                        <span className="chip chip-coral">
+                          <Icon name="person_add" size={14} />
+                          Was a first timer
+                        </span>
                       </Link>
                     )}
                     {m.gender && (

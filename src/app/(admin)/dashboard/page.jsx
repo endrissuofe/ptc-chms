@@ -171,7 +171,7 @@ function NeedsAttention({ n }) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="section-title">Needs attention</h2>
-      <ul className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr))]">
+      <ul className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,16rem),1fr))]">
         {items.map((i) => (
           <li key={i.href + i.icon}>
             <Link

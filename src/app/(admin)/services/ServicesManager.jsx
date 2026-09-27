@@ -1,22 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '@/components/ui/Icon';
-import { WEEKDAYS, formatServiceTime, sortServices } from '@/lib/church';
-
-async function api(url, method, body) {
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.details?.[0]?.message || data.error || 'Something went wrong');
-  return data;
-}
+import Busy from '@/components/ui/Busy';
+import EmptyState from '@/components/ui/EmptyState';
+import FormAlert, { FieldError } from '@/components/ui/FormAlert';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { sendJson } from '@/lib/client-api';
+import {
+  USHER_BACKDATE_DAYS,
+  WEEKDAYS,
+  describeSchedule,
+  formatServiceTime,
+  sortServices,
+} from '@/lib/church';
 
 /** API dates come back as ISO timestamps; the forms work in "YYYY-MM-DD". */
 const normalise = (s) => ({ ...s, date: s.date ? s.date.slice(0, 10) : undefined });
+
+/** Special services may be dated from a week ago (late entries), like the server allows. */
+function earliestDate(today) {
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - USHER_BACKDATE_DAYS);
+  return d.toISOString().slice(0, 10);
+}
 
 /**
  * Regular services (repeat weekly) and special services (one date).
@@ -25,30 +32,10 @@ const normalise = (s) => ({ ...s, date: s.date ? s.date.slice(0, 10) : undefined
  */
 export default function ServicesManager({ initial, isAdmin, today }) {
   const [services, setServices] = useState(initial);
-  const [error, setError] = useState('');
 
-  async function run(action) {
-    setError('');
-    try {
-      await action();
-      return true;
-    } catch (err) {
-      setError(err.message);
-      return false;
-    }
-  }
-
-  const save = (key, changes) =>
-    run(async () => {
-      const updated = normalise(await api(`/api/services/${key}`, 'PATCH', changes));
-      setServices((list) => list.map((s) => (s.key === key ? updated : s)));
-    });
-
-  const add = (values) =>
-    run(async () => {
-      const created = normalise(await api('/api/services', 'POST', values));
-      setServices((list) => [...list, created]);
-    });
+  const replace = (updated) =>
+    setServices((list) => list.map((s) => (s.key === updated.key ? normalise(updated) : s)));
+  const added = (created) => setServices((list) => [...list, normalise(created)]);
 
   const regular = sortServices(services.filter((s) => s.kind === 'regular'));
   const special = services
@@ -60,13 +47,6 @@ export default function ServicesManager({ initial, isAdmin, today }) {
 
   return (
     <>
-      {error && (
-        <p role="alert" className="alert alert-danger">
-          <Icon name="error_outline" size={20} />
-          {error}
-        </p>
-      )}
-
       <Section
         icon="repeat"
         tone="tone-primary"
@@ -83,10 +63,11 @@ export default function ServicesManager({ initial, isAdmin, today }) {
             service={s}
             editable={isAdmin}
             isLastActive={s.active && activeRegular === 1}
-            onSave={(changes) => save(s.key, changes)}
+            today={today}
+            onSaved={replace}
           />
         ))}
-        {isAdmin && <AddService kind="regular" today={today} onAdd={add} />}
+        {isAdmin && <AddService kind="regular" today={today} onAdded={added} />}
       </Section>
 
       <Section
@@ -96,22 +77,29 @@ export default function ServicesManager({ initial, isAdmin, today }) {
         hint="One-off services such as Thanksgiving or a crusade. Ushers see them on the day."
       >
         {upcoming.length === 0 && (
-          <p className="py-2 text-body text-muted">No special services coming up.</p>
+          <EmptyState icon="event" title="No special services coming up">
+            Add one below and the ushers will see it on the day.
+          </EmptyState>
         )}
         {upcoming.map((s) => (
-          <ServiceRow key={s.key} service={s} editable onSave={(c) => save(s.key, c)} />
+          <ServiceRow key={s.key} service={s} editable today={today} onSaved={replace} />
         ))}
-        <AddService kind="special" today={today} onAdd={add} />
+        <AddService kind="special" today={today} onAdded={added} />
       </Section>
 
       {past.length > 0 && (
-        <details className="card">
-          <summary className="cursor-pointer font-display text-lg font-extrabold">
+        <details className="card group">
+          <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 font-display text-lg font-extrabold">
+            <Icon
+              name="expand_more"
+              size={22}
+              className="text-muted transition-transform group-open:rotate-180"
+            />
             Past special services ({past.length})
           </summary>
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-4 flex flex-col gap-3 motion-safe:animate-fade-in">
             {past.map((s) => (
-              <ServiceRow key={s.key} service={s} editable onSave={(c) => save(s.key, c)} />
+              <ServiceRow key={s.key} service={s} editable today={today} onSaved={replace} />
             ))}
           </div>
         </details>
@@ -137,9 +125,9 @@ function Section({ icon, tone, title, hint, children }) {
   );
 }
 
-function DayPicker({ value, onChange, disabled }) {
+function DayPicker({ value, onChange, error, errorId }) {
   return (
-    <fieldset>
+    <fieldset aria-describedby={error ? errorId : undefined}>
       <legend className="field-label">Days</legend>
       <div className="flex flex-wrap gap-1.5">
         {WEEKDAYS.map((label, day) => {
@@ -149,32 +137,110 @@ function DayPicker({ value, onChange, disabled }) {
               key={label}
               type="button"
               aria-pressed={on}
-              disabled={disabled}
               onClick={() => onChange(on ? value.filter((d) => d !== day) : [...value, day].sort())}
-              className={`h-11 w-12 rounded-full font-display text-meta font-extrabold transition ${
-                on
-                  ? 'bg-primary text-on-primary shadow-primary-glow'
-                  : 'border border-line-2 bg-surface text-muted hover:text-ink'
-              } disabled:cursor-default disabled:opacity-70`}
+              className="toggle-chip min-w-[52px] px-3"
             >
               {label}
             </button>
           );
         })}
       </div>
+      <FieldError id={errorId}>{error}</FieldError>
     </fieldset>
   );
 }
 
-function ServiceRow({ service, editable, isLastActive = false, onSave }) {
-  const [draft, setDraft] = useState({
+/** Name, days or date, and start time: shared by editing and adding. */
+function ServiceFields({ kind, values, setValues, fields, idPrefix, minDate }) {
+  const isRegular = kind === 'regular';
+  const set = (field) => (e) => setValues((v) => ({ ...v, [field]: e.target.value }));
+  const invalid = (key) =>
+    fields[key] ? { 'aria-invalid': true, 'aria-describedby': `${idPrefix}-${key}-error` } : {};
+  return (
+    <div className="flex flex-wrap items-start gap-3">
+      <label className="flex min-w-[200px] flex-1 flex-col">
+        <span className="field-label">Name</span>
+        <input
+          name="name"
+          value={values.name}
+          onChange={set('name')}
+          maxLength={40}
+          required
+          placeholder={isRegular ? 'e.g. 2nd Service' : 'e.g. Thanksgiving Service'}
+          className="input"
+          {...invalid('name')}
+        />
+        <FieldError id={`${idPrefix}-name-error`}>{fields.name}</FieldError>
+      </label>
+      {isRegular ? (
+        <DayPicker
+          value={values.days}
+          onChange={(days) => setValues((v) => ({ ...v, days }))}
+          error={fields.days}
+          errorId={`${idPrefix}-days-error`}
+        />
+      ) : (
+        <label className="flex flex-col">
+          <span className="field-label">Date</span>
+          <input
+            name="date"
+            type="date"
+            min={minDate}
+            value={values.date}
+            onChange={set('date')}
+            required
+            className="input"
+            {...invalid('date')}
+          />
+          <FieldError id={`${idPrefix}-date-error`}>{fields.date}</FieldError>
+        </label>
+      )}
+      <label className="flex flex-col">
+        <span className="field-label">Starts</span>
+        <input
+          name="startTime"
+          type="time"
+          value={values.startTime}
+          onChange={set('startTime')}
+          required
+          className="input"
+          {...invalid('startTime')}
+        />
+        <FieldError id={`${idPrefix}-startTime-error`}>{fields.startTime}</FieldError>
+        {values.startTime && !fields.startTime && (
+          <span className="field-hint">Shows as {formatServiceTime(values.startTime)}</span>
+        )}
+      </label>
+    </div>
+  );
+}
+
+/** Errors from the server: those naming a field go under it; anything else in a banner. */
+function splitError(err) {
+  const fields = err?.fields ?? {};
+  return { fields, banner: err && !Object.keys(fields).length ? err : null };
+}
+
+function ServiceRow({ service, editable, isLastActive = false, today, onSaved }) {
+  const confirm = useConfirm();
+  const changeButton = useRef(null);
+  const form = useRef(null);
+  const isRegular = service.kind === 'regular';
+  const start = {
     name: service.name,
     startTime: service.startTime,
     days: service.days || [],
     date: service.date || '',
-  });
-  const [busy, setBusy] = useState(false);
-  const isRegular = service.kind === 'regular';
+  };
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(start);
+  const [state, setState] = useState({ kind: 'idle' });
+  const busy = state.kind === 'busy' || state.kind === 'switching';
+  const { fields, banner } = splitError(state.kind === 'error' ? state.error : null);
+
+  useEffect(() => {
+    if (editing) form.current?.querySelector('input')?.focus();
+  }, [editing]);
 
   const changes = {};
   if (draft.name.trim() !== service.name) changes.name = draft.name.trim();
@@ -183,176 +249,205 @@ function ServiceRow({ service, editable, isLastActive = false, onSave }) {
   if (!isRegular && draft.date !== service.date) changes.date = draft.date;
   const dirty = Object.keys(changes).length > 0;
 
-  async function submit(payload) {
-    setBusy(true);
-    await onSave(payload);
-    setBusy(false);
+  function close() {
+    setEditing(false);
+    setDraft(start);
+    requestAnimationFrame(() => changeButton.current?.focus());
   }
 
-  const set = (field) => (e) => setDraft((d) => ({ ...d, [field]: e.target.value }));
+  async function save(e) {
+    e.preventDefault();
+    if (busy || !dirty) return;
+    if (isRegular && draft.days.length === 0) {
+      setState({ kind: 'error', error: { fields: { days: 'Choose at least one day' } } });
+      return;
+    }
+    setState({ kind: 'busy' });
+    try {
+      const updated = await sendJson(`/api/services/${service.key}`, 'PATCH', changes);
+      onSaved(updated);
+      setEditing(false);
+      setState({ kind: 'ok', message: 'Saved.' });
+      requestAnimationFrame(() => changeButton.current?.focus());
+    } catch (err) {
+      setState({ kind: 'error', error: err });
+    }
+  }
+
+  async function switchActive() {
+    if (busy) return;
+    if (service.active) {
+      const ok = await confirm({
+        title: isRegular ? `Switch off ${service.name}?` : `Cancel ${service.name}?`,
+        body: isRegular
+          ? 'Ushers stop seeing it. Its attendance history is kept, and you can switch it back on.'
+          : 'Ushers won’t see it on the day. You can restore it later.',
+        confirmLabel: isRegular ? 'Switch off' : 'Cancel service',
+        cancelLabel: 'Keep it',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
+    setState({ kind: 'switching' });
+    try {
+      const updated = await sendJson(`/api/services/${service.key}`, 'PATCH', {
+        active: !service.active,
+      });
+      onSaved(updated);
+      setState({
+        kind: 'ok',
+        message: updated.active ? 'Switched back on.' : isRegular ? 'Switched off.' : 'Cancelled.',
+      });
+    } catch (err) {
+      setState({ kind: 'error', error: err });
+    }
+  }
+
+  const when = describeSchedule(service);
 
   return (
     <div
-      className={`rounded-tile border border-line p-4 ${service.active ? 'bg-surface' : 'bg-surface-2'}`}
+      className={`flex flex-col gap-3 rounded-tile border border-line p-4 ${service.active ? 'bg-surface' : 'bg-surface-2'}`}
     >
-      <form
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (dirty) submit(changes);
-        }}
-      >
-        <label className="min-w-[200px] flex-1">
-          <span className="field-label">Name</span>
-          <input
-            value={draft.name}
-            onChange={set('name')}
-            maxLength={40}
-            required
-            disabled={!editable}
-            className="input"
-          />
-        </label>
-        {isRegular ? (
-          <DayPicker
-            value={draft.days}
-            disabled={!editable}
-            onChange={(days) => setDraft((d) => ({ ...d, days }))}
-          />
-        ) : (
-          <label>
-            <span className="field-label">Date</span>
-            <input
-              type="date"
-              value={draft.date}
-              onChange={set('date')}
-              required
-              disabled={!editable}
-              className="input"
-            />
-          </label>
-        )}
-        <label>
-          <span className="field-label">Starts</span>
-          <input
-            type="time"
-            value={draft.startTime}
-            onChange={set('startTime')}
-            required
-            disabled={!editable}
-            className="input"
-          />
-        </label>
-        {editable && (
-          <button
-            type="submit"
-            disabled={!dirty || busy || (isRegular && draft.days.length === 0)}
-            className="btn btn-primary"
-          >
-            Save
-          </button>
-        )}
-      </form>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <span className={`chip ${service.active ? 'chip-success' : 'chip-soft'}`}>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="break-words font-display text-lg font-extrabold">{service.name}</p>
+          <p className="text-meta text-muted">{when}</p>
+        </div>
+        <span className={`chip ${service.active ? 'chip-success' : 'chip-warning'}`}>
           <Icon name={service.active ? 'check_circle' : 'pending'} size={14} />
           {service.active ? 'Active' : isRegular ? 'Switched off' : 'Cancelled'}
-          <span className="font-semibold opacity-80">· {formatServiceTime(service.startTime)}</span>
         </span>
-        {editable && (
-          <div className="flex items-center gap-2">
-            {isLastActive && (
-              <span id={`${service.key}-last`} className="text-xs text-muted">
-                At least one regular service must stay active
-              </span>
-            )}
-            <button
-              type="button"
-              disabled={busy || isLastActive}
-              aria-describedby={isLastActive ? `${service.key}-last` : undefined}
-              onClick={() => submit({ active: !service.active })}
-              className="btn btn-ghost btn-sm"
-            >
-              {service.active ? (isRegular ? 'Switch off' : 'Cancel service') : 'Restore'}
-            </button>
-          </div>
+        {editable && !editing && (
+          <button
+            ref={changeButton}
+            type="button"
+            onClick={() => {
+              setEditing(true);
+              setState({ kind: 'idle' });
+            }}
+            aria-expanded={false}
+            className="btn btn-ghost btn-sm"
+          >
+            <Icon name="edit_note" size={17} />
+            Change
+          </button>
         )}
       </div>
+
+      {editing && (
+        <form
+          ref={form}
+          onSubmit={save}
+          onKeyDown={(e) => e.key === 'Escape' && close()}
+          className="flex flex-col gap-4 border-t border-line pt-4 motion-safe:animate-fade-in"
+        >
+          <ServiceFields
+            kind={service.kind}
+            values={draft}
+            setValues={(fn) => {
+              setDraft(fn);
+              setState({ kind: 'idle' });
+            }}
+            fields={fields}
+            idPrefix={`edit-${service.key}`}
+            minDate={earliestDate(today)}
+          />
+          {banner && <FormAlert error={banner} />}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              disabled={!dirty}
+              aria-disabled={busy}
+              className="btn btn-primary"
+            >
+              <Busy busy={state.kind === 'busy'} icon="save" label="Save" />
+            </button>
+            <button type="button" onClick={close} className="btn btn-ghost">
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={switchActive}
+              disabled={isLastActive}
+              aria-disabled={busy}
+              aria-describedby={isLastActive ? `${service.key}-last` : undefined}
+              className={`btn sm:ml-auto ${service.active ? 'btn-danger-ghost' : 'btn-soft'}`}
+            >
+              <Busy
+                busy={state.kind === 'switching'}
+                busyLabel="Saving…"
+                icon={service.active ? 'lock' : 'how_to_reg'}
+                label={service.active ? (isRegular ? 'Switch off' : 'Cancel service') : 'Restore'}
+              />
+            </button>
+          </div>
+          {isLastActive && (
+            <p id={`${service.key}-last`} className="field-hint">
+              At least one regular service must stay active.
+            </p>
+          )}
+        </form>
+      )}
+
+      {!editing && state.kind === 'ok' && <FormAlert success={state.message} />}
+      {!editing && banner && <FormAlert error={banner} />}
     </div>
   );
 }
 
-function AddService({ kind, today, onAdd }) {
+function AddService({ kind, today, onAdded }) {
   const blank = { name: '', startTime: '', days: [], date: '' };
   const [values, setValues] = useState(blank);
+  const [state, setState] = useState({ kind: 'idle' });
   const isRegular = kind === 'regular';
-  const set = (field) => (e) => setValues((v) => ({ ...v, [field]: e.target.value }));
+  const busy = state.kind === 'busy';
+  const { fields, banner } = splitError(state.kind === 'error' ? state.error : null);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (busy) return;
+    if (isRegular && values.days.length === 0) {
+      setState({ kind: 'error', error: { fields: { days: 'Choose at least one day' } } });
+      return;
+    }
+    const base = { kind, name: values.name.trim(), startTime: values.startTime };
+    const payload = isRegular ? { ...base, days: values.days } : { ...base, date: values.date };
+    setState({ kind: 'busy' });
+    try {
+      const created = await sendJson('/api/services', 'POST', payload);
+      onAdded(created);
+      setValues(blank);
+      setState({ kind: 'ok', message: `${created.name} added.` });
+    } catch (err) {
+      setState({ kind: 'error', error: err });
+    }
+  }
 
   return (
-    <div className="rounded-tile border-[1.5px] border-dashed border-line-2 bg-surface-2/60 p-4">
+    <div className="rounded-tile border-[1.5px] border-dashed border-field/60 bg-surface-2/60 p-4">
       <h3 className="flex items-center gap-2 font-display text-body font-extrabold">
         <Icon name="add_circle" size={20} className="text-primary" />
         {isRegular ? 'Add a regular service' : 'Add a special service'}
       </h3>
-      <form
-        className="mt-3 flex flex-wrap items-end gap-3"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const base = { kind, name: values.name.trim(), startTime: values.startTime };
-          const payload = isRegular
-            ? { ...base, days: values.days }
-            : { ...base, date: values.date };
-          if (await onAdd(payload)) setValues(blank);
-        }}
-      >
-        <label className="min-w-[200px] flex-1">
-          <span className="field-label">Name</span>
-          <input
-            value={values.name}
-            onChange={set('name')}
-            maxLength={40}
-            required
-            placeholder={isRegular ? '2nd Service' : 'Thanksgiving Service'}
-            className="input"
-          />
-        </label>
-        {isRegular ? (
-          <DayPicker value={values.days} onChange={(days) => setValues((v) => ({ ...v, days }))} />
-        ) : (
-          <label>
-            <span className="field-label">Date</span>
-            <input
-              type="date"
-              min={today}
-              value={values.date}
-              onChange={set('date')}
-              required
-              className="input"
-            />
-          </label>
-        )}
-        <label>
-          <span className="field-label">Starts</span>
-          <input
-            type="time"
-            value={values.startTime}
-            onChange={set('startTime')}
-            required
-            className="input"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={isRegular && values.days.length === 0}
-          className="btn btn-soft"
-        >
-          <Icon name="add" size={18} />
-          Add
+      <form className="mt-3 flex flex-col gap-3" onSubmit={submit}>
+        <ServiceFields
+          kind={kind}
+          values={values}
+          setValues={(fn) => {
+            setValues(fn);
+            if (state.kind !== 'busy') setState({ kind: 'idle' });
+          }}
+          fields={fields}
+          idPrefix={`add-${kind}`}
+          minDate={earliestDate(today)}
+        />
+        {banner && <FormAlert error={banner} />}
+        {state.kind === 'ok' && <FormAlert success={state.message} />}
+        <button type="submit" aria-disabled={busy} className="btn btn-primary self-start">
+          <Busy busy={busy} busyLabel="Adding…" icon="add" label="Add service" />
         </button>
       </form>
-      {values.startTime && (
-        <p className="mt-2 text-meta text-muted">Shows as {formatServiceTime(values.startTime)}</p>
-      )}
     </div>
   );
 }

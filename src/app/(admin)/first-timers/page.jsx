@@ -159,7 +159,7 @@ export default async function FirstTimersPage({ searchParams }) {
           )
         ) : (
           <>
-            <div className="-mx-5 hidden overflow-x-auto sm:-mx-6 md:block">
+            <div className="relative -mx-5 hidden overflow-x-auto sm:-mx-6 md:block">
               <table className="table min-w-[760px]">
                 <thead>
                   <tr>
@@ -262,7 +262,7 @@ function Row({ person: p }) {
   return (
     <tr className="transition-colors hover:bg-surface-2/60">
       <td className="pl-5 sm:pl-6">
-        <Link href={`/newcomers/${p._id}`} className="flex items-center gap-3">
+        <Link href={`/newcomers/${p._id}`} className="flex min-h-[44px] items-center gap-3">
           <Avatar name={name} size="sm" />
           <span className="font-display font-extrabold hover:text-primary">{name}</span>
           <Flags person={p} />
