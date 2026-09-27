@@ -9,3 +9,5 @@ export { default as SmsLog } from './SmsLog';
 export { default as ChurchService } from './ChurchService';
 export { default as Member } from './Member';
 export { default as Broadcast } from './Broadcast';
+export { default as AlertSettings } from './AlertSettings';
+export { default as EmailLog } from './EmailLog';

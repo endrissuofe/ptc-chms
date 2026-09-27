@@ -46,3 +46,8 @@ export function dayFromIso(iso) {
 export function daysBetween(from, to) {
   return Math.round((new Date(to) - new Date(from)) / 86400000);
 }
+
+/** The instant a Lagos day starts (Lagos is UTC+1 all year), given its service-date key. */
+export function lagosDayStart(serviceDate) {
+  return new Date(new Date(serviceDate).getTime() - 60 * 60 * 1000);
+}

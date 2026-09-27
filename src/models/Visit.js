@@ -13,5 +13,6 @@ const visitSchema = new mongoose.Schema(
 );
 
 visitSchema.index({ person: 1, serviceDate: 1, service: 1 }, { unique: true });
+visitSchema.index({ createdAt: -1 });
 
 export default mongoose.models.Visit || mongoose.model('Visit', visitSchema);

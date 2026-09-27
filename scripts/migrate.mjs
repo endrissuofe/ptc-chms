@@ -120,6 +120,21 @@ const MIGRATIONS = [
       await people.createIndex({ movedToMembersAt: 1, lastVisitDate: -1 });
     },
   },
+  {
+    id: '007-email-alerts',
+    async up(db) {
+      // A day's follow-up report is sent once (runKey is only set on success).
+      await db
+        .collection('emaillogs')
+        .createIndex(
+          { runKey: 1 },
+          { unique: true, partialFilterExpression: { runKey: { $type: 'string' } } },
+        );
+      await db.collection('emaillogs').createIndex({ createdAt: -1 });
+      await db.collection('alertsettings').createIndex({ key: 1 }, { unique: true });
+      await db.collection('visits').createIndex({ createdAt: -1 });
+    },
+  },
 ];
 
 async function main() {
