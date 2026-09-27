@@ -44,8 +44,10 @@ export const returningVisitSchema = z.object({
 
 /** Pastor/admin: correct a newcomer's details, or set the milestones visits can't tell us. */
 export const personUpdateSchema = cardFields
-  .pick({ firstName: true, lastName: true, phone: true, email: true, smsConsent: true })
+  .pick({ firstName: true, lastName: true, phone: true, email: true })
   .extend({
+    // No default here: a change that leaves consent out must leave it as it is.
+    smsConsent: z.boolean(),
     birthDay: z.coerce.number().int().min(1).max(31).nullable(),
     birthMonth: z.coerce.number().int().min(1).max(12).nullable(),
     cardUnclear: z.boolean(),

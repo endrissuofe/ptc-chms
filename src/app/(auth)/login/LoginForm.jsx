@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { safeCallbackUrl } from '@/lib/safe-url';
 import Icon from '@/components/ui/Icon';
 
 export default function LoginForm() {
@@ -24,7 +25,7 @@ export default function LoginForm() {
     });
     setBusy(false);
     if (res?.error) return setError('Wrong username or password');
-    router.replace(params.get('callbackUrl') || '/');
+    router.replace(safeCallbackUrl(params.get('callbackUrl'), window.location.origin));
   }
 
   return (
