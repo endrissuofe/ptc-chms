@@ -135,6 +135,15 @@ const MIGRATIONS = [
       await db.collection('visits').createIndex({ createdAt: -1 });
     },
   },
+  {
+    id: '008-birthdays-anniversaries',
+    async up(db) {
+      // Today's birthdays and anniversaries are looked up by day and month.
+      await db.collection('members').createIndex({ birthMonth: 1, birthDay: 1 });
+      await db.collection('members').createIndex({ anniversaryMonth: 1, anniversaryDay: 1 });
+      await db.collection('people').createIndex({ birthMonth: 1, birthDay: 1 });
+    },
+  },
 ];
 
 async function main() {

@@ -1,11 +1,9 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
-import Avatar from '@/components/ui/Avatar';
 import EmptyState from '@/components/ui/EmptyState';
-import { formatPhone } from '@/lib/phone';
-import { MONTHS } from '@/lib/birthday';
 import { listMembers } from '@/services/member.service';
 import MemberImport from './MemberImport';
+import MemberList, { AddMember } from './MemberList';
 
 export const metadata = { title: 'Members' };
 export const dynamic = 'force-dynamic';
@@ -40,6 +38,7 @@ export default async function MembersPage({ searchParams }) {
         )}
       </div>
 
+      <AddMember />
       <MemberImport empty={list.all === 0} />
 
       {list.all > 0 && (
@@ -78,41 +77,22 @@ export default async function MembersPage({ searchParams }) {
               action={{ href: '/members', label: 'Clear search' }}
             />
           ) : (
-            <ul className="divide-y divide-line">
-              {list.items.map((m) => (
-                <li key={m._id} className="flex items-center gap-3 py-3">
-                  <Avatar name={`${m.firstName} ${m.lastName}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-display font-extrabold">
-                      {m.firstName} {m.lastName}
-                    </p>
-                    <p className="text-meta text-muted">{formatPhone(m.phone)}</p>
-                  </div>
-                  <div className="hidden flex-wrap justify-end gap-1.5 sm:flex">
-                    {m.source === 'first_timer' && m.person && (
-                      <Link
-                        href={`/newcomers/${m.person}`}
-                        className="-my-2.5 inline-flex min-h-[44px] items-center"
-                      >
-                        <span className="chip chip-coral">
-                          <Icon name="person_add" size={14} />
-                          Was a first timer
-                        </span>
-                      </Link>
-                    )}
-                    {m.gender && (
-                      <span className="chip">{m.gender === 'male' ? 'Male' : 'Female'}</span>
-                    )}
-                    {m.birthDay && (
-                      <span className="chip chip-coral">
-                        <Icon name="cake" size={14} />
-                        {m.birthDay} {MONTHS[m.birthMonth - 1].slice(0, 3)}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <MemberList
+              members={list.items.map((m) => ({
+                id: String(m._id),
+                firstName: m.firstName,
+                lastName: m.lastName ?? '',
+                phone: m.phone,
+                gender: m.gender ?? '',
+                birthDay: m.birthDay ?? null,
+                birthMonth: m.birthMonth ?? null,
+                anniversaryDay: m.anniversaryDay ?? null,
+                anniversaryMonth: m.anniversaryMonth ?? null,
+                smsOptOut: Boolean(m.smsOptOut),
+                source: m.source,
+                person: m.person ? String(m.person) : null,
+              }))}
+            />
           )}
 
           {pages > 1 && (

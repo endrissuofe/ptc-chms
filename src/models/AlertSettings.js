@@ -7,6 +7,9 @@ const alertSettingsSchema = new mongoose.Schema(
     followupEmails: { type: [String], default: [] },
     pastorEmails: { type: [String], default: [] },
     followUpReport: { type: Boolean, default: true },
+    // Birthdays and anniversaries email (admin / media team, to wish and post on socials).
+    celebrationEmails: { type: [String], default: [] },
+    celebrationReport: { type: Boolean, default: true },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true },

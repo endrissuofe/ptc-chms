@@ -1,4 +1,6 @@
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
+import { normalizePhone } from '@/lib/phone';
 import { searchFilter } from '@/lib/search';
 import { HttpError } from '@/lib/api';
 import { readMemberCsv } from '@/lib/members';
@@ -63,6 +65,8 @@ export async function importMembers(csvText, user) {
         gender: r.gender,
         birthDay: r.birthDay,
         birthMonth: r.birthMonth,
+        anniversaryDay: r.anniversaryDay,
+        anniversaryMonth: r.anniversaryMonth,
         source: 'csv',
         createdBy: user?.id,
       })),
@@ -75,6 +79,10 @@ export async function importMembers(csvText, user) {
     if (r.birthDay && !current.birthDay) {
       fill.birthDay = r.birthDay;
       fill.birthMonth = r.birthMonth;
+    }
+    if (r.anniversaryDay && !current.anniversaryDay) {
+      fill.anniversaryDay = r.anniversaryDay;
+      fill.anniversaryMonth = r.anniversaryMonth;
     }
     if (Object.keys(fill).length) await Member.updateOne({ _id: r.memberId }, fill);
   }
@@ -100,4 +108,53 @@ export async function listMembers({ q, page = 1, limit = 50 } = {}) {
     Member.countDocuments({ active: true }),
   ]);
   return { items, total, all, page, limit };
+}
+
+const MEMBER_FIELDS = [
+  'firstName',
+  'lastName',
+  'gender',
+  'birthDay',
+  'birthMonth',
+  'anniversaryDay',
+  'anniversaryMonth',
+  'smsOptOut',
+  'active',
+];
+
+/** Someone else with the same phone and name is the same person. */
+async function assertNotDuplicate({ phone, firstName, lastName }, exceptId) {
+  const same = await Member.find({ phone, _id: { $ne: exceptId } }).lean();
+  const id = identity({ phone, firstName, lastName });
+  if (same.some((m) => identity(m) === id)) {
+    throw new HttpError(409, `${firstName} ${lastName} is already on the list with this number`);
+  }
+}
+
+/** Admin adds one member by hand. */
+export async function createMember(input, user) {
+  await connectDB();
+  const phone = normalizePhone(input.phone);
+  await assertNotDuplicate({ ...input, phone });
+  const member = await Member.create({
+    ...Object.fromEntries(MEMBER_FIELDS.map((k) => [k, input[k] ?? undefined])),
+    phone,
+    source: 'manual',
+    createdBy: user?.id,
+  });
+  return member.toObject();
+}
+
+/** Admin corrects a member (name, phone, gender, birthday, anniversary, messages, on the list). */
+export async function updateMember(id, input) {
+  await connectDB();
+  if (!mongoose.isValidObjectId(id)) throw new HttpError(404, 'Member not found');
+  const current = await Member.findById(id).lean();
+  if (!current) throw new HttpError(404, 'Member not found');
+  const update = {};
+  for (const k of MEMBER_FIELDS) if (input[k] !== undefined) update[k] = input[k];
+  if (input.phone !== undefined) update.phone = normalizePhone(input.phone);
+  const next = { ...current, ...update };
+  await assertNotDuplicate(next, id);
+  return Member.findByIdAndUpdate(id, update, { new: true, runValidators: true }).lean();
 }

@@ -1,6 +1,6 @@
 /**
- * Reading a member list uploaded as CSV: columns Name, Phone, Gender, Birthday
- * (any order, any capitalisation; extra columns are ignored).
+ * Reading a member list uploaded as CSV: columns Name, Phone, Gender, Birthday, Anniversary
+ * (any order, any capitalisation; extra columns are ignored; only Name and Phone are required).
  */
 import { normalizePhone } from './phone';
 import { MONTHS, birthdayProblem } from './birthday';
@@ -47,6 +47,14 @@ const HEADERS = {
   phone: ['phone', 'phone number', 'mobile', 'telephone', 'tel', 'number', 'gsm'],
   gender: ['gender', 'sex'],
   birthday: ['birthday', 'birth date', 'date of birth', 'dob', 'birthdate'],
+  anniversary: [
+    'anniversary',
+    'wedding anniversary',
+    'wedding',
+    'wedding date',
+    'anniversary date',
+    'marriage anniversary',
+  ],
 };
 
 /** Which column holds what, from the header row. Missing columns are -1. */
@@ -134,6 +142,8 @@ export function readMemberCsv(text) {
     if (!firstName) problems.push('No name');
     if (!phone) problems.push(phoneRaw ? 'Phone number not valid' : 'No phone number');
     const birthday = parseBirthday(birthdayRaw);
+    const anniversaryRaw = cell(r, 'anniversary');
+    const anniversary = parseBirthday(anniversaryRaw);
     return {
       line: i + 2,
       name,
@@ -144,6 +154,9 @@ export function readMemberCsv(text) {
       gender: parseGender(cell(r, 'gender')),
       ...birthday,
       birthdayUnread: Boolean(birthdayRaw) && !birthday.birthDay,
+      anniversaryDay: anniversary.birthDay,
+      anniversaryMonth: anniversary.birthMonth,
+      anniversaryUnread: Boolean(anniversaryRaw) && !anniversary.birthDay,
       problems,
     };
   });

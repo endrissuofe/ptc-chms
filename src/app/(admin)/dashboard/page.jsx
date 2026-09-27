@@ -80,6 +80,34 @@ export default async function DashboardPage() {
         />
       </div>
 
+      {d.celebrationsToday.length > 0 && (
+        <Link
+          href="/birthdays"
+          className="card card-compact flex flex-wrap items-center gap-3 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary"
+        >
+          <span className="icon-tile tone-coral h-11 w-11">
+            <Icon name="celebration" size={22} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-lg font-black">
+              Today we celebrate{' '}
+              {d.celebrationsToday
+                .slice(0, 3)
+                .map((c) => c.name)
+                .join(', ')}
+              {d.celebrationsToday.length > 3 && ` and ${d.celebrationsToday.length - 3} more`}
+            </span>
+            <span className="block text-meta text-muted">
+              Birthdays and anniversaries · wish them and post on the church’s socials
+            </span>
+          </span>
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-primary">
+            Birthdays
+            <Icon name="arrow_forward" size={16} />
+          </span>
+        </Link>
+      )}
+
       <NeedsAttention n={d.needsAttention} />
 
       <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">

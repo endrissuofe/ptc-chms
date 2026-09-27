@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import FormAlert from '@/components/ui/FormAlert';
 import { formatPhone } from '@/lib/phone';
 import { MONTHS } from '@/lib/birthday';
 
@@ -25,7 +26,7 @@ const STATUS = {
 };
 
 /**
- * Upload a member list (CSV with Name, Phone, Gender, Birthday). The file is checked first —
+ * Upload a member list (CSV with Name, Phone, Gender, Birthday, Anniversary). The file is checked first —
  * nothing is saved until the admin sees the result and presses Import.
  */
 export default function MemberImport({ empty }) {
@@ -97,10 +98,10 @@ export default function MemberImport({ empty }) {
         <div className="flex-1">
           <h2 className="section-title">Upload your member list</h2>
           <p className="card-sub">
-            A CSV file with the columns{' '}
-            <strong className="text-ink">Name, Phone, Gender, Birthday</strong> (Excel: File → Save
-            As → CSV). Birthdays like 14/10 or 14 Oct. Nothing is saved until you check it and press
-            Import.
+            A CSV file with the columns <strong className="text-ink">Name, Phone</strong> and, if
+            you have them, <strong className="text-ink">Gender, Birthday, Anniversary</strong>{' '}
+            (Excel: File → Save As → CSV). Dates like 14/10 or 14 Oct. Nothing is saved until you
+            check it and press Import.
           </p>
         </div>
       </div>
@@ -124,21 +125,16 @@ export default function MemberImport({ empty }) {
           {file ? 'Choose a different file' : 'Choose CSV file'}
         </button>
         {file && <span className="chip">{file.name}</span>}
-        {state.kind === 'busy' && <span className="text-sm text-muted">Checking…</span>}
+        {state.kind === 'busy' && (
+          <span className="flex items-center gap-1.5 text-sm text-muted">
+            <Icon name="sync" size={16} className="motion-safe:animate-spin" />
+            Checking…
+          </span>
+        )}
       </div>
 
-      {state.kind === 'error' && (
-        <p role="alert" className="alert alert-danger">
-          <Icon name="error_outline" size={19} />
-          {state.message}
-        </p>
-      )}
-      {state.kind === 'ok' && (
-        <p role="status" className="alert alert-success">
-          <Icon name="check_circle" size={19} filled />
-          {state.message}
-        </p>
-      )}
+      {state.kind === 'error' && <FormAlert error={{ message: state.message }} />}
+      {state.kind === 'ok' && <FormAlert success={state.message} />}
 
       {preview && (
         <>
@@ -146,9 +142,7 @@ export default function MemberImport({ empty }) {
             {['new', 'update', 'duplicate', 'invalid'].map((s) => (
               <div key={s} className="rounded-tile bg-surface-2 p-4">
                 <p className="label-caps">{STATUS[s].label}</p>
-                <p className="font-display text-3xl font-black tabular-nums">
-                  {preview.summary[s]}
-                </p>
+                <p className="stat-value mt-1">{preview.summary[s]}</p>
               </div>
             ))}
           </div>
@@ -161,8 +155,8 @@ export default function MemberImport({ empty }) {
             </p>
           )}
 
-          <div className="max-h-[420px] overflow-auto rounded-tile border border-line">
-            <table className="table min-w-[620px]">
+          <div className="relative max-h-[420px] overflow-auto rounded-tile border border-line">
+            <table className="table min-w-[720px]">
               <thead className="sticky top-0">
                 <tr>
                   <th className="px-4 py-3">Row</th>
@@ -170,6 +164,7 @@ export default function MemberImport({ empty }) {
                   <th className="px-4 py-3">Phone</th>
                   <th className="px-4 py-3">Gender</th>
                   <th className="px-4 py-3">Birthday</th>
+                  <th className="px-4 py-3">Anniversary</th>
                   <th className="px-4 py-3">Result</th>
                 </tr>
               </thead>
@@ -186,6 +181,15 @@ export default function MemberImport({ empty }) {
                       {r.birthDay ? (
                         `${r.birthDay} ${MONTHS[r.birthMonth - 1].slice(0, 3)}`
                       ) : r.birthdayUnread ? (
+                        <span className="text-warning">Couldn’t read</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="py-2.5">
+                      {r.anniversaryDay ? (
+                        `${r.anniversaryDay} ${MONTHS[r.anniversaryMonth - 1].slice(0, 3)}`
+                      ) : r.anniversaryUnread ? (
                         <span className="text-warning">Couldn’t read</span>
                       ) : (
                         '—'

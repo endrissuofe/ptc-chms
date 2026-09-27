@@ -24,6 +24,7 @@ export const ROUTE_ACCESS = [
   { prefix: '/members', roles: [ROLES.ADMIN] },
   { prefix: '/users', roles: [ROLES.ADMIN] },
   { prefix: '/alerts', roles: [ROLES.ADMIN] },
+  { prefix: '/birthdays', roles: [ROLES.PASTOR, ROLES.ADMIN] },
 ];
 
 /** Home screen after sign-in, by role. */

@@ -28,6 +28,16 @@ export const DEFAULT_TEMPLATES = [
     name: 'Saturday invite',
     body: 'Hi {FirstName}, we would love to see you in church tomorrow! {ServiceTimes} See you there. PTC Chapel',
   },
+  {
+    key: 'birthday',
+    name: 'Birthday',
+    body: "Happy birthday, {FirstName}! Everyone at RCCG Peculiar Treasure Chapel celebrates you today. May this new year be full of God's favour and joy.",
+  },
+  {
+    key: 'anniversary',
+    name: 'Wedding anniversary',
+    body: 'Happy wedding anniversary, {FirstName}! RCCG Peculiar Treasure Chapel celebrates with you today. May God keep your home in love, peace and joy.',
+  },
 ];
 
 export async function ensureTemplates() {

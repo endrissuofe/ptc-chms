@@ -13,14 +13,14 @@ import { listFollowUps } from './followup.service';
  * On the live site, refuse to "send" with the mock: nothing would arrive, yet the screen would
  * say it was sent. Local development can use the mock freely.
  */
-function requireLiveEmail() {
+export function requireLiveEmail() {
   if (!emailStatus().live && process.env.NODE_ENV === 'production') {
     throw new HttpError(409, 'Email sending isn’t switched on yet');
   }
 }
 
 /** Where names in emails link to. */
-const baseUrl = () =>
+export const baseUrl = () =>
   (process.env.APP_URL || process.env.NEXTAUTH_URL || 'https://ptc-chms.vercel.app').replace(
     /\/+$/,
     '',
@@ -37,6 +37,8 @@ export async function getAlertSettings() {
     followupEmails: doc.followupEmails ?? [],
     pastorEmails: doc.pastorEmails ?? [],
     followUpReport: doc.followUpReport !== false,
+    celebrationEmails: doc.celebrationEmails ?? [],
+    celebrationReport: doc.celebrationReport !== false,
   };
 }
 
@@ -47,6 +49,10 @@ export async function updateAlertSettings(input, user) {
   if (input.followupEmails) update.followupEmails = clean(input.followupEmails);
   if (input.pastorEmails) update.pastorEmails = clean(input.pastorEmails);
   if (typeof input.followUpReport === 'boolean') update.followUpReport = input.followUpReport;
+  if (input.celebrationEmails) update.celebrationEmails = clean(input.celebrationEmails);
+  if (typeof input.celebrationReport === 'boolean') {
+    update.celebrationReport = input.celebrationReport;
+  }
   await AlertSettings.updateOne({ key: 'alerts' }, update, { upsert: true });
   return getAlertSettings();
 }
@@ -139,7 +145,7 @@ export async function previewFollowUpReport({ today = nextMorning() } = {}) {
   return { settings, report, email: report.empty ? null : renderFollowUpReport(report, baseUrl()) };
 }
 
-async function logEmail(entry) {
+export async function logEmail(entry) {
   try {
     await EmailLog.create(entry);
   } catch (err) {

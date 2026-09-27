@@ -40,6 +40,7 @@ personSchema.virtual('fullName').get(function fullName() {
 });
 
 personSchema.index({ phone: 1 });
+personSchema.index({ birthMonth: 1, birthDay: 1 });
 personSchema.index({ stage: 1, firstVisitDate: -1 });
 personSchema.index({ movedToMembersAt: 1, lastVisitDate: -1 });
 

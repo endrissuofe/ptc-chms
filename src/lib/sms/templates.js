@@ -24,6 +24,19 @@ export const TEMPLATE_INFO = {
       'First and second timers from the past 4 weeks who agreed to messages and aren’t regulars yet',
     tags: ['FirstName', 'LastName', 'ChurchName', 'ServiceTimes'],
   },
+  birthday: {
+    title: 'Birthday',
+    schedule: 'Every morning at 7 AM, on their birthday',
+    recipients:
+      'Members, and first timers who agreed to messages and gave a birthday on their card',
+    tags: ['FirstName', 'LastName', 'ChurchName'],
+  },
+  anniversary: {
+    title: 'Wedding anniversary',
+    schedule: 'Every morning at 7 AM, on their anniversary',
+    recipients: 'Members with a wedding anniversary on the Members list',
+    tags: ['FirstName', 'LastName', 'ChurchName'],
+  },
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_INFO);

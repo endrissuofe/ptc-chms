@@ -474,13 +474,15 @@ describe('SMS', () => {
     expect(saved).toMatchObject({ body: 'Hi {FirstName}, welcome!', enabled: false });
   });
 
-  it('shows the three automatic messages and the next Saturday invite', async () => {
+  it('shows the automatic messages and the next Saturday invite', async () => {
     await svc.createFromCard(card({ serviceDate: sunday }));
     const overview = await sms.getSmsOverview({ today: new Date('2026-09-22T12:00:00Z') });
     expect(overview.templates.map((t) => t.key)).toEqual([
       'sunday_thanks',
       'welcome_back',
       'saturday_invite',
+      'birthday',
+      'anniversary',
     ]);
     expect(overview.invite).toMatchObject({ toSend: 1 });
     expect(overview.live).toBe(false);

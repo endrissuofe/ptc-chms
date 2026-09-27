@@ -24,11 +24,14 @@ describe('parseCsv', () => {
 
 describe('member columns and values', () => {
   it('finds columns whatever their order or capitals', () => {
-    expect(mapHeaders(['BIRTHDAY', 'Phone Number', 'Full Name', 'Sex'])).toEqual({
+    expect(
+      mapHeaders(['BIRTHDAY', 'Phone Number', 'Full Name', 'Sex', 'Wedding Anniversary']),
+    ).toEqual({
       name: 2,
       phone: 1,
       gender: 3,
       birthday: 0,
+      anniversary: 4,
     });
   });
 

@@ -12,6 +12,8 @@ const memberSchema = new mongoose.Schema(
     gender: { type: String, enum: ['male', 'female'] },
     birthDay: { type: Number, min: 1, max: 31 },
     birthMonth: { type: Number, min: 1, max: 12 },
+    anniversaryDay: { type: Number, min: 1, max: 31 },
+    anniversaryMonth: { type: Number, min: 1, max: 12 },
     source: { type: String, enum: ['csv', 'first_timer', 'manual'], default: 'csv' },
     // Set when a first timer is moved into the member list, so their journey stays linked.
     person: { type: mongoose.Schema.Types.ObjectId, ref: 'Person' },
@@ -24,5 +26,7 @@ const memberSchema = new mongoose.Schema(
 
 memberSchema.index({ phone: 1 });
 memberSchema.index({ lastName: 1, firstName: 1 });
+memberSchema.index({ birthMonth: 1, birthDay: 1 });
+memberSchema.index({ anniversaryMonth: 1, anniversaryDay: 1 });
 
 export default mongoose.models.Member || mongoose.model('Member', memberSchema);

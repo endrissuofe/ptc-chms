@@ -9,6 +9,7 @@ import FormAlert, { FieldError } from '@/components/ui/FormAlert';
 import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { sendJson } from '@/lib/client-api';
 import { formatMoment } from '@/lib/format';
+import CelebrationsCard from './CelebrationsCard';
 
 const toList = (text) =>
   text
@@ -25,6 +26,7 @@ export default function AlertsManager({ settings, report, email, recent }) {
         email={email}
         hasRecipients={settings.followupEmails.length + settings.pastorEmails.length > 0}
       />
+      <CelebrationsCard settings={settings} />
       <History recent={recent} />
     </>
   );

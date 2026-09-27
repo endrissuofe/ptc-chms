@@ -135,6 +135,9 @@ export const ICON_NAMES = [
   'woman',
   'help',
   'upload_file',
+  'favorite',
+  'content_copy',
+  'celebration',
 ];
 
 /** Google Fonts needs the names sorted; FILL is kept as an axis for filled icons. */

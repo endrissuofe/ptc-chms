@@ -5,7 +5,13 @@ const emails = z
   .max(30, 'Up to 30 addresses');
 
 export const alertSettingsSchema = z
-  .object({ followupEmails: emails, pastorEmails: emails, followUpReport: z.boolean() })
+  .object({
+    followupEmails: emails,
+    pastorEmails: emails,
+    followUpReport: z.boolean(),
+    celebrationEmails: emails,
+    celebrationReport: z.boolean(),
+  })
   .partial();
 
 export const testEmailSchema = z.object({

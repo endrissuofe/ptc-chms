@@ -7,6 +7,7 @@ import { attendanceTrend } from './attendance.service';
 import { listServices } from './churchService.service';
 import { listFollowUps } from './followup.service';
 import { countNewPrayerRequests } from './prayer.service';
+import { celebrantsOn } from './celebration.service';
 
 const monthStartOf = (day) => new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), 1));
 
@@ -81,13 +82,14 @@ export async function getDashboard({ today = new Date() } = {}) {
       listFollowUps({ today }),
       Person.countDocuments({ movedToMembersAt: null, cardUnclear: true }),
     ]);
-  const [newPrayer, readyToMove, callsThisWeek] = await Promise.all([
+  const [newPrayer, readyToMove, callsThisWeek, celebrants] = await Promise.all([
     countNewPrayerRequests(),
     Person.countDocuments({
       movedToMembersAt: null,
       firstVisitDate: { $lte: addDays(day, -MOVE_AFTER_DAYS) },
     }),
     FollowUp.countDocuments({ createdAt: { $gte: addDays(new Date(today), -7) } }),
+    celebrantsOn(today),
   ]);
 
   const sundays = trend.filter(
@@ -115,6 +117,10 @@ export async function getDashboard({ today = new Date() } = {}) {
       readyToMove,
     },
     callsThisWeek,
+    celebrationsToday: celebrants.map((c) => ({
+      kind: c.kind,
+      name: `${c.firstName} ${c.lastName}`.trim(),
+    })),
     reachRate: followUps.stats.reachRate,
   };
 }
