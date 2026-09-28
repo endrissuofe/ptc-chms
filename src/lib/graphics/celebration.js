@@ -83,12 +83,15 @@ export async function cutOut(file, onStatus) {
   }
 }
 
-/** The part of a transparent canvas that isn't empty: { x, y, width, height }. */
-function subjectBounds(canvas) {
+/**
+ * The part of a transparent canvas that isn't empty: { x, y, width, height }. With `top` and
+ * `bottom`, only those rows are looked at (e.g. just the head).
+ */
+function subjectBounds(canvas, { top = 0, bottom = canvas.height } = {}) {
   const { width, height } = canvas;
   const data = canvas.getContext('2d').getImageData(0, 0, width, height).data;
   let [minX, minY, maxX, maxY] = [width, height, -1, -1];
-  for (let y = 0; y < height; y += 2) {
+  for (let y = Math.max(0, Math.floor(top)); y < Math.min(height, bottom); y += 2) {
     for (let x = 0; x < width; x += 2) {
       if (data[(y * width + x) * 4 + 3] > 40) {
         if (x < minX) minX = x;
@@ -150,13 +153,17 @@ export async function drawCelebration(canvas, { kind, person, name, date, fonts 
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, width, height);
 
-  // Place the person: their top near the top of the frame, feet going under the lettering.
+  // Frame the person like the design, from about the waist up: a full-length photo is
+  // zoomed in on the head and shoulders, and the rest runs down under the lettering.
   const b = subjectBounds(person);
-  const scale = Math.min((PHOTO.height * 0.97) / b.height, (PHOTO.width * 1.05) / b.width);
+  const shown = Math.min(b.height, b.width * 1.3);
+  const scale = Math.min((PHOTO.height * 0.97) / shown, (PHOTO.width * 1.15) / b.width);
   const w = person.width * scale;
   const h = person.height * scale;
-  const x = PHOTO.x + PHOTO.width / 2 - (b.x + b.width / 2) * scale;
-  const y = PHOTO.y + PHOTO.height - (b.y + b.height) * scale;
+  // Centre on the head (the top of the figure), not on arms or hands further down.
+  const head = subjectBounds(person, { top: b.y, bottom: b.y + b.height * 0.2 });
+  const x = PHOTO.x + PHOTO.width / 2 - (head.x + head.width / 2) * scale;
+  const y = PHOTO.y + 12 - b.y * scale;
 
   // The design's warm peach glow behind the person…
   const warm = ctx.createRadialGradient(540, 400, 60, 540, 420, 640);
@@ -166,12 +173,29 @@ export async function drawCelebration(canvas, { kind, person, name, date, fonts 
   ctx.fillStyle = warm;
   ctx.fillRect(0, 0, width, height);
 
-  // …tinted by the photo's own colours.
+  // …tinted by the photo's own colours: shrunk to a few pixels and stretched back, which
+  // blurs it on every phone (Safari can't blur a canvas with a filter).
+  // A clear border round the tiny copy keeps its edges soft when it's stretched.
+  const pad = 4;
+  const inner = { w: 12, h: Math.max(1, Math.round((12 * person.height) / person.width)) };
+  const tiny = document.createElement('canvas');
+  tiny.width = inner.w + pad * 2;
+  tiny.height = inner.h + pad * 2;
+  const t = tiny.getContext('2d');
+  t.imageSmoothingQuality = 'high';
+  t.drawImage(person, pad, pad, inner.w, inner.h);
+  const cellW = (w * 1.3) / inner.w;
+  const cellH = (h * 1.2) / inner.h;
   ctx.save();
-  ctx.filter = 'blur(70px) saturate(1.3)';
-  ctx.globalAlpha = 0.3;
-  const g = 1.25;
-  ctx.drawImage(person, x - (w * (g - 1)) / 2, y - (h * (g - 1)) / 2 - 40, w * g, h * g);
+  ctx.globalAlpha = 0.28;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(
+    tiny,
+    x - w * 0.15 - pad * cellW,
+    y - h * 0.1 - pad * cellH,
+    tiny.width * cellW,
+    tiny.height * cellH,
+  );
   ctx.restore();
 
   ctx.drawImage(person, x, y, w, h);
