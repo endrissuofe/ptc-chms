@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 import { emailStatus, sendEmail } from '@/lib/email';
 import { renderCelebrations } from '@/lib/email/celebrations-report';
 import { EmailLog, Member, Person, SmsLog, SmsTemplate } from '@/models';
-import { baseUrl, getAlertSettings, logEmail, requireLiveEmail } from './alerts.service';
+import { baseUrl, getAlertSettings, logEmail } from './alerts.service';
 import { deliver, ensureTemplates, memberRecipient, personRecipient } from './sms.service';
 
 /**
@@ -126,17 +126,16 @@ export async function buildCelebrationsEmail({ today = new Date() } = {}) {
   return renderCelebrations({ date: first.date, today: first.people, week }, baseUrl());
 }
 
-/** Sends the celebrations email once a day (unless `manual`). */
-export async function sendCelebrationsEmail({ today = new Date(), manual = false } = {}) {
-  if (manual) requireLiveEmail();
+/** Sends the celebrations email once a day. */
+export async function sendCelebrationsEmail({ today = new Date() } = {}) {
   const settings = await getAlertSettings();
-  if (!settings.celebrationReport && !manual) return { skipped: 'switched off' };
+  if (!settings.celebrationReport) return { skipped: 'switched off' };
   const to = settings.celebrationEmails;
   if (!to.length) return { skipped: 'no recipients set' };
   const email = await buildCelebrationsEmail({ today });
   if (!email) return { skipped: 'nothing to report' };
-  const runKey = manual ? undefined : `celebrations:${isoDay(toServiceDate(today))}`;
-  if (runKey && (await EmailLog.exists({ runKey }))) return { skipped: 'already sent today' };
+  const runKey = `celebrations:${isoDay(toServiceDate(today))}`;
+  if (await EmailLog.exists({ runKey })) return { skipped: 'already sent today' };
 
   const res = await sendEmail({ to, ...email });
   const logged = await logEmail({

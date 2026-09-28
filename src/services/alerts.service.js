@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
-import { HttpError } from '@/lib/api';
 import { addDays, isoDay, lagosDayStart, toServiceDate } from '@/lib/dates';
 import { emailStatus, sendEmail } from '@/lib/email';
 import { renderFollowUpReport } from '@/lib/email/followup-report';
@@ -8,16 +7,6 @@ import { logger } from '@/lib/logger';
 import { AlertSettings, EmailLog, FollowUp, Person, Visit } from '@/models';
 import { listServices } from './churchService.service';
 import { listFollowUps } from './followup.service';
-
-/**
- * On the live site, refuse to "send" with the mock: nothing would arrive, yet the screen would
- * say it was sent. Local development can use the mock freely.
- */
-export function requireLiveEmail() {
-  if (!emailStatus().live && process.env.NODE_ENV === 'production') {
-    throw new HttpError(409, 'Email sending isn’t switched on yet');
-  }
-}
 
 /** Where names in emails link to. */
 export const baseUrl = () =>
@@ -157,20 +146,18 @@ export async function logEmail(entry) {
 }
 
 /**
- * Sends the morning report. Safe to run twice: a day's report goes out once (unless `manual`,
- * the admin's "Send now"). Skips when switched off, when there's nobody to send to, or when
- * nothing needs attention.
+ * Sends the morning report. Safe to run twice: a day's report goes out once. Skips when
+ * switched off, when there's nobody to send to, or when nothing needs attention.
  */
-export async function sendFollowUpReport({ today = new Date(), manual = false } = {}) {
-  if (manual) requireLiveEmail();
+export async function sendFollowUpReport({ today = new Date() } = {}) {
   const { settings, report, email } = await previewFollowUpReport({ today });
-  const runKey = manual ? undefined : `followup_report:${isoDay(toServiceDate(today))}`;
-  if (!settings.followUpReport && !manual) return { skipped: 'switched off' };
+  const runKey = `followup_report:${isoDay(toServiceDate(today))}`;
+  if (!settings.followUpReport) return { skipped: 'switched off' };
   if (!email) return { skipped: 'nothing to report' };
   const to = settings.followupEmails.length ? settings.followupEmails : settings.pastorEmails;
   const cc = settings.followupEmails.length ? settings.pastorEmails : [];
   if (!to.length) return { skipped: 'no recipients set' };
-  if (runKey && (await EmailLog.exists({ runKey }))) return { skipped: 'already sent today' };
+  if (await EmailLog.exists({ runKey })) return { skipped: 'already sent today' };
 
   const res = await sendEmail({ to, cc, ...email });
   const logged = await logEmail({
@@ -188,26 +175,6 @@ export async function sendFollowUpReport({ today = new Date(), manual = false } 
   return res.ok
     ? { sent: true, to: to.length, cc: cc.length, subject: email.subject }
     : { sent: false, error: res.error };
-}
-
-export async function sendTestEmail(to) {
-  requireLiveEmail();
-  await connectDB();
-  const res = await sendEmail({
-    to,
-    subject: 'Test email from PTC Chapel',
-    text: 'This is a test from the PTC Chapel app. If you can read it, email alerts work.',
-    html: '<p style="font:15px Arial,sans-serif">This is a test from the PTC Chapel app. If you can read it, email alerts work.</p>',
-  });
-  await logEmail({
-    kind: 'test',
-    to: [to],
-    subject: 'Test email from PTC Chapel',
-    status: res.ok ? 'sent' : 'failed',
-    provider: emailStatus().provider,
-    error: res.error,
-  });
-  return res;
 }
 
 export async function recentEmails(limit = 10) {

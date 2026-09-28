@@ -2,7 +2,7 @@ import { connectDB } from '@/lib/db';
 import { HttpError } from '@/lib/api';
 import { getSmsProvider } from '@/lib/sms';
 import { renderTemplate, unknownTags } from '@/lib/sms/templates';
-import { normalizePhone, formatPhone } from '@/lib/phone';
+import { formatPhone } from '@/lib/phone';
 import { toServiceDate, addDays, isoDay } from '@/lib/dates';
 import { STAGES } from '@/lib/stages';
 import { describeServiceTimes } from '@/lib/church';
@@ -212,48 +212,6 @@ export async function previewInvite(saturday) {
     toSend: consented.length,
     noConsent: people.length - consented.length,
   };
-}
-
-/** Sends one message to the admin's own phone so they can see how it looks. */
-export async function sendTest({ templateKey, phone, body }, user) {
-  await ensureTemplates();
-  const to = normalizePhone(phone);
-  if (!to) throw new HttpError(400, 'Enter a Nigerian mobile number');
-  let text = body;
-  if (!text) {
-    const template = await SmsTemplate.findOne({ key: templateKey }).lean();
-    if (!template) throw new HttpError(404, 'Template not found');
-    text = template.body;
-  }
-  const bad = unknownTags(templateKey, text);
-  if (bad.length) throw new HttpError(400, `Unknown tag {${bad[0]}}`);
-
-  const day = toServiceDate();
-  const saturday = addDays(day, (6 - day.getUTCDay() + 7) % 7);
-  const [firstName = 'Friend', ...rest] = (user?.name || 'Friend').split(' ');
-  const message = renderTemplate(text, {
-    FirstName: firstName,
-    LastName: rest.join(' '),
-    ChurchName: CHURCH_NAME(),
-    ServiceTimes: await serviceTimesAfter(saturday),
-  });
-
-  const provider = getSmsProvider();
-  const res = await provider.send({ to, body: message, from: smsStatus().senderId });
-  await SmsLog.create({
-    template: templateKey,
-    name: user?.name ? `${user.name} (test)` : 'Test',
-    run: `test:${isoDay(day)}`,
-    to,
-    body: message,
-    provider: provider.name,
-    status: res.ok ? 'sent' : 'failed',
-    providerRef: res.providerRef,
-    cost: res.cost,
-    error: res.error,
-  });
-  if (!res.ok) throw new HttpError(502, `The SMS provider refused it: ${res.error}`);
-  return { ok: true, body: message };
 }
 
 export async function updateTemplate(key, { body, enabled }, user) {

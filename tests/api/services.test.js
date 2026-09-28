@@ -452,17 +452,6 @@ describe('SMS', () => {
     expect(off).toMatchObject({ skipped: true });
   });
 
-  it('sends a test to the admin with their first name and keeps it out of real runs', async () => {
-    const res = await sms.sendTest(
-      { templateKey: 'sunday_thanks', phone: '0803 000 0999' },
-      { name: 'Endris Suofe' },
-    );
-    expect(res.body).toMatch(/^Hi Endris, thank you/);
-    const runs = await sms.recentRuns();
-    expect(runs).toHaveLength(1);
-    expect(runs[0]).toMatchObject({ test: true, sent: 1 });
-  });
-
   it('refuses template wording with tags it cannot fill', async () => {
     await expect(
       sms.updateTemplate('sunday_thanks', { body: 'Hi {Firstname}', enabled: true }),

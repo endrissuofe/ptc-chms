@@ -168,90 +168,6 @@ function MessageBox({ tagsFor, value, onChange, id, rows = 4, foldPreview = fals
   );
 }
 
-/** "Send test to my phone" for any message. Errors show under the phone box. */
-function TestSend({ templateKey, body, disabled }) {
-  const [open, setOpen] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [state, setState] = useState({ kind: 'idle' });
-  const inputRef = useRef(null);
-  const busy = state.kind === 'busy';
-  const errorId = `test-${templateKey}-error`;
-
-  async function send() {
-    if (busy) return;
-    setState({ kind: 'busy' });
-    try {
-      await sendJson('/api/sms/test', 'POST', { templateKey, phone, body: body.trim() });
-      setState({ kind: 'ok', message: 'Test sent. It should arrive within a minute.' });
-    } catch (err) {
-      setState({ kind: 'error', error: err });
-      inputRef.current?.focus();
-    }
-  }
-
-  if (!open) {
-    return (
-      <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            setOpen(true);
-            requestAnimationFrame(() => inputRef.current?.focus());
-          }}
-          className="btn btn-ghost self-start"
-        >
-          <Icon name="smartphone" size={18} />
-          Send test to my phone
-        </button>
-        {state.kind === 'ok' && <FormAlert success={state.message} />}
-      </div>
-    );
-  }
-  const phoneError = state.kind === 'error' ? state.error.fields?.phone : null;
-  return (
-    <div
-      className="flex w-full flex-col gap-3 rounded-tile bg-surface-2 p-4 motion-safe:animate-fade-in"
-      onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
-    >
-      <label className="flex flex-col">
-        <span className="field-label">Your phone number</span>
-        <input
-          ref={inputRef}
-          type="tel"
-          inputMode="tel"
-          value={phone}
-          onChange={(e) => {
-            setPhone(e.target.value);
-            setState({ kind: 'idle' });
-          }}
-          placeholder="e.g. 0803 000 0000"
-          aria-invalid={phoneError ? true : undefined}
-          aria-describedby={phoneError ? errorId : undefined}
-          className="input"
-        />
-        <FieldError id={errorId}>{phoneError}</FieldError>
-        <span className="field-hint">Uses your first name in place of {'{FirstName}'}.</span>
-      </label>
-      {state.kind === 'error' && !phoneError && <FormAlert error={state.error} />}
-      {state.kind === 'ok' && <FormAlert success={state.message} />}
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={send}
-          disabled={!phone || disabled}
-          aria-disabled={busy}
-          className="btn btn-primary"
-        >
-          <Busy busy={busy} busyLabel="Sending…" icon="send" label="Send test" />
-        </button>
-        <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost">
-          Close
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /**
  * Send one message to a group. Steps: write → check (people, pages, sample) → send in
  * batches with a progress bar. If the connection drops, "Continue sending" picks up where it
@@ -370,8 +286,7 @@ function Broadcast({ counts }) {
             rows={5}
           />
           {state.kind === 'error' && <FormAlert error={state.error} />}
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <TestSend templateKey="broadcast" body={body} disabled={bad} />
+          <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
               onClick={check}
@@ -565,8 +480,7 @@ function TemplateEditor({ template, invite }) {
       />
       {state.kind === 'error' && <FormAlert error={state.error} />}
       {state.kind === 'ok' && !dirty && <FormAlert success={state.message} />}
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
-        <TestSend templateKey={template.key} body={body} disabled={bad} />
+      <div className="mt-auto flex flex-wrap items-center justify-end gap-2">
         {dirty ? (
           <button
             type="button"

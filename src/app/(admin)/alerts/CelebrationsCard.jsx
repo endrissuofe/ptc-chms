@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import Busy from '@/components/ui/Busy';
 import FormAlert, { FieldError } from '@/components/ui/FormAlert';
-import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { sendJson } from '@/lib/client-api';
 
 const toList = (text) =>
@@ -14,14 +13,12 @@ const toList = (text) =>
     .map((e) => e.trim())
     .filter(Boolean);
 
-/** Who gets the 7 AM birthdays and anniversaries email, plus "send today's now". */
+/** Who gets the 7 AM birthdays and anniversaries email. */
 export default function CelebrationsCard({ settings }) {
   const router = useRouter();
-  const confirm = useConfirm();
   const [list, setList] = useState(settings.celebrationEmails.join('\n'));
   const [on, setOn] = useState(settings.celebrationReport);
   const [state, setState] = useState({ kind: 'idle' });
-  const [send, setSend] = useState({ kind: 'idle' });
   const emails = toList(list);
   const busy = state.kind === 'busy';
 
@@ -45,29 +42,6 @@ export default function CelebrationsCard({ settings }) {
       router.refresh();
     } catch (err) {
       setState({ kind: 'error', error: err });
-    }
-  }
-
-  async function sendNow() {
-    if (send.kind === 'busy') return;
-    const ok = await confirm({
-      title: 'Send today’s celebrations email now?',
-      body: 'It goes to the addresses in this box. Tomorrow’s 7 AM email still goes out as usual.',
-      confirmLabel: 'Send now',
-      icon: 'send',
-    });
-    if (!ok) return;
-    setSend({ kind: 'busy' });
-    try {
-      const r = await sendJson('/api/alerts/celebrations', 'POST');
-      setSend(
-        r.sent
-          ? { kind: 'ok', message: `Sent to ${r.to} ${r.to === 1 ? 'person' : 'people'}.` }
-          : { kind: 'error', error: { message: r.error || `Not sent: ${r.skipped}.` } },
-      );
-      router.refresh();
-    } catch (err) {
-      setSend({ kind: 'error', error: err });
     }
   }
 
@@ -114,27 +88,9 @@ export default function CelebrationsCard({ settings }) {
       </label>
       {state.kind === 'error' && !listError && <FormAlert error={state.error} />}
       {state.kind === 'ok' && <FormAlert success={state.message} />}
-      {send.kind === 'error' && <FormAlert error={send.error} />}
-      {send.kind === 'ok' && <FormAlert success={send.message} />}
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" aria-disabled={busy} className="btn btn-primary">
-          <Busy busy={busy} icon="save" label="Save" />
-        </button>
-        <button
-          type="button"
-          onClick={sendNow}
-          disabled={!settings.celebrationEmails.length}
-          aria-disabled={send.kind === 'busy'}
-          className="btn btn-soft"
-        >
-          <Busy
-            busy={send.kind === 'busy'}
-            busyLabel="Sending…"
-            icon="send"
-            label="Send today’s now"
-          />
-        </button>
-      </div>
+      <button type="submit" aria-disabled={busy} className="btn btn-primary self-start">
+        <Busy busy={busy} icon="save" label="Save" />
+      </button>
     </form>
   );
 }

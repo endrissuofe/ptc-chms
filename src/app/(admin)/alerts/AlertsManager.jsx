@@ -6,7 +6,6 @@ import Icon from '@/components/ui/Icon';
 import Busy from '@/components/ui/Busy';
 import EmptyState from '@/components/ui/EmptyState';
 import FormAlert, { FieldError } from '@/components/ui/FormAlert';
-import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { sendJson } from '@/lib/client-api';
 import { formatMoment } from '@/lib/format';
 import CelebrationsCard from './CelebrationsCard';
@@ -21,11 +20,7 @@ export default function AlertsManager({ settings, report, email, recent }) {
   return (
     <>
       <Recipients settings={settings} />
-      <Preview
-        report={report}
-        email={email}
-        hasRecipients={settings.followupEmails.length + settings.pastorEmails.length > 0}
-      />
+      <Preview report={report} email={email} />
       <CelebrationsCard settings={settings} />
       <History recent={recent} />
     </>
@@ -153,53 +148,7 @@ function Recipients({ settings }) {
   );
 }
 
-function Preview({ report, email, hasRecipients }) {
-  const confirm = useConfirm();
-  const router = useRouter();
-  const [testTo, setTestTo] = useState('');
-  const [test, setTest] = useState({ kind: 'idle' });
-  const [send, setSend] = useState({ kind: 'idle' });
-
-  async function sendTest(e) {
-    e.preventDefault();
-    if (test.kind === 'busy') return;
-    setTest({ kind: 'busy' });
-    try {
-      await sendJson('/api/alerts/test', 'POST', { to: testTo });
-      setTest({ kind: 'ok', message: `Test email sent to ${testTo}. Check the inbox (and spam).` });
-      router.refresh();
-    } catch (err) {
-      setTest({ kind: 'error', error: err });
-    }
-  }
-
-  async function sendNow() {
-    if (send.kind === 'busy') return;
-    const ok = await confirm({
-      title: 'Send this report now?',
-      body: 'It goes to everyone on the lists above. Tomorrow’s 7 AM email still goes out as usual.',
-      confirmLabel: 'Send now',
-      icon: 'send',
-    });
-    if (!ok) return;
-    setSend({ kind: 'busy' });
-    try {
-      const r = await sendJson('/api/alerts/send', 'POST');
-      setSend(
-        r.sent
-          ? {
-              kind: 'ok',
-              message: `Sent to ${r.to + r.cc} ${r.to + r.cc === 1 ? 'person' : 'people'}.`,
-            }
-          : { kind: 'error', error: { message: r.error || `Not sent: ${r.skipped}.` } },
-      );
-      router.refresh();
-    } catch (err) {
-      setSend({ kind: 'error', error: err });
-    }
-  }
-
-  const testError = test.kind === 'error' ? test.error.fields?.to : null;
+function Preview({ report, email }) {
   return (
     <section className="card flex flex-col gap-5">
       <div className="flex items-start gap-3">
@@ -234,57 +183,6 @@ function Preview({ report, email, hasRecipients }) {
           No new first timers today and nobody waiting over 72 hours, so no email would go out.
         </EmptyState>
       )}
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <form onSubmit={sendTest} className="flex flex-col gap-2 rounded-tile bg-surface-2 p-4">
-          <label htmlFor="test-to" className="field-label">
-            Send a test email
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <input
-              id="test-to"
-              type="email"
-              value={testTo}
-              onChange={(e) => {
-                setTestTo(e.target.value);
-                setTest({ kind: 'idle' });
-              }}
-              required
-              placeholder="your@email.com"
-              autoCapitalize="none"
-              aria-invalid={testError ? true : undefined}
-              aria-describedby={testError ? 'test-to-error' : undefined}
-              className="input min-w-[12rem] flex-1"
-            />
-            <button type="submit" aria-disabled={test.kind === 'busy'} className="btn btn-soft">
-              <Busy
-                busy={test.kind === 'busy'}
-                busyLabel="Sending…"
-                icon="send"
-                label="Send test"
-              />
-            </button>
-          </div>
-          <FieldError id="test-to-error">{testError}</FieldError>
-          {test.kind === 'error' && !testError && <FormAlert error={test.error} />}
-          {test.kind === 'ok' && <FormAlert success={test.message} />}
-        </form>
-        <div className="flex flex-col gap-2 rounded-tile bg-surface-2 p-4">
-          <p className="field-label">Send this report now</p>
-          <button
-            type="button"
-            onClick={sendNow}
-            disabled={!email || !hasRecipients}
-            aria-disabled={send.kind === 'busy'}
-            className="btn btn-primary self-start"
-          >
-            <Busy busy={send.kind === 'busy'} busyLabel="Sending…" icon="send" label="Send now" />
-          </button>
-          {!hasRecipients && <p className="field-hint">Add at least one email address first.</p>}
-          {send.kind === 'error' && <FormAlert error={send.error} />}
-          {send.kind === 'ok' && <FormAlert success={send.message} />}
-        </div>
-      </div>
     </section>
   );
 }

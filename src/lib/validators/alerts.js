@@ -13,7 +13,3 @@ export const alertSettingsSchema = z
     celebrationReport: z.boolean(),
   })
   .partial();
-
-export const testEmailSchema = z.object({
-  to: z.string().trim().toLowerCase().email('Enter a valid email address'),
-});

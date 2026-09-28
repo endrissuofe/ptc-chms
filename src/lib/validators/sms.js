@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { AUDIENCES, TEMPLATE_KEYS } from '../sms/templates';
-import { isValidPhone } from '../phone';
+import { AUDIENCES } from '../sms/templates';
 
 const body = z
   .string()
@@ -9,12 +8,6 @@ const body = z
   .max(459, 'Keep it to 3 pages or fewer');
 
 export const smsTemplateSchema = z.object({ body, enabled: z.boolean() });
-
-export const testSmsSchema = z.object({
-  templateKey: z.enum([...TEMPLATE_KEYS, 'broadcast']),
-  phone: z.string().refine(isValidPhone, 'Enter a Nigerian mobile number'),
-  body: body.optional(),
-});
 
 export const broadcastSchema = z.object({
   audience: z.enum(Object.keys(AUDIENCES)),
