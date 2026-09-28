@@ -27,6 +27,7 @@
     "members:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-members.mjs"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
     "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
     "mongoose": "^8.19.0",

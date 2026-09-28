@@ -7,6 +7,7 @@ import { CELEBRATIONS, socialsText } from '@/lib/celebrations';
 import { telLink, whatsAppLink } from '@/lib/followup';
 import { listCelebrations } from '@/services/celebration.service';
 import CopyButton from './CopyButton';
+import MakeGraphic from './MakeGraphic';
 
 export const metadata = { title: 'Birthdays' };
 export const dynamic = 'force-dynamic';
@@ -80,7 +81,7 @@ export default async function BirthdaysPage({ searchParams }) {
         {today.people.length ? (
           <ul className="grid gap-3 md:grid-cols-2">
             {today.people.map((p) => (
-              <Celebrant key={`${p.kind}-${p.id}`} person={p} today />
+              <Celebrant key={`${p.kind}-${p.id}`} person={p} date={today.date} today />
             ))}
           </ul>
         ) : (
@@ -109,7 +110,7 @@ export default async function BirthdaysPage({ searchParams }) {
               <h3 className="card-title">{dayLabel.format(new Date(d.date))}</h3>
               <ul className="grid gap-3 md:grid-cols-2">
                 {d.people.map((p) => (
-                  <Celebrant key={`${p.kind}-${p.id}`} person={p} />
+                  <Celebrant key={`${p.kind}-${p.id}`} person={p} date={d.date} />
                 ))}
               </ul>
             </div>
@@ -120,7 +121,7 @@ export default async function BirthdaysPage({ searchParams }) {
   );
 }
 
-function Celebrant({ person: p, today = false }) {
+function Celebrant({ person: p, date, today = false }) {
   const kind = CELEBRATIONS[p.kind];
   const wish =
     p.kind === 'anniversary'
@@ -171,6 +172,7 @@ function Celebrant({ person: p, today = false }) {
           WhatsApp
         </a>
         <CopyButton text={socialsText(p.kind, p.name)} />
+        <MakeGraphic kind={p.kind} name={p.name} date={date} />
       </div>
     </li>
   );
