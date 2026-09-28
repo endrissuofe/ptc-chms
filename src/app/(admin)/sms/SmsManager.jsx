@@ -55,14 +55,7 @@ function plainReason(error = '') {
   return error || 'Unknown reason';
 }
 
-export default function SmsManager({
-  templates,
-  drafts,
-  invite,
-  memberInvite,
-  runs,
-  audienceCounts,
-}) {
+export default function SmsManager({ templates, invite, memberInvite, runs, audienceCounts }) {
   const previews = { saturday_invite: invite, member_invite: memberInvite };
   return (
     <>
@@ -74,12 +67,7 @@ export default function SmsManager({
         </div>
         <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
           {templates.map((t) => (
-            <TemplateEditor
-              key={t.key}
-              template={t}
-              draft={drafts?.[t.key] ?? null}
-              invite={previews[t.key] ?? null}
-            />
+            <TemplateEditor key={t.key} template={t} invite={previews[t.key] ?? null} />
           ))}
         </div>
       </section>
@@ -413,34 +401,48 @@ function Figure({ label, value, hint }) {
   );
 }
 
-function TemplateEditor({ template, invite, draft }) {
+function TemplateEditor({ template, invite }) {
   const router = useRouter();
   const info = TEMPLATE_INFO[template.key];
+  const rotates = Boolean(info.rotates);
+  const initial = template.bodies ?? [template.body];
+  const [saved, setSaved] = useState({ bodies: initial, enabled: template.enabled });
+  const [bodies, setBodies] = useState(initial);
   const [enabled, setEnabled] = useState(template.enabled);
-  const [toggle, setToggle] = useState({ kind: 'idle' });
+  const [state, setState] = useState({ kind: 'idle' });
+  const trimmed = bodies.map((b) => b.trim());
+  const dirty =
+    JSON.stringify(trimmed) !== JSON.stringify(saved.bodies) || enabled !== saved.enabled;
+  const bad = trimmed.some((b) => !b || unknownTags(template.key, b).length > 0);
+  const busy = state.kind === 'busy';
+  const body = bodies[0];
+  const setBody = (v) => setBodies((list) => [v, ...list.slice(1)]);
+  const setWording = (i) => (v) => {
+    setBodies((list) => list.map((b, j) => (j === i ? v : b)));
+    setState({ kind: 'idle' });
+  };
 
-  // The switch saves at once, keeping the backup wordings as they are.
-  async function switchOnOff(value) {
-    setEnabled(value);
-    setToggle({ kind: 'busy' });
+  async function save() {
+    if (busy) return;
+    setState({ kind: 'busy' });
     try {
-      await sendJson(
+      const doc = await sendJson(
         `/api/sms/templates?key=${template.key}`,
         'PATCH',
-        template.bodies
-          ? { bodies: template.bodies, enabled: value }
-          : { body: template.body, enabled: value },
+        rotates ? { bodies: trimmed, enabled } : { body: trimmed[0], enabled },
       );
-      setToggle({ kind: 'ok', message: value ? 'Switched on.' : 'Switched off.' });
+      const next = rotates ? [doc.body, ...(doc.variants ?? [])] : [doc.body];
+      setSaved({ bodies: next, enabled: doc.enabled });
+      setBodies(next);
+      setState({ kind: 'ok', message: 'Changes saved.' });
       router.refresh();
     } catch (err) {
-      setEnabled(!value);
-      setToggle({ kind: 'error', error: err });
+      setState({ kind: 'error', error: err });
     }
   }
 
   return (
-    <section className="card flex flex-col gap-4">
+    <section className={`card flex flex-col gap-4 ${rotates ? 'lg:col-span-3' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="card-title">{info.title}</h3>
@@ -455,7 +457,10 @@ function TemplateEditor({ template, invite, draft }) {
             type="checkbox"
             role="switch"
             checked={enabled}
-            onChange={(e) => switchOnOff(e.target.checked)}
+            onChange={(e) => {
+              setEnabled(e.target.checked);
+              setState({ kind: 'idle' });
+            }}
             aria-label={`${info.title}: ${enabled ? 'on' : 'off'}`}
             className="switch"
           />
@@ -473,168 +478,11 @@ function TemplateEditor({ template, invite, draft }) {
           )}
         </span>
       </p>
-      {toggle.kind === 'error' && <FormAlert error={toggle.error} />}
 
-      {draft && <WeekDraft templateKey={template.key} week={draft.thisWeek} label="This week" />}
-      {draft?.nextWeek && (
-        <WeekDraft templateKey={template.key} week={draft.nextWeek} label="Next week" />
-      )}
-
-      <details className="group rounded-tile border border-line">
-        <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 px-3.5 text-sm font-bold text-ink-2 hover:text-ink [&::-webkit-details-marker]:hidden">
-          <Icon
-            name="expand_more"
-            size={18}
-            className="text-muted transition-transform group-open:rotate-180"
-          />
-          Backup wording{template.bodies ? 's' : ''}
-          <span className="font-semibold text-muted">if there’s no weekly draft</span>
-        </summary>
-        <div className="border-t border-line p-3.5">
-          <BackupWordings template={template} />
-        </div>
-      </details>
-    </section>
-  );
-}
-
-const weekLabel = (iso) => dayLabel.format(new Date(iso)).replace(/^\w+ /, '');
-
-/** One week's wording: what the AI drafted (or an admin edited), editable. */
-function WeekDraft({ templateKey, week, label }) {
-  const router = useRouter();
-  const saved = week.draft?.body ?? week.body;
-  const [body, setBody] = useState(saved);
-  const [state, setState] = useState({ kind: 'idle' });
-  const dirty = body.trim() !== saved;
-  const busy = state.kind === 'busy';
-  const bad = !body.trim() || unknownTags(templateKey, body).length > 0;
-  const source = week.draft?.source;
-
-  async function save() {
-    if (busy) return;
-    setState({ kind: 'busy' });
-    try {
-      const doc = await sendJson('/api/sms/drafts', 'PATCH', {
-        template: templateKey,
-        weekOf: week.weekOf,
-        body: body.trim(),
-      });
-      setBody(doc.body);
-      setState({ kind: 'ok', message: 'Saved. This wording goes out this week.' });
-      router.refresh();
-    } catch (err) {
-      setState({ kind: 'error', error: err });
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-bold">
-          {label} <span className="font-semibold text-muted">from {weekLabel(week.weekOf)}</span>
-        </p>
-        {source === 'ai' && (
-          <span className="chip chip-violet">
-            <Icon name="auto_awesome" size={14} />
-            Drafted by AI
-          </span>
-        )}
-        {source === 'edited' && (
-          <span className="chip chip-primary">
-            <Icon name="edit_note" size={14} />
-            Edited
-          </span>
-        )}
-        {!source && <span className="chip">Backup wording</span>}
-      </div>
-      <MessageBox
-        id={`draft-${templateKey}-${week.weekOf}`}
-        tagsFor={templateKey}
-        value={body}
-        foldPreview
-        onChange={(v) => {
-          setBody(v);
-          setState({ kind: 'idle' });
-        }}
-      />
-      {state.kind === 'error' && (
-        <FormAlert
-          error={state.error.fields?.body ? { message: state.error.fields.body } : state.error}
-        />
-      )}
-      {state.kind === 'ok' && !dirty && <FormAlert success={state.message} />}
-      {dirty && (
-        <div className="flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setBody(saved);
-              setState({ kind: 'idle' });
-            }}
-            className="btn btn-ghost"
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            onClick={save}
-            disabled={bad}
-            aria-disabled={busy}
-            className="btn btn-primary"
-          >
-            <Busy busy={busy} icon="save" label="Save" />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** The fixed wordings used when there's no weekly draft (AI off or unable). */
-function BackupWordings({ template }) {
-  const router = useRouter();
-  const rotates = Boolean(TEMPLATE_INFO[template.key].rotates);
-  const initial = template.bodies ?? [template.body];
-  const [saved, setSaved] = useState(initial);
-  const [bodies, setBodies] = useState(initial);
-  const [state, setState] = useState({ kind: 'idle' });
-  const trimmed = bodies.map((b) => b.trim());
-  const dirty = JSON.stringify(trimmed) !== JSON.stringify(saved);
-  const bad = trimmed.some((b) => !b || unknownTags(template.key, b).length > 0);
-  const busy = state.kind === 'busy';
-  const setWording = (i) => (v) => {
-    setBodies((list) => list.map((b, j) => (j === i ? v : b)));
-    setState({ kind: 'idle' });
-  };
-
-  async function save() {
-    if (busy) return;
-    setState({ kind: 'busy' });
-    try {
-      const doc = await sendJson(
-        `/api/sms/templates?key=${template.key}`,
-        'PATCH',
-        rotates
-          ? { bodies: trimmed, enabled: template.enabled }
-          : { body: trimmed[0], enabled: template.enabled },
-      );
-      const next = rotates ? [doc.body, ...(doc.variants ?? [])] : [doc.body];
-      setSaved(next);
-      setBodies(next);
-      setState({ kind: 'ok', message: 'Backup saved.' });
-      router.refresh();
-    } catch (err) {
-      setState({ kind: 'error', error: err });
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <ol className="flex flex-col gap-4">
-        {bodies.map((b, i) => (
-          <li key={i} className="flex flex-col gap-1.5">
-            {rotates && (
+      {rotates ? (
+        <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {bodies.map((b, i) => (
+            <li key={i} className="flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-sm font-bold">
                   Wording {i + 1}
@@ -656,31 +504,44 @@ function BackupWordings({ template }) {
                   </button>
                 )}
               </div>
-            )}
-            <MessageBox
-              id={`backup-${template.key}-${i}`}
-              tagsFor={template.key}
-              value={b}
-              foldPreview
-              onChange={setWording(i)}
-            />
-          </li>
-        ))}
-      </ol>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {rotates && bodies.length < MAX_WORDINGS ? (
-          <button
-            type="button"
-            onClick={() => setBodies((list) => [...list, ''])}
-            className="btn btn-soft btn-sm"
-          >
-            <Icon name="add" size={16} />
-            Add a wording
-          </button>
-        ) : (
-          <span />
-        )}
-        {dirty && (
+              <MessageBox
+                id={`message-${template.key}-${i}`}
+                tagsFor={template.key}
+                value={b}
+                foldPreview
+                onChange={setWording(i)}
+              />
+            </li>
+          ))}
+          {bodies.length < MAX_WORDINGS && (
+            <li>
+              <button
+                type="button"
+                onClick={() => setBodies((list) => [...list, ''])}
+                className="btn btn-soft btn-sm"
+              >
+                <Icon name="add" size={16} />
+                Add a wording
+              </button>
+            </li>
+          )}
+        </ol>
+      ) : (
+        <MessageBox
+          id={`message-${template.key}`}
+          tagsFor={template.key}
+          value={body}
+          foldPreview
+          onChange={(v) => {
+            setBody(v);
+            setState({ kind: 'idle' });
+          }}
+        />
+      )}
+      {state.kind === 'error' && <FormAlert error={state.error} />}
+      {state.kind === 'ok' && !dirty && <FormAlert success={state.message} />}
+      <div className="mt-auto flex flex-wrap items-center justify-end gap-2">
+        {dirty ? (
           <button
             type="button"
             onClick={save}
@@ -688,13 +549,18 @@ function BackupWordings({ template }) {
             aria-disabled={busy}
             className="btn btn-primary"
           >
-            <Busy busy={busy} icon="save" label="Save backup" />
+            <Busy busy={busy} icon="save" label="Save changes" />
           </button>
+        ) : (
+          state.kind !== 'ok' && (
+            <span className="chip chip-success">
+              <Icon name="check" size={14} />
+              Saved
+            </span>
+          )
         )}
       </div>
-      {state.kind === 'error' && <FormAlert error={state.error} />}
-      {state.kind === 'ok' && !dirty && <FormAlert success={state.message} />}
-    </div>
+    </section>
   );
 }
 

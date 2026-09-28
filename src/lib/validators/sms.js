@@ -28,10 +28,3 @@ export const memberImportSchema = z.object({
   csv: z.string().min(1, 'The file is empty').max(5_000_000, 'The file is too big'),
   commit: z.boolean().default(false),
 });
-
-/** An admin edits a week's AI-drafted wording. */
-export const smsDraftSchema = z.object({
-  template: z.string().min(1).max(40),
-  weekOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  body,
-});

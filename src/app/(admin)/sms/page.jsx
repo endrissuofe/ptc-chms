@@ -2,7 +2,6 @@ import Icon from '@/components/ui/Icon';
 import { isoDay } from '@/lib/dates';
 import { getSmsOverview } from '@/services/sms.service';
 import { audienceCounts } from '@/services/broadcast.service';
-import { listDrafts } from '@/services/sms-draft.service';
 import SmsManager from './SmsManager';
 
 export const metadata = { title: 'SMS messages' };
@@ -11,11 +10,7 @@ export const dynamic = 'force-dynamic';
 const naira = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' });
 
 export default async function SmsPage() {
-  const [overview, counts, { drafts }] = await Promise.all([
-    getSmsOverview(),
-    audienceCounts(),
-    listDrafts(),
-  ]);
+  const [overview, counts] = await Promise.all([getSmsOverview(), audienceCounts()]);
   const balance = overview.balance;
 
   return (
@@ -46,7 +41,6 @@ export default async function SmsPage() {
       </div>
       <SmsManager
         templates={overview.templates}
-        drafts={drafts}
         invite={{ ...overview.invite, serviceDate: isoDay(overview.invite.serviceDate) }}
         memberInvite={{
           ...overview.memberInvite,

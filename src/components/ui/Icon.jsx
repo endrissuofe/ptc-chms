@@ -146,7 +146,6 @@ export const ICON_NAMES = [
   'person_remove',
   'star',
   'reviews',
-  'auto_awesome',
 ];
 
 /** Google Fonts needs the names sorted; FILL is kept as an axis for filled icons. */

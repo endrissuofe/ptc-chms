@@ -5,16 +5,12 @@ import { smsStatus } from '@/services/sms.service';
 import { sendFollowUpReport } from '@/services/alerts.service';
 import { sendCelebrationSms, sendCelebrationsEmail } from '@/services/celebration.service';
 import { sendCheckIns } from '@/services/checkin.service';
-import { weekOf } from '@/services/sms.service';
-import { draftWeek } from '@/services/sms-draft.service';
-import { addDays, toServiceDate } from '@/lib/dates';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /**
  * Every morning, 7 AM Lagos (Vercel Cron, Authorization: Bearer <CRON_SECRET>):
- *   - Fridays: the AI writer drafts next week's SMS wording (Saturdays: fills any gaps first)
  *   - the follow-up report (new first timers, anyone waiting over 72 hours)
  *   - birthday and wedding anniversary SMS
  *   - the celebrations email for the admin / media team
@@ -27,13 +23,7 @@ export async function GET(req) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const emailOn = emailStatus().live;
-  const weekday = toServiceDate().getUTCDay();
   const jobs = {
-    // First, so a Saturday's messages already use the new week's wording.
-    smsDrafts: () =>
-      weekday === 5 || weekday === 6
-        ? draftWeek({ saturday: weekOf(addDays(new Date(), 1)) })
-        : { skipped: 'only on Fridays and Saturdays' },
     followUpReport: () => (emailOn ? sendFollowUpReport() : { skipped: 'EMAIL_PROVIDER is mock' }),
     // With the mock SMS provider nothing really goes out, so don't mark anyone as wished.
     celebrationSms: () =>
