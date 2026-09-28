@@ -183,12 +183,16 @@ function NeedsAttention({ n }) {
       sub: 'People who used a team invite link',
       action: 'Logins',
     },
-    n.overdue > 0 && {
+    // Everyone still waiting for a call, not only those past 3 days.
+    n.toCall > 0 && {
       href: '/my-newcomers',
-      icon: 'alarm',
-      tone: 'tone-danger',
-      title: n.overdue === 1 ? '1 person not called' : `${n.overdue} people not called`,
-      sub: 'Waiting over 3 days since their visit',
+      icon: n.overdue > 0 ? 'alarm' : 'call',
+      tone: n.overdue > 0 ? 'tone-danger' : 'tone-primary',
+      title: n.toCall === 1 ? '1 person to call' : `${n.toCall} people to call`,
+      sub:
+        n.overdue > 0
+          ? `${n.overdue} waiting over 3 days since their visit`
+          : 'Visited in the last 3 days',
       action: 'Follow-up list',
     },
     n.newPrayer > 0 && {
