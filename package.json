@@ -24,7 +24,8 @@
     "sms:check": "node scripts/sms-check.mjs",
     "user:add": "node scripts/add-user.mjs",
     "clear-test-data": "node scripts/clear-test-data.mjs",
-    "members:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-members.mjs"
+    "members:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-members.mjs",
+    "ai:check": "node scripts/ai-check.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

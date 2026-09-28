@@ -7,7 +7,7 @@ import { toServiceDate, addDays, isoDay } from '@/lib/dates';
 import { STAGES } from '@/lib/stages';
 import { describeServiceTimes } from '@/lib/church';
 import { logger } from '@/lib/logger';
-import { Member, Person, SmsTemplate, SmsLog, Broadcast } from '@/models';
+import { Member, Person, SmsDraft, SmsTemplate, SmsLog, Broadcast } from '@/models';
 import { listServices } from './churchService.service';
 
 const CHURCH_NAME = () => process.env.CHURCH_NAME || 'RCCG Peculiar Treasure Chapel';
@@ -87,6 +87,26 @@ export const wordingFor = (template, serviceDate) => {
   const all = wordings(template);
   return all[wordingIndex(all.length, serviceDate)];
 };
+
+/** The Saturday that starts the week `date` falls in (weeks run Saturday to Friday). */
+export function weekOf(date = new Date()) {
+  const day = toServiceDate(date);
+  return addDays(day, -((day.getUTCDay() + 1) % 7));
+}
+
+/**
+ * The text a message goes out with on `date`: that week's draft (AI-written or edited), or
+ * the backup wording when there is none (AI off, or it couldn't write one).
+ */
+export async function wordingForSend(template, date = new Date()) {
+  const draft = await SmsDraft.findOne({ template: template.key, weekOf: weekOf(date) })
+    .select('body')
+    .lean();
+  if (draft?.body) return draft.body;
+  return TEMPLATE_INFO[template.key]?.rotates
+    ? wordingFor(template, toServiceDate(date))
+    : template.body;
+}
 
 /** Is SMS really going out? Set in the hosting settings, never shown in the app. */
 export function smsStatus() {
@@ -192,7 +212,7 @@ export async function sendCardMessage({ personId, templateKey, serviceDate }) {
     if (!smsStatus().live && process.env.NODE_ENV === 'production') return { skipped: true };
     const result = await deliver({
       recipients: [personRecipient(person)],
-      text: template.body,
+      text: await wordingForSend(template),
       run: `${templateKey}:${isoDay(toServiceDate(serviceDate))}`,
       template: templateKey,
     });
@@ -218,7 +238,7 @@ async function inviteRecipients(day) {
 }
 
 /** Tomorrow's service times, e.g. "Service starts at 8:00 AM." */
-async function serviceTimesAfter(day) {
+export async function serviceTimesAfter(day) {
   return describeServiceTimes(await listServices({ on: addDays(day, 1) }));
 }
 
@@ -263,7 +283,7 @@ export async function runScheduledSend(templateKey, { today = new Date() } = {})
   const run = `${templateKey}:${isoDay(day)}`;
   const result = await deliver({
     recipients,
-    text: wordingFor(template, day),
+    text: await wordingForSend(template, day),
     run,
     template: templateKey,
     extraTags: { ServiceTimes: await serviceTimesAfter(day) },

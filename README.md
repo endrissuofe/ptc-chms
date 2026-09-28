@@ -16,7 +16,8 @@ What it does:
   follow-up list.
 - **Media team:** birthdays and wedding anniversaries, with a line ready for the socials.
 - **Admins:** SMS (instant thank-you and welcome back, Saturday invites to first timers and
-  members in a different wording each week, birthday wishes,
+  members, birthday wishes — each week's wording drafted by an AI writer on the server and
+  editable by admins,
   broadcasts to members), the member list (CSV import), email alerts and logins.
 - **Joining:** each team has an invite link; people sign up themselves and an admin approves
   them. Everyone manages their own details and emails on My account.

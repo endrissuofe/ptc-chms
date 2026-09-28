@@ -13,3 +13,4 @@ export { default as AlertSettings } from './AlertSettings';
 export { default as EmailLog } from './EmailLog';
 export { default as JoinLink } from './JoinLink';
 export { default as CheckIn } from './CheckIn';
+export { default as SmsDraft } from './SmsDraft';

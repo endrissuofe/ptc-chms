@@ -176,6 +176,13 @@ const MIGRATIONS = [
       await db.collection('people').createIndex({ firstVisitDate: 1 });
     },
   },
+  {
+    id: '011-ai-sms-drafts',
+    async up(db) {
+      // One draft per message per week (Saturday to Friday).
+      await db.collection('smsdrafts').createIndex({ template: 1, weekOf: 1 }, { unique: true });
+    },
+  },
 ];
 
 async function main() {

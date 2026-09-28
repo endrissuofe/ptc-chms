@@ -6,7 +6,13 @@ import { emailStatus, sendEmail } from '@/lib/email';
 import { renderCelebrations } from '@/lib/email/celebrations-report';
 import { EmailLog, Member, Person, SmsLog, SmsTemplate } from '@/models';
 import { alertRecipients, baseUrl, getAlertSettings, logEmail } from './alerts.service';
-import { deliver, ensureTemplates, memberRecipient, personRecipient } from './sms.service';
+import {
+  deliver,
+  ensureTemplates,
+  memberRecipient,
+  personRecipient,
+  wordingForSend,
+} from './sms.service';
 
 /**
  * Birthdays and wedding anniversaries. Members come from the Members list; first timers
@@ -105,7 +111,12 @@ export async function sendCelebrationSms({ today = new Date() } = {}) {
     }
     const recipients = people.filter((p) => p.kind === kind && p.canSms).map((p) => p.recipient);
     results[kind] = recipients.length
-      ? await deliver({ recipients, text: template.body, run: `${kind}:${day}`, template: kind })
+      ? await deliver({
+          recipients,
+          text: await wordingForSend(template, today),
+          run: `${kind}:${day}`,
+          template: kind,
+        })
       : { total: 0 };
   }
   logger.info({ day, ...results }, 'Birthday and anniversary SMS');

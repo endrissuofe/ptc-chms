@@ -7,7 +7,7 @@ import { STAGES } from '@/lib/stages';
 import { appUrl } from '@/lib/site';
 import { logger } from '@/lib/logger';
 import { CheckIn, Person, SmsTemplate } from '@/models';
-import { deliver, ensureTemplates, personRecipient } from './sms.service';
+import { deliver, ensureTemplates, personRecipient, wordingForSend } from './sms.service';
 
 /** 8 random characters: short enough for one SMS page, too many to guess. */
 const newToken = () => crypto.randomBytes(6).toString('base64url');
@@ -57,7 +57,7 @@ export async function sendCheckIns({ today = new Date() } = {}) {
   }
   const result = await deliver({
     recipients,
-    text: template.body,
+    text: await wordingForSend(template, today),
     run: `checkin:${isoDay(toServiceDate(today))}`,
     template: 'checkin',
   });
