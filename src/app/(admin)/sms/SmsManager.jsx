@@ -61,9 +61,6 @@ export default function SmsManager({ templates, invite, runs, audienceCounts }) 
       <section className="flex flex-col gap-4">
         <div>
           <h2 className="section-title">Automatic messages</h2>
-          <p className="card-sub">
-            Sent without anyone pressing a button. Switch any of them off here.
-          </p>
         </div>
         <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
           {templates.map((t) => (
@@ -606,10 +603,6 @@ function RunHistory({ runs }) {
     <section className="flex flex-col gap-3">
       <div>
         <h2 className="section-title">Recent sends</h2>
-        <p className="card-sub">
-          “Sent” means our SMS company accepted the message; it can’t tell us whether the phone
-          received it.
-        </p>
       </div>
       {runs.length === 0 ? (
         <EmptyState

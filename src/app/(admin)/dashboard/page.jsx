@@ -31,9 +31,6 @@ export default async function DashboardPage() {
             Overview
           </p>
           <h1 className="page-title">Dashboard</h1>
-          <p className="page-sub">
-            How attendance and first timers are doing, and what needs attention this week.
-          </p>
         </div>
       </div>
 

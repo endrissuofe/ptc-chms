@@ -17,10 +17,7 @@ export default async function UsersPage() {
             Admin
           </p>
           <h1 className="page-title">Logins</h1>
-          <p className="page-sub">
-            Who can sign in and what each person can do · {users.filter((u) => u.active).length}{' '}
-            active
-          </p>
+          <p className="page-sub">{users.filter((u) => u.active).length} active</p>
         </div>
       </div>
       <UserManager users={users} meId={session?.user?.id} />

@@ -38,9 +38,6 @@ export default async function PrayerRequestsPage({ searchParams }) {
             Prayer
           </p>
           <h1 className="page-title">Prayer requests</h1>
-          <p className="page-sub">
-            Prayer requests from first-timer cards. Mark each one when you have prayed.
-          </p>
         </div>
       </div>
 

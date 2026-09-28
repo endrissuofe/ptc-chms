@@ -15,8 +15,10 @@ export function emailStatus() {
 
 let transport;
 function gmail() {
-  const user = (process.env.GMAIL_USER || '').trim();
-  const pass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+  // Tolerate the spaces Google shows in app passwords and quotes pasted around either value.
+  const unquote = (s) => s.replace(/^["']|["']$/g, '');
+  const user = unquote((process.env.GMAIL_USER || '').trim());
+  const pass = unquote((process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, ''));
   if (!user || !pass) throw new Error('GMAIL_USER and GMAIL_APP_PASSWORD must be set');
   transport ??= nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
   return { transport, user };
@@ -48,6 +50,17 @@ export async function sendEmail({ to, cc = [], subject, html, text }) {
     return { ok: true, id: info.messageId };
   } catch (err) {
     logger.error({ err: err.message }, 'Email failed');
-    return { ok: false, error: err.message };
+    return { ok: false, error: explain(err) };
   }
+}
+
+/** Gmail's sign-in refusal (535) is the usual setup mistake; say what to check. */
+function explain(err) {
+  if (err.responseCode !== 535 && err.code !== 'EAUTH') return err.message;
+  const user = (process.env.GMAIL_USER || '').trim();
+  return (
+    `Gmail refused to sign in as “${user}”. Check that GMAIL_USER is that Gmail’s full ` +
+    'address and GMAIL_APP_PASSWORD is an app password created in that same account, ' +
+    'then redeploy.'
+  );
 }

@@ -271,7 +271,6 @@ function Preview({ report, email, hasRecipients }) {
         </form>
         <div className="flex flex-col gap-2 rounded-tile bg-surface-2 p-4">
           <p className="field-label">Send this report now</p>
-          <p className="field-hint mt-0">For trying it out. Goes to everyone on the lists above.</p>
           <button
             type="button"
             onClick={sendNow}
@@ -295,9 +294,7 @@ function History({ recent }) {
     <section className="flex flex-col gap-3">
       <h2 className="section-title">Recent emails</h2>
       {recent.length === 0 ? (
-        <EmptyState card icon="mail" title="No emails sent yet">
-          The first one goes out tomorrow at 7 AM, or send a test above.
-        </EmptyState>
+        <EmptyState card icon="mail" title="No emails sent yet" />
       ) : (
         <div className="relative overflow-x-auto rounded-card border border-line bg-surface shadow-soft">
           <table className="table min-w-[560px]">

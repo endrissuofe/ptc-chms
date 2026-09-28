@@ -16,10 +16,6 @@ export default async function AlertsPage() {
             Admin
           </p>
           <h1 className="page-title">Email alerts</h1>
-          <p className="page-sub">
-            Every morning at 7 AM the follow-up team gets one email: the previous day’s first
-            timers, and anyone still not reached after 72 hours. Pastors are copied in.
-          </p>
         </div>
       </div>
       <AlertsManager

@@ -18,9 +18,6 @@ export default async function FollowUpPage() {
             Follow-up team
           </p>
           <h1 className="page-title">Follow-up</h1>
-          <p className="page-sub">
-            Call or WhatsApp the first timers on the list, then log how each call went.
-          </p>
         </div>
       </div>
 

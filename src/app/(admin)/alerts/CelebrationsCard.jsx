@@ -80,10 +80,6 @@ export default function CelebrationsCard({ settings }) {
           </span>
           <div>
             <h2 className="card-title">Birthdays and anniversaries email</h2>
-            <p className="card-sub">
-              At 7 AM on days with a celebration: who to wish, with a line ready to post on the
-              church’s socials. On Mondays it also lists the rest of the week.
-            </p>
           </div>
         </div>
         <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-bold">

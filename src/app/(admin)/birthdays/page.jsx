@@ -51,10 +51,6 @@ export default async function BirthdaysPage({ searchParams }) {
             Church family
           </p>
           <h1 className="page-title">Birthdays</h1>
-          <p className="page-sub">
-            Birthdays and wedding anniversaries. An SMS wish goes out automatically at 7 AM on the
-            day; wish them yourself and post on the church’s socials too.
-          </p>
         </div>
       </div>
 

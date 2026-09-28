@@ -21,10 +21,6 @@ export default async function ServicesPage() {
             Church calendar
           </p>
           <h1 className="page-title">Services</h1>
-          <p className="page-sub">
-            Ushers record attendance and first-timer cards against these. Each day they only see the
-            services held that day. Times are Lagos time.
-          </p>
         </div>
       </div>
       <ServicesManager

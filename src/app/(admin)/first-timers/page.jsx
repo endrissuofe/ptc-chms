@@ -57,9 +57,6 @@ export default async function FirstTimersPage({ searchParams }) {
             Follow-up
           </p>
           <h1 className="page-title">First timers</h1>
-          <p className="page-sub">
-            Everyone who has filled a first-timer card: search, filter, open a profile or export.
-          </p>
         </div>
         <a href={exportHref} className="btn btn-soft">
           <Icon name="download" size={18} />

@@ -25,10 +25,7 @@ export default async function MembersPage({ searchParams }) {
             Church family
           </p>
           <h1 className="page-title">Members</h1>
-          <p className="page-sub">
-            The church member list, used for messages to members ·{' '}
-            {list.all === 1 ? '1 member' : `${list.all} members`}
-          </p>
+          <p className="page-sub">{list.all === 1 ? '1 member' : `${list.all} members`}</p>
         </div>
         {list.all > 0 && (
           <Link href="/sms#broadcast" className="btn btn-soft">
