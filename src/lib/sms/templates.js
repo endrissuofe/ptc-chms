@@ -37,6 +37,12 @@ export const TEMPLATE_INFO = {
     recipients: 'Members with a wedding anniversary on the Members list',
     tags: ['FirstName', 'LastName', 'ChurchName'],
   },
+  checkin: {
+    title: 'One-month check-in',
+    schedule: 'Every morning at 7 AM, a month after their first visit',
+    recipients: 'First timers who agreed to messages; each gets their own survey link',
+    tags: ['FirstName', 'LastName', 'ChurchName', 'Link'],
+  },
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_INFO);

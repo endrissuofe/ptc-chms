@@ -38,6 +38,11 @@ export const DEFAULT_TEMPLATES = [
     name: 'Wedding anniversary',
     body: 'Happy wedding anniversary, {FirstName}! RCCG Peculiar Treasure Chapel celebrates with you today. May God keep your home in love, peace and joy.',
   },
+  {
+    key: 'checkin',
+    name: 'One-month check-in',
+    body: "Hi {FirstName}, it's been a month since your first visit to PTC Chapel. How has it been? Tell us here: {Link}",
+  },
 ];
 
 export async function ensureTemplates() {
@@ -103,6 +108,8 @@ export async function deliver({ recipients, text, run, template, extraTags = {} 
       LastName: r.lastName,
       ChurchName: CHURCH_NAME(),
       ...extraTags,
+      // A recipient's own tags, e.g. their personal survey {Link}.
+      ...r.tags,
     });
     const res = await provider.send({ to: r.phone, body: message, from });
     try {

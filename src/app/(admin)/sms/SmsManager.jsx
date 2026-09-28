@@ -23,6 +23,7 @@ const SAMPLE = {
   LastName: 'Okafor',
   ChurchName: 'RCCG Peculiar Treasure Chapel',
   ServiceTimes: 'Service starts at 8:00 AM.',
+  Link: 'https://ptc-chms.vercel.app/c/Ab3dE9xY',
 };
 
 const dayLabel = new Intl.DateTimeFormat('en-GB', {

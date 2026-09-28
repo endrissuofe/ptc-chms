@@ -28,6 +28,8 @@ const personSchema = new mongoose.Schema(
     lastContactAt: { type: Date },
     lastAttemptAt: { type: Date },
     lastOutcome: { type: String, enum: ['reached', 'no_answer', 'call_back', 'wrong_number'] },
+    // They asked for a call (or scored their first month low) on the one-month check-in.
+    callRequestedAt: { type: Date },
 
     // Moved into the Members list: no longer followed up as a first timer.
     movedToMembersAt: { type: Date },

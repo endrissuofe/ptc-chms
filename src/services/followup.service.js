@@ -1,7 +1,7 @@
 import { connectDB } from '@/lib/db';
 import { HttpError } from '@/lib/api';
 import { addDays } from '@/lib/dates';
-import { followUpState, waiting } from '@/lib/followup';
+import { askedForCall, followUpState, waiting } from '@/lib/followup';
 import { STAGES } from '@/lib/stages';
 import { Person, FollowUp } from '@/models';
 import { markLostPeople } from './newcomer.service';
@@ -51,7 +51,9 @@ export async function listFollowUps({ today = new Date() } = {}) {
       state,
       tried,
       lastOutcome: lastOutcome ?? p.lastOutcome ?? null,
-      toCall: state === 'to_call' && p.stage !== STAGES.LOST,
+      askedForCall: askedForCall(p),
+      // Lost people drop off the list, unless they asked for a call on the check-in.
+      toCall: state === 'to_call' && (p.stage !== STAGES.LOST || askedForCall(p)),
       ...waiting(p, today),
     };
   });

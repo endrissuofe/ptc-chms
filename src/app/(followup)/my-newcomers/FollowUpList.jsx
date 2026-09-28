@@ -143,7 +143,13 @@ function Status({ person: p }) {
   const outcome = p.tried && OUTCOMES[p.lastOutcome];
   return (
     <span className="flex flex-wrap gap-1.5">
-      {p.toCall && (
+      {p.askedForCall && (
+        <span className={`chip ${p.overdue ? 'chip-danger' : 'chip-coral'}`}>
+          <Icon name="forum" size={14} />
+          Asked for a call {daysAgo(p.days)}
+        </span>
+      )}
+      {p.toCall && !p.askedForCall && (
         <span className={`chip ${p.overdue ? 'chip-danger' : ''}`}>
           <Icon name={p.overdue ? 'alarm' : 'schedule'} size={14} />
           {p.overdue ? `Waiting ${p.days} days` : `Visited ${daysAgo(p.days)}`}

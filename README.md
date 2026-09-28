@@ -11,6 +11,9 @@ What it does:
   visits, and a call log; a 7 AM email of new first timers and anyone waiting over 72 hours.
 - **Prayer team, pastors and admins:** prayer requests from the cards.
 - **Pastors and admins:** dashboard, first-timers table (export, move to Members), services.
+- **One-month check-in:** first timers get an SMS with a short survey a month after their first
+  visit; answers show on their page and in the morning email, and "call me" puts them back on the
+  follow-up list.
 - **Media team:** birthdays and wedding anniversaries, with a line ready for the socials.
 - **Admins:** SMS (instant thank-you and welcome back, Saturday invite, birthday wishes,
   broadcasts to members), the member list (CSV import), email alerts and logins.

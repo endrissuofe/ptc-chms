@@ -22,24 +22,33 @@ export const MOVE_AFTER_DAYS = 30;
 
 const onOrAfter = (a, b) => Boolean(a && b && new Date(a) >= new Date(b));
 
+/** They asked for a call on the one-month check-in, after their latest visit. */
+export const askedForCall = (person) =>
+  onOrAfter(person.callRequestedAt, person.lastVisitDate || person.firstVisitDate);
+
+/** When this round of follow-up started: their latest visit, or a later request for a call. */
+const roundStart = (person) =>
+  askedForCall(person) ? person.callRequestedAt : person.lastVisitDate || person.firstVisitDate;
+
 /**
- * Where someone is in follow-up since their latest visit (every new visit starts a new round):
+ * Where someone is in follow-up since their latest visit (every new visit, or a request for a
+ * call on the check-in, starts a new round):
  *   reached      someone spoke with them
  *   wrong_number the number doesn't work (needs fixing, not calling)
  *   to_call      nobody has got through yet (tried: a call was made but not answered)
  */
 export function followUpState(person) {
-  const since = person.lastVisitDate || person.firstVisitDate;
+  const since = roundStart(person);
   if (onOrAfter(person.lastContactAt, since)) return { state: 'reached', tried: true };
   const tried = onOrAfter(person.lastAttemptAt, since);
   if (tried && person.lastOutcome === 'wrong_number') return { state: 'wrong_number', tried };
   return { state: 'to_call', tried, lastOutcome: tried ? person.lastOutcome : null };
 }
 
-/** Days since their latest visit, and whether that's overdue for a call. */
+/** Days since this round started (visit or request), and whether that's overdue for a call. */
 export function waiting(person, today = new Date()) {
-  const last = person.lastVisitDate || person.firstVisitDate;
-  const days = Math.max(daysBetween(last, toServiceDate(today)), 0);
+  const last = roundStart(person);
+  const days = Math.max(daysBetween(toServiceDate(last), toServiceDate(today)), 0);
   return { days, overdue: days > OVERDUE_AFTER_DAYS };
 }
 

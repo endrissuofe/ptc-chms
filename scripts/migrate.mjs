@@ -166,6 +166,16 @@ const MIGRATIONS = [
       await db.collection('joinlinks').createIndex({ token: 1 }, { unique: true });
     },
   },
+  {
+    id: '010-one-month-check-in',
+    async up(db) {
+      const checkins = db.collection('checkins');
+      await checkins.createIndex({ person: 1 }, { unique: true });
+      await checkins.createIndex({ token: 1 }, { unique: true });
+      await checkins.createIndex({ answeredAt: -1 });
+      await db.collection('people').createIndex({ firstVisitDate: 1 });
+    },
+  },
 ];
 
 async function main() {

@@ -472,6 +472,7 @@ describe('SMS', () => {
       'saturday_invite',
       'birthday',
       'anniversary',
+      'checkin',
     ]);
     expect(overview.invite).toMatchObject({ toSend: 1 });
     expect(overview.live).toBe(false);

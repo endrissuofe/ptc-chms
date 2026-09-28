@@ -10,6 +10,7 @@ import { ALERTS, ROLE_INFO } from '@/lib/users';
 import { AlertSettings, EmailLog, FollowUp, Person, User, Visit } from '@/models';
 import { listServices } from './churchService.service';
 import { listFollowUps } from './followup.service';
+import { checkInsAnswered } from './checkin.service';
 
 /** Where names in emails link to. */
 export const baseUrl = appUrl;
@@ -104,6 +105,7 @@ export async function alertPeople() {
  *   firstTimers  cards entered the day before (by when they were typed, so late entries count)
  *   returning    returning visitors recorded that day
  *   overdue      not reached, last visit over 3 days (72 hours) ago
+ *   checkIns     one-month check-in answers given that day
  */
 export async function buildFollowUpReport({ today = new Date() } = {}) {
   await connectDB();
@@ -112,10 +114,11 @@ export async function buildFollowUpReport({ today = new Date() } = {}) {
   const from = lagosDayStart(yesterday);
   const to = lagosDayStart(todayKey);
 
-  const [visits, services, followUps] = await Promise.all([
+  const [visits, services, followUps, answers] = await Promise.all([
     Visit.find({ createdAt: { $gte: from, $lt: to } }).lean(),
     listServices({ includeInactive: true }),
     listFollowUps({ today }),
+    checkInsAnswered(from, to),
   ]);
   const serviceName = Object.fromEntries(services.map((s) => [s.key, s.name]));
   const people = await Person.find({ _id: { $in: visits.map((v) => v.person) } })
@@ -168,12 +171,24 @@ export async function buildFollowUpReport({ today = new Date() } = {}) {
     lastCallerName: caller[p.id] ?? null,
   }));
 
+  const checkIns = answers
+    .filter((c) => c.person)
+    .map((c) => ({
+      id: String(c.person._id),
+      name: `${c.person.firstName} ${c.person.lastName}`,
+      phone: c.person.phone,
+      rating: c.rating,
+      wantsCall: Boolean(c.wantsCall),
+      comment: c.comment ?? null,
+    }));
+
   return {
     day: isoDay(yesterday),
     firstTimers,
     returning,
     overdue,
-    empty: !firstTimers.length && !returning.length && !overdue.length,
+    checkIns,
+    empty: !firstTimers.length && !returning.length && !overdue.length && !checkIns.length,
   };
 }
 

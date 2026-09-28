@@ -2,6 +2,7 @@ import { formatPhone } from '../phone';
 import { OUTCOMES } from '../followup';
 import { STAGE_LABELS } from '../stages';
 import { formatMoment } from '../format';
+import { RATINGS } from '../checkin';
 
 /**
  * The morning follow-up email: new first-timer cards from one day, and who is still waiting for a call after
@@ -36,6 +37,8 @@ export function followUpSubject(report) {
     );
   }
   if (report.returning.length) parts.push(`${report.returning.length} came back`);
+  const calls = (report.checkIns ?? []).filter((c) => c.wantsCall).length;
+  if (calls) parts.push(`${plural(calls, 'person asked', 'people asked')} for a call`);
   if (report.overdue.length) {
     parts.push(
       `${plural(report.overdue.length, 'person', 'people')} still not called after 72 hours`,
@@ -49,7 +52,7 @@ function personLine(p, baseUrl, extra) {
     html: `<tr>
       <td style="padding:10px 12px;border-top:1px solid #ece7f0;">
         <a href="${esc(baseUrl)}/newcomers/${esc(p.id)}" style="color:#1e1b3a;font-weight:700;text-decoration:none;">${esc(p.name)}</a>
-        <div style="color:#625e7d;font-size:13px;">${esc(formatPhone(p.phone))} · ${esc(STAGE_LABELS[p.stage] || p.stage)}${p.service ? ` · ${esc(p.service)}` : ''}</div>${
+        <div style="color:#625e7d;font-size:13px;">${esc(formatPhone(p.phone))}${p.stage ? ` · ${esc(STAGE_LABELS[p.stage] || p.stage)}` : ''}${p.service ? ` · ${esc(p.service)}` : ''}</div>${
           p.address
             ? `
         <div style="color:#625e7d;font-size:13px;">${esc(p.address)}</div>`
@@ -92,6 +95,22 @@ export function renderFollowUpReport(report, baseUrl) {
     `Still not reached after 72 hours (${report.overdue.length})`,
     report.overdue.map((p) => personLine(p, baseUrl, `Waiting ${p.days} days · ${lastTry(p)}`)),
   );
+  const answers = section(
+    `One-month check-in answers (${(report.checkIns ?? []).length})`,
+    (report.checkIns ?? []).map((c) =>
+      personLine(
+        { ...c, stage: null },
+        baseUrl,
+        [
+          c.rating && `${c.rating}/5 ${RATINGS[c.rating].label}`,
+          c.wantsCall && 'Asked for a call',
+          c.comment && `“${c.comment}”`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      ),
+    ),
+  );
   const subject = followUpSubject(report);
   const button = `${baseUrl}/my-newcomers`;
 
@@ -100,11 +119,11 @@ export function renderFollowUpReport(report, baseUrl) {
     <p style="margin:0 0 4px;color:#b1361b;font:800 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;">PTC Chapel · Follow-up</p>
     <h1 style="font:900 24px Arial,sans-serif;margin:0 0 8px;">Good morning, follow-up team</h1>
     <p style="margin:0;color:#3d3960;">Here is who needs a call. Report for ${esc(day)}.</p>
-    ${came.html}${back.html}${overdue.html}
+    ${came.html}${back.html}${overdue.html}${answers.html}
     <p style="margin:28px 0;"><a href="${esc(button)}" style="background:#4f46e5;color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;display:inline-block;">Open the follow-up list</a></p>
     <p style="color:#625e7d;font-size:13px;margin:0;">Log each call in the app so the pastors can see it. This email goes to the follow-up team, with the pastors copied in. It comes every morning while anyone is waiting.</p>
   </div></body></html>`;
 
-  const text = `Good morning, follow-up team. Report for ${day}.\n\n${came.text}\n${back.text}\n${overdue.text}\nOpen the follow-up list: ${button}\n`;
+  const text = `Good morning, follow-up team. Report for ${day}.\n\n${came.text}\n${back.text}\n${overdue.text}\n${answers.text}\nOpen the follow-up list: ${button}\n`;
   return { subject, html, text };
 }

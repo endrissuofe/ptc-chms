@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { ROLES } from '@/lib/roles';
 import { getDashboard } from '@/services/dashboard.service';
 import { countPending } from '@/services/user.service';
+import { checkInSummary } from '@/services/checkin.service';
 
 export const metadata = { title: 'Dashboard' };
 export const dynamic = 'force-dynamic';
@@ -19,7 +20,11 @@ const monthName = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', m
 export default async function DashboardPage() {
   const me = await getCurrentUser();
   const isAdmin = me?.role === ROLES.ADMIN;
-  const [d, signups] = await Promise.all([getDashboard(), isAdmin ? countPending() : 0]);
+  const [d, signups, checkIns] = await Promise.all([
+    getDashboard(),
+    isAdmin ? countPending() : 0,
+    checkInSummary(),
+  ]);
   const colour = Object.fromEntries(
     d.services.map((s, i) => [s.key, SERVICE_COLOURS[i % SERVICE_COLOURS.length]]),
   );
@@ -81,6 +86,23 @@ export default async function DashboardPage() {
           }
         />
       </div>
+
+      {checkIns.sent > 0 && (
+        <section className="card card-compact flex flex-wrap items-center gap-3">
+          <span className="icon-tile tone-coral h-11 w-11">
+            <Icon name="reviews" size={22} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-lg font-black">
+              One-month check-in:{' '}
+              {checkIns.average == null ? 'no answers yet' : `${checkIns.average} out of 5`}
+            </span>
+            <span className="block text-meta text-muted">
+              {checkIns.answered} of {checkIns.sent} first timers answered in the last 90 days
+            </span>
+          </span>
+        </section>
+      )}
 
       {d.celebrationsToday.length > 0 && (
         <Link

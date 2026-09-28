@@ -4,6 +4,7 @@ import { emailStatus } from '@/lib/email';
 import { smsStatus } from '@/services/sms.service';
 import { sendFollowUpReport } from '@/services/alerts.service';
 import { sendCelebrationSms, sendCelebrationsEmail } from '@/services/celebration.service';
+import { sendCheckIns } from '@/services/checkin.service';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -13,6 +14,7 @@ export const maxDuration = 300;
  *   - the follow-up report (new first timers, anyone waiting over 72 hours)
  *   - birthday and wedding anniversary SMS
  *   - the celebrations email for the admin / media team
+ *   - the one-month check-in SMS (a survey link) for first timers
  * Each part runs even if another fails, and each is safe to run twice.
  */
 export async function GET(req) {
@@ -28,6 +30,7 @@ export async function GET(req) {
       smsStatus().live ? sendCelebrationSms() : { skipped: 'SMS provider is mock' },
     celebrationsEmail: () =>
       emailOn ? sendCelebrationsEmail() : { skipped: 'EMAIL_PROVIDER is mock' },
+    checkInSms: () => (smsStatus().live ? sendCheckIns() : { skipped: 'SMS provider is mock' }),
   };
   const results = {};
   for (const [name, run] of Object.entries(jobs)) {

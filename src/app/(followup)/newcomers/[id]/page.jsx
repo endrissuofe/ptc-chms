@@ -16,6 +16,8 @@ import { PRAYER_STATUSES } from '@/services/prayer.service';
 import { getProfile } from '@/services/newcomer.service';
 import { listServices } from '@/services/churchService.service';
 import LogCall from './LogCall';
+import { RATINGS } from '@/lib/checkin';
+import { checkInFor } from '@/services/checkin.service';
 import ManagePerson from './ManagePerson';
 
 export const metadata = { title: 'First-timer profile' };
@@ -43,10 +45,13 @@ export default async function NewcomerPage({ params }) {
   const me = await getCurrentUser();
   const canManage = hasRole(me, ROLES.PASTOR, ROLES.ADMIN);
   // Prayer requests: pastors and admins here — never the follow-up team.
-  const [{ person, visits, followUps, sms, prayerRequests }, services] = await Promise.all([
-    load(id, canManage),
-    listServices({ includeInactive: true }),
-  ]);
+  const [{ person, visits, followUps, sms, prayerRequests }, services, checkIn] = await Promise.all(
+    [
+      load(id, canManage),
+      listServices({ includeInactive: true }),
+      checkInFor(id).catch(() => null),
+    ],
+  );
   const serviceName = Object.fromEntries(services.map((s) => [s.key, s.name]));
   const name = `${person.firstName} ${person.lastName}`;
   const birthday = formatBirthday(person.birthDay, person.birthMonth);
@@ -121,6 +126,7 @@ export default async function NewcomerPage({ params }) {
       <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
           <Journey stage={person.stage} />
+          {checkIn?.answeredAt && <CheckInAnswer checkIn={checkIn} />}
           <LogCall
             personId={String(person._id)}
             firstName={person.firstName}
@@ -326,5 +332,38 @@ function HistoryItem({ entry: { kind, item } }) {
         </p>
       </div>
     </li>
+  );
+}
+
+/** What they said on the one-month check-in survey. */
+function CheckInAnswer({ checkIn: c }) {
+  const rating = RATINGS[c.rating];
+  return (
+    <section className="card flex flex-col gap-3">
+      <div className="flex items-start gap-3">
+        <span className="icon-tile tone-coral">
+          <Icon name="reviews" size={22} />
+        </span>
+        <div>
+          <h2 className="card-title">One-month check-in</h2>
+          <p className="card-sub">Answered {formatMoment(c.answeredAt)}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {rating && (
+          <span className={`chip ${rating.chip}`}>
+            <Icon name="star" size={14} filled />
+            {c.rating}/5 · {rating.label}
+          </span>
+        )}
+        {c.wantsCall && (
+          <span className="chip chip-coral">
+            <Icon name="forum" size={14} />
+            Asked for a call
+          </span>
+        )}
+      </div>
+      {c.comment && <p className="break-words rounded-tile bg-surface-2 p-3">“{c.comment}”</p>}
+    </section>
   );
 }
