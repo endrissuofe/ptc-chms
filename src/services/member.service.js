@@ -63,6 +63,7 @@ export async function importMembers(csvText, user) {
         lastName: r.lastName,
         phone: r.phone,
         gender: r.gender,
+        address: r.address,
         birthDay: r.birthDay,
         birthMonth: r.birthMonth,
         anniversaryDay: r.anniversaryDay,
@@ -76,6 +77,7 @@ export async function importMembers(csvText, user) {
     const current = await Member.findById(r.memberId).lean();
     const fill = {};
     if (r.gender && !current.gender) fill.gender = r.gender;
+    if (r.address && !current.address) fill.address = r.address;
     if (r.birthDay && !current.birthDay) {
       fill.birthDay = r.birthDay;
       fill.birthMonth = r.birthMonth;
@@ -114,6 +116,7 @@ const MEMBER_FIELDS = [
   'firstName',
   'lastName',
   'gender',
+  'address',
   'birthDay',
   'birthMonth',
   'anniversaryDay',
@@ -145,7 +148,7 @@ export async function createMember(input, user) {
   return member.toObject();
 }
 
-/** Admin corrects a member (name, phone, gender, birthday, anniversary, messages, on the list). */
+/** Admin corrects a member (name, phone, gender, address, dates, messages, on the list). */
 export async function updateMember(id, input) {
   await connectDB();
   if (!mongoose.isValidObjectId(id)) throw new HttpError(404, 'Member not found');

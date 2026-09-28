@@ -7,11 +7,15 @@ What it does:
 
 - **Ushers:** record the door count per service and type up first-timer cards on a phone;
   returning visitors are recognised by phone number.
-- **Follow-up team:** a shared call list with Call and WhatsApp buttons, and a call log.
+- **Follow-up team:** a shared call list with Call and WhatsApp buttons, home addresses for
+  visits, and a call log; a 7 AM email of new first timers and anyone waiting over 72 hours.
 - **Prayer team, pastors and admins:** prayer requests from the cards.
 - **Pastors and admins:** dashboard, first-timers table (export, move to Members), services.
-- **Admins:** SMS (instant thank-you and welcome back, Saturday invite, broadcasts to members),
-  the member list (CSV import) and logins.
+- **Media team:** birthdays and wedding anniversaries, with a line ready for the socials.
+- **Admins:** SMS (instant thank-you and welcome back, Saturday invite, birthday wishes,
+  broadcasts to members), the member list (CSV import), email alerts and logins.
+- **Joining:** each team has an invite link; people sign up themselves and an admin approves
+  them. Everyone manages their own details and emails on My account.
 
 ## What you need on your computer
 

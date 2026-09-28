@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 import { emailStatus, sendEmail } from '@/lib/email';
 import { renderCelebrations } from '@/lib/email/celebrations-report';
 import { EmailLog, Member, Person, SmsLog, SmsTemplate } from '@/models';
-import { baseUrl, getAlertSettings, logEmail } from './alerts.service';
+import { alertRecipients, baseUrl, getAlertSettings, logEmail } from './alerts.service';
 import { deliver, ensureTemplates, memberRecipient, personRecipient } from './sms.service';
 
 /**
@@ -130,7 +130,7 @@ export async function buildCelebrationsEmail({ today = new Date() } = {}) {
 export async function sendCelebrationsEmail({ today = new Date() } = {}) {
   const settings = await getAlertSettings();
   if (!settings.celebrationReport) return { skipped: 'switched off' };
-  const to = settings.celebrationEmails;
+  const { to } = await alertRecipients('celebrations', settings);
   if (!to.length) return { skipped: 'no recipients set' };
   const email = await buildCelebrationsEmail({ today });
   if (!email) return { skipped: 'nothing to report' };

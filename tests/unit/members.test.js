@@ -32,6 +32,20 @@ describe('member columns and values', () => {
       gender: 3,
       birthday: 0,
       anniversary: 4,
+      address: -1,
+    });
+  });
+
+  it('reads the church sheet’s own headings, with the address', () => {
+    const [row] = readMemberCsv(
+      'NAMES,PHONE NUMBERS,HOME ADDRESS,DATE OF BIRTHDAY\nAda Eze,8030000001,"12  Adeola St,  Ikeja",14 Oct',
+    );
+    expect(row).toMatchObject({
+      firstName: 'Ada',
+      phone: '+2348030000001',
+      address: '12 Adeola St, Ikeja',
+      birthDay: 14,
+      birthMonth: 10,
     });
   });
 

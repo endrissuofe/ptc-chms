@@ -23,7 +23,8 @@
     "prepare": "husky",
     "sms:check": "node scripts/sms-check.mjs",
     "user:add": "node scripts/add-user.mjs",
-    "clear-test-data": "node scripts/clear-test-data.mjs"
+    "clear-test-data": "node scripts/clear-test-data.mjs",
+    "members:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/import-members.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -45,6 +46,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9.37.0",
     "eslint-config-next": "15.5.26",
+    "exceljs": "^4.4.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.4",
     "mongodb-memory-server": "^11.3.0",

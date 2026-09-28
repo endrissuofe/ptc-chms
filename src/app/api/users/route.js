@@ -4,10 +4,10 @@ import { ROLES } from '@/lib/roles';
 import { newUserSchema } from '@/lib/validators/user';
 import { createUser, listUsers } from '@/services/user.service';
 
-/** Admins only: every login (never password hashes). */
+/** Admins only: every login and every sign-up waiting (never password hashes). */
 export const GET = handler(async () => {
   await requireRole(ROLES.ADMIN);
-  return NextResponse.json({ items: await listUsers() });
+  return NextResponse.json(await listUsers());
 });
 
 export const POST = handler(async (req) => {

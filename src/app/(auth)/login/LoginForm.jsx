@@ -27,7 +27,11 @@ export default function LoginForm() {
         redirect: false,
       });
       if (res?.error) {
-        setError('Wrong username or password.');
+        setError(
+          res.error === 'PENDING'
+            ? 'Your sign-up is waiting for an admin to approve it. You’ll get an email when you’re in.'
+            : 'Wrong username, email or password.',
+        );
         setBusy(false);
         return;
       }
@@ -44,10 +48,10 @@ export default function LoginForm() {
       <div>
         <p className="eyebrow">Welcome back</p>
         <h1 className="page-title">Sign in</h1>
-        <p className="page-sub">Use the username and password the church admin gave you.</p>
+        <p className="page-sub">Use your email, or the username the church admin gave you.</p>
       </div>
       <label>
-        <span className="field-label">Username</span>
+        <span className="field-label">Email or username</span>
         <span className="relative block">
           <Icon
             name="person"
@@ -90,7 +94,7 @@ export default function LoginForm() {
         {!busy && <Icon name="arrow_forward" size={20} />}
       </button>
       <p className="text-center text-meta text-muted">
-        No login yet? Ask the church admin to create one for you.
+        No login yet? Ask your team leader for your team’s sign-up link.
       </p>
     </form>
   );

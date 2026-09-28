@@ -40,6 +40,7 @@ export async function listFollowUps({ today = new Date() } = {}) {
       firstName: p.firstName,
       lastName: p.lastName,
       phone: p.phone,
+      address: p.address ?? null,
       stage: p.stage,
       firstVisitDate: p.firstVisitDate,
       lastVisitDate: p.lastVisitDate,
@@ -86,7 +87,8 @@ export async function logFollowUp(input, user, now = new Date()) {
     outcome: input.outcome,
     channel: input.channel,
     note: input.note || undefined,
-    callerName: input.callerName || undefined,
+    // A personal login is one person: their name, not whatever was typed on a shared phone.
+    callerName: (user.personal ? user.name : input.callerName) || undefined,
   });
 
   person.lastAttemptAt = now;

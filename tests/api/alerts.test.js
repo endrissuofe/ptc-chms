@@ -57,6 +57,25 @@ const card = (overrides = {}) => ({
 });
 
 describe('morning follow-up report', () => {
+  it('keeps the address from the card, takes a new one from a later card, and emails it', async () => {
+    const p = await newcomers.createFromCard(card({ firstName: 'Home', address: '12 Adeola St' }));
+    expect(p.address).toBe('12 Adeola St');
+    const report = await alerts.buildFollowUpReport({ today: tomorrow() });
+    const { email } = await alerts.previewFollowUpReport({ today: tomorrow() });
+    expect(report.firstTimers[0].address).toBe('12 Adeola St');
+    expect(email.html).toContain('12 Adeola St');
+
+    await newcomers.recordReturningVisit({
+      personId: String(p._id),
+      service: 'sunday',
+      serviceDate: lastSunday(),
+      card: { address: '4 New Road, Ikeja' },
+    });
+    expect((await models.Person.findById(p._id).lean()).address).toBe('4 New Road, Ikeja');
+    await newcomers.updateDetails(p._id, { address: '' });
+    expect((await models.Person.findById(p._id).lean()).address).toBeNull();
+  });
+
   it('lists cards typed yesterday and people waiting over 72 hours, with who tried last', async () => {
     const fresh = await newcomers.createFromCard(card({ firstName: 'Fresh' }));
     // Someone who came 10 days ago, typed back then, and was tried but not reached.

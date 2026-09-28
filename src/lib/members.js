@@ -1,9 +1,10 @@
 /**
- * Reading a member list uploaded as CSV: columns Name, Phone, Gender, Birthday, Anniversary
- * (any order, any capitalisation; extra columns are ignored; only Name and Phone are required).
+ * Reading a member list uploaded as CSV: columns Name, Phone, Gender, Birthday, Anniversary,
+ * Address (any order, any capitalisation; extra columns are ignored; only Name and Phone are
+ * required). Imports carry ".js" so scripts/import-members.mjs can use this file in plain Node.
  */
-import { normalizePhone } from './phone';
-import { MONTHS, birthdayProblem } from './birthday';
+import { normalizePhone } from './phone.js';
+import { MONTHS, birthdayProblem } from './birthday.js';
 
 /** Parses CSV text (commas or semicolons, quoted fields, Excel's BOM) into rows of strings. */
 export function parseCsv(text) {
@@ -44,9 +45,20 @@ export function parseCsv(text) {
 
 const HEADERS = {
   name: ['name', 'full name', 'fullname', 'names'],
-  phone: ['phone', 'phone number', 'mobile', 'telephone', 'tel', 'number', 'gsm'],
+  phone: [
+    'phone',
+    'phone number',
+    'phone numbers',
+    'mobile',
+    'mobile number',
+    'telephone',
+    'tel',
+    'number',
+    'gsm',
+  ],
+  address: ['address', 'home address', 'house address', 'residential address'],
   gender: ['gender', 'sex'],
-  birthday: ['birthday', 'birth date', 'date of birth', 'dob', 'birthdate'],
+  birthday: ['birthday', 'birth date', 'date of birth', 'date of birthday', 'dob', 'birthdate'],
   anniversary: [
     'anniversary',
     'wedding anniversary',
@@ -152,6 +164,7 @@ export function readMemberCsv(text) {
       phone,
       phoneRaw,
       gender: parseGender(cell(r, 'gender')),
+      address: cell(r, 'address').replace(/\s+/g, ' ').slice(0, 200) || undefined,
       ...birthday,
       birthdayUnread: Boolean(birthdayRaw) && !birthday.birthDay,
       anniversaryDay: anniversary.birthDay,

@@ -9,6 +9,8 @@ const personSchema = new mongoose.Schema(
     // Normalised +234... Not unique: family members sometimes share one phone.
     phone: { type: String, required: true },
     email: { type: String, trim: true, lowercase: true },
+    // Where the follow-up team can visit them.
+    address: { type: String, trim: true },
     birthDay: { type: Number, min: 1, max: 31 },
     birthMonth: { type: Number, min: 1, max: 12 },
     smsConsent: { type: Boolean, default: false },

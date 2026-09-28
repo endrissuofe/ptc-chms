@@ -7,6 +7,7 @@ const cardFields = z.object({
   firstName: z.string().trim().min(1, 'First name is required').max(60),
   lastName: z.string().trim().min(1, 'Last name is required').max(60),
   phone: z.string().refine(isValidPhone, 'Enter a valid Nigerian phone number'),
+  address: z.string().trim().max(200, 'Keep the address under 200 characters').optional(),
   email: z.union([z.string().trim().email('Enter a valid email'), z.literal('')]).optional(),
   birthDay: z.coerce.number().int().min(1).max(31).optional(),
   birthMonth: z.coerce.number().int().min(1).max(12).optional(),
@@ -36,7 +37,14 @@ export const returningVisitSchema = z.object({
   service: serviceKey,
   serviceDate: z.coerce.date(),
   card: cardFields
-    .pick({ email: true, birthDay: true, birthMonth: true, prayerRequest: true, smsConsent: true })
+    .pick({
+      address: true,
+      email: true,
+      birthDay: true,
+      birthMonth: true,
+      prayerRequest: true,
+      smsConsent: true,
+    })
     .partial()
     .superRefine(checkBirthday)
     .optional(),
@@ -44,7 +52,7 @@ export const returningVisitSchema = z.object({
 
 /** Pastor/admin: correct a newcomer's details, or set the milestones visits can't tell us. */
 export const personUpdateSchema = cardFields
-  .pick({ firstName: true, lastName: true, phone: true, email: true })
+  .pick({ firstName: true, lastName: true, phone: true, address: true, email: true })
   .extend({
     // No default here: a change that leaves consent out must leave it as it is.
     smsConsent: z.boolean(),

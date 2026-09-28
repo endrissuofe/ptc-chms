@@ -10,6 +10,7 @@ const fields = z.object({
   lastName: z.string().trim().max(60).default(''),
   phone: z.string().refine(isValidPhone, 'Enter a Nigerian mobile number'),
   gender: z.enum(['male', 'female']).nullable(),
+  address: z.string().trim().max(200, 'Keep the address under 200 characters'),
   birthDay: day,
   birthMonth: month,
   anniversaryDay: day,
@@ -33,6 +34,7 @@ function checkDates(v, ctx) {
 export const memberCreateSchema = fields
   .partial({
     gender: true,
+    address: true,
     birthDay: true,
     birthMonth: true,
     anniversaryDay: true,

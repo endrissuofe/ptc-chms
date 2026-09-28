@@ -188,6 +188,7 @@ function EditDetails({ person, onCancel, onSaved }) {
     const body = {
       firstName: f.firstName.trim(),
       lastName: f.lastName.trim(),
+      address: f.address.trim(),
       email: f.email.trim(),
       birthDay: f.birthDay ? Number(f.birthDay) : null,
       birthMonth: f.birthMonth ? Number(f.birthMonth) : null,
@@ -261,6 +262,16 @@ function EditDetails({ person, onCancel, onSaved }) {
             required
             className="input"
             {...invalid('phone')}
+          />
+        </Field>
+        <Field label="Home address" error={fields.address} errorId="edit-address-error">
+          <input
+            name="address"
+            value={f.address}
+            onChange={set('address')}
+            maxLength={200}
+            className="input"
+            {...invalid('address')}
           />
         </Field>
         <Field label="Email" error={fields.email} errorId="edit-email-error">

@@ -179,6 +179,12 @@ function PersonCard({ person: p }) {
             {formatPhone(p.phone)} · First came {formatServiceDay(p.firstVisitDate)}
             {p.visitCount > 1 && ` · ${plural(p.visitCount, 'visit')}`}
           </p>
+          {p.address && (
+            <p className="mt-0.5 flex items-start gap-1 break-words text-meta text-muted">
+              <Icon name="home" size={15} className="mt-px shrink-0" />
+              {p.address}
+            </p>
+          )}
         </div>
         <Link
           href={`/newcomers/${p.id}#log`}

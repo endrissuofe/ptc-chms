@@ -4,7 +4,7 @@ import Icon from '@/components/ui/Icon';
 import EmptyState from '@/components/ui/EmptyState';
 import Avatar from '@/components/ui/Avatar';
 import StageBadge from '@/components/ui/StageBadge';
-import { getSession } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { HttpError } from '@/lib/api';
 import { ROLES, hasRole } from '@/lib/roles';
 import { STAGES, STAGE_LABELS } from '@/lib/stages';
@@ -40,8 +40,8 @@ async function load(id, includePrayer) {
 
 export default async function NewcomerPage({ params }) {
   const { id } = await params;
-  const session = await getSession();
-  const canManage = hasRole(session?.user, ROLES.PASTOR, ROLES.ADMIN);
+  const me = await getCurrentUser();
+  const canManage = hasRole(me, ROLES.PASTOR, ROLES.ADMIN);
   // Prayer requests: pastors and admins here — never the follow-up team.
   const [{ person, visits, followUps, sms, prayerRequests }, services] = await Promise.all([
     load(id, canManage),
@@ -107,6 +107,7 @@ export default async function NewcomerPage({ params }) {
 
         <dl className="grid gap-x-6 gap-y-3 rounded-tile bg-surface-2 p-4 sm:grid-cols-2">
           <Detail icon="smartphone" label="Phone" value={formatPhone(person.phone)} />
+          <Detail icon="home" label="Address" value={person.address || '—'} />
           <Detail icon="mail" label="Email" value={person.email || '—'} />
           <Detail icon="cake" label="Birthday" value={birthday || '—'} />
           <Detail
@@ -120,7 +121,11 @@ export default async function NewcomerPage({ params }) {
       <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
           <Journey stage={person.stage} />
-          <LogCall personId={String(person._id)} firstName={person.firstName} />
+          <LogCall
+            personId={String(person._id)}
+            firstName={person.firstName}
+            callerName={me?.personal ? me.name : null}
+          />
           <section className="card flex flex-col gap-4">
             <h2 className="card-title">History</h2>
             {history.length === 0 ? (
@@ -201,6 +206,7 @@ export default async function NewcomerPage({ params }) {
                 firstName: person.firstName,
                 lastName: person.lastName,
                 phone: formatPhone(person.phone),
+                address: person.address || '',
                 email: person.email || '',
                 birthDay: person.birthDay ?? '',
                 birthMonth: person.birthMonth ?? '',

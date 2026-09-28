@@ -3,7 +3,10 @@ import Icon from '@/components/ui/Icon';
 import EmptyState from '@/components/ui/EmptyState';
 import StatCard from '@/components/ui/StatCard';
 import { formatServiceDay } from '@/lib/format';
+import { getCurrentUser } from '@/lib/auth';
+import { ROLES } from '@/lib/roles';
 import { getDashboard } from '@/services/dashboard.service';
+import { countPending } from '@/services/user.service';
 
 export const metadata = { title: 'Dashboard' };
 export const dynamic = 'force-dynamic';
@@ -14,7 +17,9 @@ const SERVICE_COLOURS = ['bg-primary', 'bg-coral', 'bg-teal', 'bg-violet', 'bg-w
 const monthName = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', month: 'long' });
 
 export default async function DashboardPage() {
-  const d = await getDashboard();
+  const me = await getCurrentUser();
+  const isAdmin = me?.role === ROLES.ADMIN;
+  const [d, signups] = await Promise.all([getDashboard(), isAdmin ? countPending() : 0]);
   const colour = Object.fromEntries(
     d.services.map((s, i) => [s.key, SERVICE_COLOURS[i % SERVICE_COLOURS.length]]),
   );
@@ -105,7 +110,7 @@ export default async function DashboardPage() {
         </Link>
       )}
 
-      <NeedsAttention n={d.needsAttention} />
+      <NeedsAttention n={{ ...d.needsAttention, signups }} />
 
       <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
         <section className="card flex min-w-0 flex-col gap-4 lg:col-span-3">
@@ -148,6 +153,14 @@ export default async function DashboardPage() {
 
 function NeedsAttention({ n }) {
   const items = [
+    n.signups > 0 && {
+      href: '/users',
+      icon: 'how_to_reg',
+      tone: 'tone-teal',
+      title: n.signups === 1 ? '1 sign-up waiting' : `${n.signups} sign-ups waiting`,
+      sub: 'People who used a team invite link',
+      action: 'Logins',
+    },
     n.overdue > 0 && {
       href: '/my-newcomers',
       icon: 'alarm',

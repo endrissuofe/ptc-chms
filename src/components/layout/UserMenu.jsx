@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import Avatar from '@/components/ui/Avatar';
 import Icon from '@/components/ui/Icon';
@@ -10,7 +11,7 @@ const ITEM =
   'flex min-h-[44px] w-full items-center gap-2.5 rounded-control px-3 text-left text-body font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-primary';
 
 /**
- * Account button in the top bar: who is signed in, the light/dark switch and Sign out.
+ * Account button in the top bar: who is signed in, My account, the light/dark switch and Sign out.
  * A simple disclosure: Escape or clicking/tabbing away closes it and focus returns to the button.
  */
 export default function UserMenu({ name, roleLabel }) {
@@ -23,7 +24,7 @@ export default function UserMenu({ name, roleLabel }) {
 
   useEffect(() => {
     if (!open) return undefined;
-    panel.current?.querySelector('button')?.focus();
+    panel.current?.querySelector('a, button')?.focus();
     const onDown = (e) => {
       if (!wrap.current?.contains(e.target)) setOpen(false);
     };
@@ -80,6 +81,10 @@ export default function UserMenu({ name, roleLabel }) {
             </div>
           </div>
           <div className="my-1 border-t border-line" />
+          <Link href="/account" onClick={() => setOpen(false)} className={ITEM}>
+            <Icon name="manage_accounts" size={19} className="text-muted" />
+            My account
+          </Link>
           <button type="button" onClick={toggleTheme} className={ITEM}>
             <Icon name={dark ? 'light_mode' : 'dark_mode'} size={19} className="text-muted" />
             {dark ? 'Light theme' : 'Dark theme'}

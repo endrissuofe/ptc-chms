@@ -80,6 +80,7 @@ export default async function MembersPage({ searchParams }) {
                 firstName: m.firstName,
                 lastName: m.lastName ?? '',
                 phone: m.phone,
+                address: m.address ?? '',
                 gender: m.gender ?? '',
                 birthDay: m.birthDay ?? null,
                 birthMonth: m.birthMonth ?? null,

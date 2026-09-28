@@ -19,13 +19,17 @@ export const authOptions = {
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
         await connectDB();
-        const user = await User.findOne({
-          username: credentials.username.toLowerCase(),
-          active: true,
-        });
+        // Team logins use a username; people who signed up themselves use their email.
+        const login = credentials.username.trim().toLowerCase();
+        const user = await User.findOne(
+          login.includes('@') ? { email: login } : { username: login },
+        );
         if (!user) return null;
         const ok = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!ok) return null;
+        // Right password but not let in yet: say so (LoginForm shows a friendly message).
+        if (user.pending) throw new Error('PENDING');
+        if (!user.active) return null;
         await User.updateOne({ _id: user._id }, { lastSignInAt: new Date() });
         return { id: String(user._id), name: user.displayName, role: user.role };
       },
@@ -65,9 +69,14 @@ export const getCurrentUser = cache(async () => {
   if (!id) return null;
   await connectDB();
   const user = mongoose.isValidObjectId(id)
-    ? await User.findById(id).select('displayName role active').lean()
+    ? await User.findById(id).select('displayName role active personal').lean()
     : null;
   if (!user?.active) return { ...session.user, status: 'inactive' };
   if (user.role !== session.user.role) return { ...session.user, status: 'changed' };
-  return { ...session.user, name: user.displayName, status: 'ok' };
+  return {
+    ...session.user,
+    name: user.displayName,
+    personal: Boolean(user.personal),
+    status: 'ok',
+  };
 });

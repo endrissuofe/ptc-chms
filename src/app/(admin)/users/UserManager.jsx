@@ -152,7 +152,13 @@ function RolePicker({ value, onChange, name }) {
 function AddUser({ onCancel, onDone }) {
   const router = useRouter();
   const form = useRef(null);
-  const [f, setF] = useState({ displayName: '', username: '', role: 'usher', password: '' });
+  const [f, setF] = useState({
+    displayName: '',
+    username: '',
+    email: '',
+    role: 'usher',
+    password: '',
+  });
   const [state, setState] = useState({ kind: 'idle' });
   const busy = state.kind === 'busy';
   const { fields, banner } = splitError(state.kind === 'error' ? state.error : null);
@@ -178,7 +184,7 @@ function AddUser({ onCancel, onDone }) {
     } catch (err) {
       setState({ kind: 'error', error: err });
       const { fields: bad } = splitError(err);
-      const first = ['displayName', 'username', 'password'].find((k) => bad[k]);
+      const first = ['displayName', 'username', 'email', 'password'].find((k) => bad[k]);
       if (first) form.current?.querySelector(`[name="${first}"]`)?.focus();
     }
   }
@@ -229,15 +235,36 @@ function AddUser({ onCancel, onDone }) {
         </label>
       </div>
       <RolePicker name="add-role" value={f.role} onChange={set('role')} />
-      <div className="sm:max-w-sm">
-        <PasswordField
-          value={f.password}
-          onChange={set('password')}
-          label="Password"
-          required
-          error={fields.password}
-          errorId="add-password-error"
-        />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="flex flex-col">
+          <span className="field-label">
+            Email <span className="font-semibold text-muted">For email alerts</span>
+          </span>
+          <input
+            name="email"
+            type="email"
+            value={f.email}
+            onChange={set('email')}
+            autoCapitalize="none"
+            spellCheck={false}
+            maxLength={120}
+            placeholder="e.g. grace@gmail.com"
+            className="input"
+            aria-invalid={fields.email ? true : undefined}
+            aria-describedby={fields.email ? `add-email-error` : undefined}
+          />
+          <FieldError id={`add-email-error`}>{fields.email}</FieldError>
+        </label>
+        <div>
+          <PasswordField
+            value={f.password}
+            onChange={set('password')}
+            label="Password"
+            required
+            error={fields.password}
+            errorId="add-password-error"
+          />
+        </div>
       </div>
 
       {banner && <FormAlert error={banner} />}
@@ -259,7 +286,12 @@ function UserRow({ user: u, isMe }) {
   const form = useRef(null);
   const changeButton = useRef(null);
   const [editing, setEditing] = useState(false);
-  const [f, setF] = useState({ displayName: u.displayName, role: u.role, password: '' });
+  const [f, setF] = useState({
+    displayName: u.displayName,
+    email: u.email ?? '',
+    role: u.role,
+    password: '',
+  });
   const [state, setState] = useState({ kind: 'idle' });
   const role = ROLE_INFO[u.role];
   const busy = state.kind === 'busy' || state.kind === 'switching';
@@ -271,7 +303,7 @@ function UserRow({ user: u, isMe }) {
 
   function close() {
     setEditing(false);
-    setF({ displayName: u.displayName, role: u.role, password: '' });
+    setF({ displayName: u.displayName, email: u.email ?? '', role: u.role, password: '' });
     requestAnimationFrame(() => changeButton.current?.focus());
   }
 
@@ -294,6 +326,7 @@ function UserRow({ user: u, isMe }) {
     if (busy) return;
     const changes = {};
     if (f.displayName.trim() !== u.displayName) changes.displayName = f.displayName.trim();
+    if (f.email.trim().toLowerCase() !== (u.email ?? '')) changes.email = f.email.trim();
     if (f.role !== u.role) changes.role = f.role;
     if (f.password) changes.password = f.password;
     if (!Object.keys(changes).length) {
@@ -339,7 +372,7 @@ function UserRow({ user: u, isMe }) {
             {!u.active && <span className="chip chip-danger">Switched off</span>}
           </p>
           <p className="text-meta text-muted">
-            {u.username} ·{' '}
+            {u.email || u.username} ·{' '}
             {u.lastSignInAt ? `Last signed in ${formatMoment(u.lastSignInAt)}` : 'Never signed in'}
           </p>
         </div>
@@ -372,20 +405,41 @@ function UserRow({ user: u, isMe }) {
           onKeyDown={(e) => e.key === 'Escape' && close()}
           className="flex flex-col gap-4 border-t border-line pt-4 motion-safe:animate-fade-in"
         >
-          <label className="flex flex-col sm:max-w-sm">
-            <span className="field-label">Name shown in the app</span>
-            <input
-              name="displayName"
-              value={f.displayName}
-              onChange={(e) => setF((s) => ({ ...s, displayName: e.target.value }))}
-              required
-              maxLength={60}
-              aria-invalid={fields.displayName ? true : undefined}
-              aria-describedby={fields.displayName ? `${u.id}-displayName-error` : undefined}
-              className="input"
-            />
-            <FieldError id={`${u.id}-displayName-error`}>{fields.displayName}</FieldError>
-          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col">
+              <span className="field-label">Name shown in the app</span>
+              <input
+                name="displayName"
+                value={f.displayName}
+                onChange={(e) => setF((s) => ({ ...s, displayName: e.target.value }))}
+                required
+                maxLength={60}
+                aria-invalid={fields.displayName ? true : undefined}
+                aria-describedby={fields.displayName ? `${u.id}-displayName-error` : undefined}
+                className="input"
+              />
+              <FieldError id={`${u.id}-displayName-error`}>{fields.displayName}</FieldError>
+            </label>
+            <label className="flex flex-col">
+              <span className="field-label">
+                Email <span className="font-semibold text-muted">For email alerts</span>
+              </span>
+              <input
+                name="email"
+                type="email"
+                value={f.email}
+                onChange={(e) => setF((s) => ({ ...s, email: e.target.value }))}
+                autoCapitalize="none"
+                spellCheck={false}
+                maxLength={120}
+                placeholder="e.g. grace@gmail.com"
+                className="input"
+                aria-invalid={fields.email ? true : undefined}
+                aria-describedby={fields.email ? `${u.id}-email-error` : undefined}
+              />
+              <FieldError id={`${u.id}-email-error`}>{fields.email}</FieldError>
+            </label>
+          </div>
           {isMe ? (
             <p className="field-hint">You can’t change your own role.</p>
           ) : (

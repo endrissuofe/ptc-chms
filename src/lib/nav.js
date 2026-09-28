@@ -1,6 +1,6 @@
 import { ROLES } from './roles';
 
-const { USHER, FOLLOWUP, PASTOR, ADMIN, PRAYER } = ROLES;
+const { USHER, FOLLOWUP, PASTOR, ADMIN, PRAYER, MEDIA } = ROLES;
 
 /** The app's menu, in order. The desktop rail shows every item the role can open. */
 export const NAV = [
@@ -16,7 +16,7 @@ export const NAV = [
     icon: 'volunteer_activism',
     roles: [PRAYER, PASTOR, ADMIN],
   },
-  { href: '/birthdays', label: 'Birthdays', icon: 'cake', roles: [PASTOR, ADMIN] },
+  { href: '/birthdays', label: 'Birthdays', icon: 'cake', roles: [MEDIA, PASTOR, ADMIN] },
   { href: '/sms', label: 'SMS', icon: 'sms', roles: [ADMIN] },
   { href: '/members', label: 'Members', icon: 'contacts', roles: [ADMIN] },
   { href: '/services', label: 'Services', icon: 'event', roles: [PASTOR, ADMIN] },
@@ -39,6 +39,7 @@ export const ROLE_LABELS = {
   [FOLLOWUP]: 'Follow-up team',
   [PASTOR]: 'Pastor',
   [PRAYER]: 'Prayer team',
+  [MEDIA]: 'Media team',
   [ADMIN]: 'Admin',
 };
 

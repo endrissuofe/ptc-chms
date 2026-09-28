@@ -138,6 +138,12 @@ export const ICON_NAMES = [
   'favorite',
   'content_copy',
   'celebration',
+  'link',
+  'link_off',
+  'autorenew',
+  'manage_accounts',
+  'photo_camera',
+  'person_remove',
 ];
 
 /** Google Fonts needs the names sorted; FILL is kept as an axis for filled icons. */

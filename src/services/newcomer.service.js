@@ -83,6 +83,7 @@ export async function createFromCard(input, user) {
     firstName: input.firstName,
     lastName: input.lastName,
     phone,
+    address: input.address || undefined,
     email: input.email || undefined,
     birthDay: input.birthDay,
     birthMonth: input.birthMonth,
@@ -112,7 +113,8 @@ export async function createFromCard(input, user) {
 /**
  * Records that a known person came back. Safe to call twice for the same service.
  * `card` is what they wrote on today's card: a new prayer request is saved for the pastors,
- * email and birthday only fill in blanks, and SMS consent can be given but not withdrawn here.
+ * email and birthday only fill in blanks, a newly written address replaces the old one (people
+ * move), and SMS consent can be given but not withdrawn here.
  */
 export async function recordReturningVisit({ personId, service, serviceDate, card = {} }, user) {
   await connectDB();
@@ -129,6 +131,7 @@ export async function recordReturningVisit({ personId, service, serviceDate, car
 
   const fill = {};
   if (card.email && !existing.email) fill.email = card.email;
+  if (card.address && card.address !== existing.address) fill.address = card.address;
   if (card.birthDay && card.birthMonth && !existing.birthDay) {
     fill.birthDay = card.birthDay;
     fill.birthMonth = card.birthMonth;
@@ -284,6 +287,7 @@ export async function updateDetails(personId, input) {
     }
   }
   if (input.email !== undefined) update.email = input.email || null;
+  if (input.address !== undefined) update.address = input.address || null;
   if (input.birthDay !== undefined || input.birthMonth !== undefined) {
     update.birthDay = input.birthDay ?? null;
     update.birthMonth = input.birthMonth ?? null;

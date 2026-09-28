@@ -11,3 +11,4 @@ export { default as Member } from './Member';
 export { default as Broadcast } from './Broadcast';
 export { default as AlertSettings } from './AlertSettings';
 export { default as EmailLog } from './EmailLog';
+export { default as JoinLink } from './JoinLink';

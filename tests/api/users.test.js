@@ -47,7 +47,7 @@ describe('logins', () => {
     expect(u).not.toHaveProperty('passwordHash');
     const stored = await User.findOne({ username: 'ushers' }).lean();
     expect(await bcrypt.compare('faith-4821-dove', stored.passwordHash)).toBe(true);
-    expect((await users.listUsers())[0]).not.toHaveProperty('passwordHash');
+    expect((await users.listUsers()).users[0]).not.toHaveProperty('passwordHash');
   });
 
   it('refuses a taken username, a bad username and a short password', async () => {

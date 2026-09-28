@@ -49,11 +49,16 @@ function personLine(p, baseUrl, extra) {
     html: `<tr>
       <td style="padding:10px 12px;border-top:1px solid #ece7f0;">
         <a href="${esc(baseUrl)}/newcomers/${esc(p.id)}" style="color:#1e1b3a;font-weight:700;text-decoration:none;">${esc(p.name)}</a>
-        <div style="color:#625e7d;font-size:13px;">${esc(formatPhone(p.phone))} · ${esc(STAGE_LABELS[p.stage] || p.stage)}${p.service ? ` · ${esc(p.service)}` : ''}</div>
+        <div style="color:#625e7d;font-size:13px;">${esc(formatPhone(p.phone))} · ${esc(STAGE_LABELS[p.stage] || p.stage)}${p.service ? ` · ${esc(p.service)}` : ''}</div>${
+          p.address
+            ? `
+        <div style="color:#625e7d;font-size:13px;">${esc(p.address)}</div>`
+            : ''
+        }
       </td>
       <td style="padding:10px 12px;border-top:1px solid #ece7f0;color:#3d3960;font-size:13px;text-align:right;">${esc(extra)}</td>
     </tr>`,
-    text: `- ${p.name} (${formatPhone(p.phone)})${extra ? ` — ${extra}` : ''}`,
+    text: `- ${p.name} (${formatPhone(p.phone)}${p.address ? `, ${p.address}` : ''})${extra ? ` — ${extra}` : ''}`,
   };
 }
 

@@ -16,6 +16,7 @@ const EMPTY = {
   firstName: '',
   lastName: '',
   phone: '',
+  address: '',
   email: '',
   birthDay: '',
   birthMonth: '',
@@ -25,7 +26,7 @@ const EMPTY = {
 };
 const NO_LOOKUP = { phone: null, matches: [], error: false };
 // The order the cursor goes to when something is missing.
-const FIELD_ORDER = ['firstName', 'lastName', 'phone', 'email', 'birthDay'];
+const FIELD_ORDER = ['firstName', 'lastName', 'phone', 'address', 'email', 'birthDay'];
 
 const dayLabel = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'UTC',
@@ -52,6 +53,7 @@ function toPayload(card) {
     firstName: card.firstName.trim(),
     lastName: card.lastName.trim(),
     phone: card.phone,
+    address: card.address.trim().replace(/\s+/g, ' ') || undefined,
     email: card.email.trim(),
     birthDay: card.birthDay ? Number(card.birthDay) : undefined,
     birthMonth: card.birthMonth ? Number(card.birthMonth) : undefined,
@@ -221,12 +223,19 @@ export default function CardEntry({
   async function saveReturning(match) {
     if (saving || !validate()) return;
     setStatus({ state: 'saving' });
-    const { email, birthDay, birthMonth, prayerRequest, smsConsent } = toPayload(card);
+    const { address, email, birthDay, birthMonth, prayerRequest, smsConsent } = toPayload(card);
     const res = await post('/api/newcomers/returning', {
       personId: match.id,
       service: serviceKey,
       serviceDate,
-      card: { email: email || undefined, birthDay, birthMonth, prayerRequest, smsConsent },
+      card: {
+        address,
+        email: email || undefined,
+        birthDay,
+        birthMonth,
+        prayerRequest,
+        smsConsent,
+      },
     }).catch(() => null);
     if (res?.ok) finish(`Welcome back recorded for ${match.firstName} ${match.lastName}`);
     else failed(res);
@@ -357,6 +366,20 @@ export default function CardEntry({
             value={card.phone}
             onChange={set('phone')}
             maxLength={18}
+            className="input"
+          />
+        </Field>
+
+        <Field id="address" label="Home address" hint="Optional" error={errors.address}>
+          <input
+            id="address"
+            autoComplete="off"
+            autoCapitalize="words"
+            enterKeyHint="next"
+            placeholder="e.g. 12 Adeola Street, Ikeja"
+            value={card.address}
+            onChange={set('address')}
+            maxLength={200}
             className="input"
           />
         </Field>

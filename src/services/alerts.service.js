@@ -4,16 +4,15 @@ import { addDays, isoDay, lagosDayStart, toServiceDate } from '@/lib/dates';
 import { emailStatus, sendEmail } from '@/lib/email';
 import { renderFollowUpReport } from '@/lib/email/followup-report';
 import { logger } from '@/lib/logger';
-import { AlertSettings, EmailLog, FollowUp, Person, Visit } from '@/models';
+import { appUrl } from '@/lib/site';
+import { ROLES } from '@/lib/roles';
+import { ALERTS, ROLE_INFO } from '@/lib/users';
+import { AlertSettings, EmailLog, FollowUp, Person, User, Visit } from '@/models';
 import { listServices } from './churchService.service';
 import { listFollowUps } from './followup.service';
 
 /** Where names in emails link to. */
-export const baseUrl = () =>
-  (process.env.APP_URL || process.env.NEXTAUTH_URL || 'https://ptc-chms.vercel.app').replace(
-    /\/+$/,
-    '',
-  );
+export const baseUrl = appUrl;
 
 export async function getAlertSettings() {
   await connectDB();
@@ -47,6 +46,60 @@ export async function updateAlertSettings(input, user) {
 }
 
 /**
+ * Who gets each email: every active login with that email switched on and an email address,
+ * plus any other addresses the admin added on Alerts. The follow-up email goes to the follow-up
+ * team with everyone else copied in; with no follow-up team, everyone gets it directly.
+ */
+export async function alertRecipients(kind, settings) {
+  await connectDB();
+  const people = await User.find({
+    active: true,
+    email: { $type: 'string' },
+    [`alerts.${kind}`]: true,
+    role: { $in: ALERTS[kind].roles },
+  })
+    .select('email role')
+    .lean();
+  const unique = (list) => [...new Set(list.map((e) => e.toLowerCase()))];
+  if (kind === 'celebrations')
+    return { to: unique([...people.map((p) => p.email), ...settings.celebrationEmails]), cc: [] };
+
+  const team = people.filter((p) => p.role === ROLES.FOLLOWUP).map((p) => p.email);
+  let to = unique([...team, ...settings.followupEmails]);
+  let cc = unique([
+    ...people.filter((p) => p.role !== ROLES.FOLLOWUP).map((p) => p.email),
+    ...settings.pastorEmails,
+  ]).filter((e) => !to.includes(e));
+  if (!to.length) [to, cc] = [cc, []];
+  return { to, cc };
+}
+
+/**
+ * For the Alerts screen: each login that can get an email, with what it gets, and how many
+ * people would get an email but have no address yet.
+ */
+export async function alertPeople() {
+  await connectDB();
+  const roles = [...new Set(Object.values(ALERTS).flatMap((a) => a.roles))];
+  const users = await User.find({ active: true, role: { $in: roles } })
+    .select('displayName role email alerts')
+    .sort({ displayName: 1 })
+    .lean();
+  const view = (u) => ({
+    id: String(u._id),
+    name: u.displayName,
+    role: u.role,
+    roleLabel: ROLE_INFO[u.role]?.label ?? u.role,
+    email: u.email ?? null,
+    alerts: {
+      followUp: Boolean(u.alerts?.followUp),
+      celebrations: Boolean(u.alerts?.celebrations),
+    },
+  });
+  return users.map(view);
+}
+
+/**
  * The morning report for `today` (a Lagos day):
  *   firstTimers  cards entered the day before (by when they were typed, so late entries count)
  *   returning    returning visitors recorded that day
@@ -66,7 +119,7 @@ export async function buildFollowUpReport({ today = new Date() } = {}) {
   ]);
   const serviceName = Object.fromEntries(services.map((s) => [s.key, s.name]));
   const people = await Person.find({ _id: { $in: visits.map((v) => v.person) } })
-    .select('firstName lastName phone stage visitCount')
+    .select('firstName lastName phone address stage visitCount')
     .lean();
   const byId = Object.fromEntries(people.map((p) => [String(p._id), p]));
 
@@ -79,6 +132,7 @@ export async function buildFollowUpReport({ today = new Date() } = {}) {
       id: String(p._id),
       name: `${p.firstName} ${p.lastName}`,
       phone: p.phone,
+      address: p.address ?? null,
       stage: p.stage,
       visitCount: p.visitCount,
       service: serviceName[v.service] || v.service,
@@ -105,6 +159,7 @@ export async function buildFollowUpReport({ today = new Date() } = {}) {
     id: p.id,
     name: `${p.firstName} ${p.lastName}`,
     phone: p.phone,
+    address: p.address,
     stage: p.stage,
     days: p.days,
     tried: p.tried,
@@ -154,8 +209,7 @@ export async function sendFollowUpReport({ today = new Date() } = {}) {
   const runKey = `followup_report:${isoDay(toServiceDate(today))}`;
   if (!settings.followUpReport) return { skipped: 'switched off' };
   if (!email) return { skipped: 'nothing to report' };
-  const to = settings.followupEmails.length ? settings.followupEmails : settings.pastorEmails;
-  const cc = settings.followupEmails.length ? settings.pastorEmails : [];
+  const { to, cc } = await alertRecipients('followUp', settings);
   if (!to.length) return { skipped: 'no recipients set' };
   if (await EmailLog.exists({ runKey })) return { skipped: 'already sent today' };
 

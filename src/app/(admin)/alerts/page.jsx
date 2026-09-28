@@ -1,12 +1,16 @@
 import Icon from '@/components/ui/Icon';
-import { previewFollowUpReport, recentEmails } from '@/services/alerts.service';
+import { alertPeople, previewFollowUpReport, recentEmails } from '@/services/alerts.service';
 import AlertsManager from './AlertsManager';
 
 export const metadata = { title: 'Email alerts' };
 export const dynamic = 'force-dynamic';
 
 export default async function AlertsPage() {
-  const [preview, emails] = await Promise.all([previewFollowUpReport(), recentEmails(10)]);
+  const [preview, emails, people] = await Promise.all([
+    previewFollowUpReport(),
+    recentEmails(10),
+    alertPeople(),
+  ]);
   return (
     <div className="flex max-w-5xl flex-col gap-6">
       <div className="page-head">
@@ -20,6 +24,7 @@ export default async function AlertsPage() {
       </div>
       <AlertsManager
         settings={preview.settings}
+        people={people}
         report={preview.report}
         email={preview.email}
         recent={emails.map((e) => ({

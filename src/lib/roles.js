@@ -4,6 +4,7 @@ export const ROLES = {
   FOLLOWUP: 'followup',
   PASTOR: 'pastor',
   PRAYER: 'prayer', // prayer department: sees prayer requests only
+  MEDIA: 'media', // media team: birthdays and anniversaries, to post on the church's socials
   ADMIN: 'admin',
 };
 
@@ -24,7 +25,7 @@ export const ROUTE_ACCESS = [
   { prefix: '/members', roles: [ROLES.ADMIN] },
   { prefix: '/users', roles: [ROLES.ADMIN] },
   { prefix: '/alerts', roles: [ROLES.ADMIN] },
-  { prefix: '/birthdays', roles: [ROLES.PASTOR, ROLES.ADMIN] },
+  { prefix: '/birthdays', roles: [ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN] },
 ];
 
 /** Home screen after sign-in, by role. */
@@ -33,6 +34,7 @@ export const HOME_BY_ROLE = {
   [ROLES.FOLLOWUP]: '/my-newcomers',
   [ROLES.PASTOR]: '/dashboard',
   [ROLES.PRAYER]: '/prayer-requests',
+  [ROLES.MEDIA]: '/birthdays',
   [ROLES.ADMIN]: '/dashboard',
 };
 

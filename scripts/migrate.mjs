@@ -144,6 +144,28 @@ const MIGRATIONS = [
       await db.collection('people').createIndex({ birthMonth: 1, birthDay: 1 });
     },
   },
+  {
+    id: '009-signups-and-email-alerts-by-login',
+    async up(db) {
+      // Emails now go to logins; give existing logins their role's usual choices
+      // (same as defaultAlerts in src/lib/users.js).
+      const users = db.collection('users');
+      const setAlerts = (roles, alerts) =>
+        users.updateMany(
+          { role: { $in: roles }, alerts: { $exists: false } },
+          { $set: { alerts } },
+        );
+      await setAlerts(['followup', 'pastor'], { followUp: true, celebrations: false });
+      await setAlerts(['admin', 'media'], { followUp: false, celebrations: true });
+      await setAlerts(['usher', 'prayer'], { followUp: false, celebrations: false });
+      await users.createIndex(
+        { email: 1 },
+        { unique: true, partialFilterExpression: { email: { $type: 'string' } } },
+      );
+      await db.collection('joinlinks').createIndex({ role: 1 }, { unique: true });
+      await db.collection('joinlinks').createIndex({ token: 1 }, { unique: true });
+    },
+  },
 ];
 
 async function main() {

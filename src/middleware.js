@@ -6,7 +6,7 @@ import { canAccess, HOME_BY_ROLE } from '@/lib/roles';
  * Runs before every matched page and API request.
  * - Not signed in: pages go to /login, APIs get 401.
  * - Signed in but wrong role: pages go to that role's home screen, APIs get 403.
- * Public: /login, /api/auth/*, /api/health, /api/cron/* (cron has its own secret), static files.
+ * Public: /login, /join/* (invite links), /api/join, /api/auth/*, /api/health, /api/cron/* (cron has its own secret), static files.
  */
 export default withAuth(
   function middleware(req) {
@@ -38,6 +38,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/((?!login|api/auth|api/health|api/cron|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|icons/|robots.txt|ptc-logo.png|manifest.webmanifest).*)',
+    '/((?!login|join/|api/auth|api/join|api/health|api/cron|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|icons/|robots.txt|ptc-logo.png|manifest.webmanifest).*)',
   ],
 };

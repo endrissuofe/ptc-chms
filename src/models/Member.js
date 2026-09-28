@@ -10,6 +10,7 @@ const memberSchema = new mongoose.Schema(
     lastName: { type: String, trim: true, default: '' },
     phone: { type: String, required: true },
     gender: { type: String, enum: ['male', 'female'] },
+    address: { type: String, trim: true },
     birthDay: { type: Number, min: 1, max: 31 },
     birthMonth: { type: Number, min: 1, max: 12 },
     anniversaryDay: { type: Number, min: 1, max: 31 },

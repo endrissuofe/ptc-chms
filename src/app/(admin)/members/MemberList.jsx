@@ -78,7 +78,10 @@ function MemberRow({ member: m }) {
         <Avatar name={name} />
         <div className="min-w-0 flex-1">
           <p className="break-words font-display font-extrabold">{name}</p>
-          <p className="text-meta text-muted">{formatPhone(m.phone)}</p>
+          <p className="text-meta text-muted">
+            {formatPhone(m.phone)}
+            {m.address && <span className="break-words"> · {m.address}</span>}
+          </p>
         </div>
         <div className="flex flex-wrap justify-end gap-1.5">
           {m.source === 'first_timer' && m.person && (
@@ -201,6 +204,7 @@ function MemberForm({ member, title, onCancel, onSaved }) {
     lastName: member?.lastName ?? '',
     phone: member ? formatPhone(member.phone) : '',
     gender: member?.gender ?? '',
+    address: member?.address ?? '',
     birthDay: member?.birthDay ?? '',
     birthMonth: member?.birthMonth ?? '',
     anniversaryDay: member?.anniversaryDay ?? '',
@@ -226,6 +230,7 @@ function MemberForm({ member, title, onCancel, onSaved }) {
       lastName: f.lastName.trim(),
       phone: f.phone,
       gender: f.gender || null,
+      address: f.address.trim(),
       birthDay: num(f.birthDay),
       birthMonth: num(f.birthMonth),
       anniversaryDay: num(f.anniversaryDay),
@@ -334,6 +339,22 @@ function MemberForm({ member, title, onCancel, onSaved }) {
             <option value="female">Female</option>
             <option value="male">Male</option>
           </select>
+        </label>
+        <label className="flex flex-col sm:col-span-2">
+          <span className="field-label">
+            Home address <span className="font-semibold text-muted">Optional</span>
+          </span>
+          <input
+            name="address"
+            value={f.address}
+            onChange={set('address')}
+            maxLength={200}
+            autoComplete="street-address"
+            placeholder="e.g. 12 Adeola Street, Ikeja"
+            className="input"
+            {...invalid('address')}
+          />
+          <FieldError id={errId('address')}>{fields.address}</FieldError>
         </label>
         <DateField
           label="Birthday"

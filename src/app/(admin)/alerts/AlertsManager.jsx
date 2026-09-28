@@ -2,81 +2,85 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
+import Avatar from '@/components/ui/Avatar';
 import Busy from '@/components/ui/Busy';
 import EmptyState from '@/components/ui/EmptyState';
 import FormAlert, { FieldError } from '@/components/ui/FormAlert';
 import { sendJson } from '@/lib/client-api';
 import { formatMoment } from '@/lib/format';
-import CelebrationsCard from './CelebrationsCard';
+import { ALERTS } from '@/lib/users';
 
-const toList = (text) =>
-  text
-    .split(/[\s,;]+/)
-    .map((e) => e.trim())
-    .filter(Boolean);
+/** Each email: its on/off setting and the "other addresses" lists it uses. */
+const EMAILS = {
+  followUp: {
+    setting: 'followUpReport',
+    lists: ['followupEmails', 'pastorEmails'],
+    tone: 'tone-primary',
+  },
+  celebrations: { setting: 'celebrationReport', lists: ['celebrationEmails'], tone: 'tone-coral' },
+};
 
-export default function AlertsManager({ settings, report, email, recent }) {
+export default function AlertsManager({ settings, people, report, email, recent }) {
   return (
     <>
-      <Recipients settings={settings} />
+      <EmailCard kind="followUp" settings={settings} people={people} />
       <Preview report={report} email={email} />
-      <CelebrationsCard settings={settings} />
+      <EmailCard kind="celebrations" settings={settings} people={people} />
       <History recent={recent} />
     </>
   );
 }
 
-function Recipients({ settings }) {
+/** Who gets one email: team logins with a switch each, plus other addresses as chips. */
+function EmailCard({ kind, settings, people }) {
   const router = useRouter();
-  const [followup, setFollowup] = useState(settings.followupEmails.join('\n'));
-  const [pastors, setPastors] = useState(settings.pastorEmails.join('\n'));
-  const [on, setOn] = useState(settings.followUpReport);
+  const info = ALERTS[kind];
+  const { setting, lists, tone } = EMAILS[kind];
+  const [on, setOn] = useState(settings[setting]);
   const [state, setState] = useState({ kind: 'idle' });
-  const busy = state.kind === 'busy';
+  const eligible = people.filter((p) => info.roles.includes(p.role));
+  const receiving = eligible.filter((p) => p.email && p.alerts[kind]).length;
+  // Addresses typed in before logins had emails ("copied in" = the old pastors' box) show too.
+  const others = lists.flatMap((list) => settings[list].map((address) => ({ address, list })));
+  const total = receiving + others.length;
 
-  // Zod reports list errors as followupEmails.<index>; show them under the right box.
-  const issues = state.kind === 'error' ? (state.error.details ?? []) : [];
-  const listError = (key, list) => {
-    const issue = Array.isArray(issues) ? issues.find((i) => i.path?.[0] === key) : null;
-    if (!issue) return null;
-    const bad = list[issue.path?.[1]];
-    return bad ? `“${bad}” isn’t a valid email address` : issue.message;
-  };
-  const followupList = toList(followup);
-  const pastorList = toList(pastors);
-  const followupError = listError('followupEmails', followupList);
-  const pastorError = listError('pastorEmails', pastorList);
-
-  async function save(e) {
-    e.preventDefault();
-    if (busy) return;
+  async function patch(url, body, message) {
     setState({ kind: 'busy' });
     try {
-      const saved = await sendJson('/api/alerts', 'PATCH', {
-        followupEmails: followupList,
-        pastorEmails: pastorList,
-        followUpReport: on,
-      });
-      setFollowup(saved.followupEmails.join('\n'));
-      setPastors(saved.pastorEmails.join('\n'));
-      setState({ kind: 'ok', message: 'Saved.' });
+      await sendJson(url, 'PATCH', body);
+      setState({ kind: 'ok', message });
       router.refresh();
+      return true;
     } catch (err) {
       setState({ kind: 'error', error: err });
+      return false;
     }
   }
 
+  async function toggleEmail(value) {
+    setOn(value);
+    const ok = await patch(
+      '/api/alerts',
+      { [setting]: value },
+      value ? 'Switched on.' : 'Switched off.',
+    );
+    if (!ok) setOn(!value);
+  }
+
   return (
-    <form onSubmit={save} className="card flex flex-col gap-5">
+    <section className="card flex flex-col gap-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="icon-tile tone-primary">
-            <Icon name="group" size={22} />
+          <span className={`icon-tile ${tone}`}>
+            <Icon name={info.icon} size={22} />
           </span>
           <div>
-            <h2 className="card-title">Who gets the morning email</h2>
-            <p className="card-sub">One email address per line.</p>
+            <h2 className="card-title">{info.label}</h2>
+            <p className="card-sub">
+              {total} {total === 1 ? 'person gets' : 'people get'} it
+            </p>
           </div>
         </div>
         <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-bold">
@@ -85,65 +89,154 @@ function Recipients({ settings }) {
             type="checkbox"
             role="switch"
             checked={on}
-            onChange={(e) => setOn(e.target.checked)}
-            aria-label={`Morning follow-up email: ${on ? 'on' : 'off'}`}
+            onChange={(e) => toggleEmail(e.target.checked)}
+            aria-label={`${info.label}: ${on ? 'on' : 'off'}`}
             className="switch"
           />
         </label>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col">
-          <span className="field-label">
-            <span className="flex items-center gap-1.5">
-              <Icon name="call" size={17} className="text-muted" />
-              Follow-up team
-            </span>
-            <span className="font-semibold text-muted">{followupList.length}</span>
-          </span>
-          <textarea
-            rows={5}
-            value={followup}
-            onChange={(e) => setFollowup(e.target.value)}
-            placeholder={'e.g. followup@gmail.com'}
-            spellCheck={false}
-            autoCapitalize="none"
-            aria-invalid={followupError ? true : undefined}
-            aria-describedby={followupError ? 'followup-error' : undefined}
-            className="input resize-y"
-          />
-          <FieldError id="followup-error">{followupError}</FieldError>
-        </label>
-        <label className="flex flex-col">
-          <span className="field-label">
-            <span className="flex items-center gap-1.5">
-              <Icon name="church" size={17} className="text-muted" />
-              Pastors (copied in)
-            </span>
-            <span className="font-semibold text-muted">{pastorList.length}</span>
-          </span>
-          <textarea
-            rows={5}
-            value={pastors}
-            onChange={(e) => setPastors(e.target.value)}
-            placeholder={'e.g. pastor@gmail.com'}
-            spellCheck={false}
-            autoCapitalize="none"
-            aria-invalid={pastorError ? true : undefined}
-            aria-describedby={pastorError ? 'pastor-error' : undefined}
-            className="input resize-y"
-          />
-          <FieldError id="pastor-error">{pastorError}</FieldError>
-        </label>
-      </div>
-
-      {state.kind === 'error' && !followupError && !pastorError && (
-        <FormAlert error={state.error} />
+      {eligible.length ? (
+        <ul className="flex flex-col divide-y divide-line rounded-tile border border-line">
+          {eligible.map((p) => (
+            <PersonRow key={p.id} person={p} kind={kind} onChange={patch} />
+          ))}
+        </ul>
+      ) : (
+        <EmptyState icon="group" title="Nobody on these teams yet">
+          Share the team’s invite link from{' '}
+          <Link href="/users" className="font-bold text-primary">
+            Logins
+          </Link>
+          .
+        </EmptyState>
       )}
+
+      <OtherAddresses kind={kind} settings={settings} others={others} onChange={patch} />
+
+      {state.kind === 'error' && <FormAlert error={state.error} />}
       {state.kind === 'ok' && <FormAlert success={state.message} />}
-      <button type="submit" aria-disabled={busy} className="btn btn-primary self-start">
-        <Busy busy={busy} icon="save" label="Save" />
-      </button>
+    </section>
+  );
+}
+
+function PersonRow({ person: p, kind, onChange }) {
+  const [on, setOn] = useState(p.alerts[kind]);
+  const copied = kind === 'followUp' && p.role !== 'followup';
+
+  async function toggle(value) {
+    setOn(value);
+    const ok = await onChange(
+      `/api/users/${p.id}`,
+      { alerts: { [kind]: value } },
+      value ? `${p.name} will get it.` : `${p.name} won’t get it any more.`,
+    );
+    if (!ok) setOn(!value);
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-3 px-3 py-2.5">
+      <Avatar name={p.name} size="sm" />
+      <div className="min-w-0 flex-1">
+        <p className="break-words font-bold">{p.name}</p>
+        <p className="break-words text-meta text-muted">
+          {p.roleLabel} · {p.email || 'No email yet'}
+          {p.email && on && copied && ' · copied in'}
+        </p>
+      </div>
+      {p.email ? (
+        <input
+          type="checkbox"
+          role="switch"
+          checked={on}
+          onChange={(e) => toggle(e.target.checked)}
+          aria-label={`${p.name} gets this email`}
+          className="switch"
+        />
+      ) : (
+        <span className="chip chip-warning">Needs an email</span>
+      )}
+    </li>
+  );
+}
+
+/** Addresses without a login (e.g. a shared church inbox). Saved at once; shown as chips. */
+function OtherAddresses({ kind, settings, others, onChange }) {
+  const [address, setAddress] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const addTo = kind === 'followUp' ? 'followupEmails' : 'celebrationEmails';
+  const inputId = `${kind}-other`;
+
+  async function save(list, next, message) {
+    setBusy(true);
+    const ok = await onChange('/api/alerts', { [list]: next }, message);
+    setBusy(false);
+    return ok;
+  }
+
+  async function add(e) {
+    e.preventDefault();
+    const value = address.trim().toLowerCase();
+    if (!value || busy) return;
+    if (!/^\S+@\S+\.\S+$/.test(value)) {
+      setError('Check this email address');
+      return;
+    }
+    setError(null);
+    if (await save(addTo, [...settings[addTo], value], `Added ${value}.`)) setAddress('');
+  }
+
+  return (
+    <form onSubmit={add} className="flex flex-col gap-2">
+      <label htmlFor={inputId} className="field-label">
+        Other addresses
+      </label>
+      {others.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {others.map(({ address: a, list }) => (
+            <li key={`${list}-${a}`} className="chip max-w-full py-0 pr-0">
+              <span className="break-all">{a}</span>
+              {list === 'pastorEmails' && <span className="text-muted">· copied in</span>}
+              <button
+                type="button"
+                onClick={() =>
+                  save(
+                    list,
+                    settings[list].filter((x) => x !== a),
+                    `Removed ${a}.`,
+                  )
+                }
+                aria-label={`Remove ${a}`}
+                className="icon-btn"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <input
+          id={inputId}
+          type="email"
+          value={address}
+          onChange={(e) => {
+            setAddress(e.target.value);
+            setError(null);
+          }}
+          placeholder="e.g. media@gmail.com"
+          autoCapitalize="none"
+          spellCheck={false}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${inputId}-error` : undefined}
+          className="input min-w-[12rem] flex-1 sm:max-w-sm"
+        />
+        <button type="submit" aria-disabled={busy} className="btn btn-soft">
+          <Busy busy={busy} icon="add" label="Add" />
+        </button>
+      </div>
+      <FieldError id={`${inputId}-error`}>{error}</FieldError>
     </form>
   );
 }
@@ -187,6 +280,12 @@ function Preview({ report, email }) {
   );
 }
 
+const KIND_LABEL = {
+  test: 'Test email',
+  signup: 'New sign-up',
+  approved: 'Sign-up approved',
+};
+
 function History({ recent }) {
   return (
     <section className="flex flex-col gap-3">
@@ -215,14 +314,13 @@ function History({ recent }) {
                 <tr key={e.id}>
                   <td className="whitespace-nowrap pl-5">{formatMoment(e.at)}</td>
                   <td>
-                    <span className="font-semibold">
-                      {e.kind === 'test' ? 'Test email' : e.subject}
-                    </span>
+                    <span className="font-semibold">{KIND_LABEL[e.kind] ?? e.subject}</span>
                   </td>
                   <td className="text-right tabular-nums">{e.to}</td>
                   <td className="pr-5">
                     <span
                       className={`chip ${e.status === 'sent' ? 'chip-success' : 'chip-danger'}`}
+                      title={e.error ?? undefined}
                     >
                       {e.status === 'sent' ? 'Sent' : 'Not sent'}
                     </span>

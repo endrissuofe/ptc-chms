@@ -8,7 +8,7 @@ import FormAlert, { FieldError } from '@/components/ui/FormAlert';
 import { CHANNELS, OUTCOMES } from '@/lib/followup';
 import { sendJson } from '@/lib/client-api';
 
-// The follow-up team shares one login, so each phone remembers who is calling.
+// On a shared team login each phone remembers who is calling; a personal login is one person.
 const NAME_KEY = 'ptc.callerName';
 const readName = () => {
   try {
@@ -25,7 +25,7 @@ const saveName = (name) => {
   }
 };
 
-export default function LogCall({ personId, firstName }) {
+export default function LogCall({ personId, firstName, callerName: ownName = null }) {
   const router = useRouter();
   const heading = useRef(null);
   const [outcome, setOutcome] = useState(null);
@@ -35,7 +35,9 @@ export default function LogCall({ personId, firstName }) {
   const [missingOutcome, setMissingOutcome] = useState(false);
   const [state, setState] = useState({ kind: 'idle' });
 
-  useEffect(() => setCallerName(readName()), []);
+  useEffect(() => {
+    if (!ownName) setCallerName(readName());
+  }, [ownName]);
   const busy = state.kind === 'busy';
 
   async function save(e) {
@@ -55,7 +57,7 @@ export default function LogCall({ personId, firstName }) {
         note: note.trim() || undefined,
         callerName: callerName.trim() || undefined,
       });
-      saveName(callerName.trim());
+      if (!ownName) saveName(callerName.trim());
       setState({ kind: 'ok', message: `${OUTCOMES[outcome].label} — saved in the history below.` });
       setOutcome(null);
       setNote('');
@@ -137,18 +139,20 @@ export default function LogCall({ personId, firstName }) {
         />
       </label>
 
-      <label className="flex flex-col">
-        <span className="field-label">Your name</span>
-        <input
-          value={callerName}
-          onChange={(e) => setCallerName(e.target.value)}
-          maxLength={60}
-          placeholder="e.g. Bro. Tunde"
-          autoComplete="name"
-          className="input"
-        />
-        <span className="field-hint">Remembered on this phone.</span>
-      </label>
+      {!ownName && (
+        <label className="flex flex-col">
+          <span className="field-label">Your name</span>
+          <input
+            value={callerName}
+            onChange={(e) => setCallerName(e.target.value)}
+            maxLength={60}
+            placeholder="e.g. Bro. Tunde"
+            autoComplete="name"
+            className="input"
+          />
+          <span className="field-hint">Remembered on this phone.</span>
+        </label>
+      )}
 
       {state.kind === 'error' && <FormAlert error={state.error} />}
       {state.kind === 'ok' && <FormAlert success={state.message} />}
