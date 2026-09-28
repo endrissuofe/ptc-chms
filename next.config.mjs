@@ -11,6 +11,11 @@ const nextConfig = {
         'onnxruntime-node$': false,
       };
     }
+    // MediaPipe loads its engine from a web address at run time; webpack warns about that.
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings ?? []),
+      { module: /@mediapipe[\\/]tasks-vision/ },
+    ];
     return config;
   },
   async headers() {

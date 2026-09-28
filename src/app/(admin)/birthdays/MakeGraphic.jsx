@@ -41,31 +41,38 @@ export default function MakeGraphic({ kind, name, date }) {
   async function render(photoFile, { cut = true } = {}) {
     setState({ kind: 'busy', message: 'Opening the photo…' });
     try {
-      const g = await import('@/lib/graphics/celebration');
-      let person;
+      const [g, check] = await Promise.all([
+        import('@/lib/graphics/celebration'),
+        import('@/lib/graphics/photo-check'),
+      ]);
+      let shot;
       if (cut) {
         try {
-          person = await g.cutOut(photoFile, (message) => setState({ kind: 'busy', message }));
+          shot = await g.cutOut(photoFile, (message) => setState({ kind: 'busy', message }));
         } catch {
           setState({
             kind: 'busy',
             message: 'Couldn’t cut out the background, so using the photo as it is…',
           });
-          person = await g.plainPhoto(photoFile);
+          shot = await g.plainPhoto(photoFile);
           cut = false;
         }
       } else {
-        person = await g.plainPhoto(photoFile);
+        shot = await g.plainPhoto(photoFile);
       }
+      setState({ kind: 'busy', message: 'Finding their face…' });
+      const figure = cut ? g.subjectBounds(shot.person) : null;
+      const { face, warnings } = await check.checkPhoto(shot.photo, figure);
       setState({ kind: 'busy', message: 'Laying out the design…' });
       await g.drawCelebration(canvas.current, {
         kind,
-        person,
+        person: shot.person,
+        face,
         name,
         date: dayMonth.format(new Date(date)),
         fonts: { display: display.style.fontFamily, text: text.style.fontFamily },
       });
-      setState({ kind: 'done', cut });
+      setState({ kind: 'done', cut, warnings });
     } catch (err) {
       setState({ kind: 'error', error: { message: err.message || 'Something went wrong' } });
     }
@@ -161,6 +168,20 @@ export default function MakeGraphic({ kind, name, date }) {
           state.kind === 'done' ? '' : 'hidden'
         }`}
       />
+
+      {state.kind === 'done' && state.warnings.length > 0 && (
+        <div role="status" className="alert alert-warning flex-col items-start gap-1">
+          <p className="flex items-center gap-1.5 font-bold">
+            <Icon name="info" size={18} />
+            Check before posting
+          </p>
+          <ul className="list-disc pl-5">
+            {state.warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {state.kind === 'done' && (
         <div className="flex flex-wrap gap-2">

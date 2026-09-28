@@ -13,6 +13,9 @@ export const SIZE = { width: 1080, height: 1350 };
 const COLOURS = { orange: '#d48000', brown: '#472e24', top: '#eceef7', bottom: '#fcfcfe' };
 // Where the person stands in the design (their feet go under the lettering).
 const PHOTO = { x: 145, y: 101, width: 811, height: 962 };
+// Where the design's face is (the face finder's box on the template photo, placed as in the
+// design): the size and centre every celebrant's face is scaled and moved to.
+const FACE = { width: 205, centreX: 540, centreY: 292 };
 const WORDMARK = { x: 904, y: 25, width: 136, height: 61, src: '/graphics/church-wordmark.png' };
 
 const WORDS = { birthday: 'BIRTHDAY', anniversary: 'ANNIVERSARY' };
@@ -67,7 +70,10 @@ async function readPhoto(file) {
   }
 }
 
-/** The photo with its background removed, as a canvas with transparency. */
+/**
+ * The photo with its background removed: { photo, person }, where `person` is the same size
+ * as `photo` with transparency around the figure.
+ */
 export async function cutOut(file, onStatus) {
   const photo = await readPhoto(file);
   onStatus?.('Getting the photo tool ready…');
@@ -77,7 +83,7 @@ export async function cutOut(file, onStatus) {
   const url = URL.createObjectURL(blob);
   try {
     const [result] = await segment(url);
-    return result.toCanvas();
+    return { photo, person: result.toCanvas() };
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -87,7 +93,7 @@ export async function cutOut(file, onStatus) {
  * The part of a transparent canvas that isn't empty: { x, y, width, height }. With `top` and
  * `bottom`, only those rows are looked at (e.g. just the head).
  */
-function subjectBounds(canvas, { top = 0, bottom = canvas.height } = {}) {
+export function subjectBounds(canvas, { top = 0, bottom = canvas.height } = {}) {
   const { width, height } = canvas;
   const data = canvas.getContext('2d').getImageData(0, 0, width, height).data;
   let [minX, minY, maxX, maxY] = [width, height, -1, -1];
@@ -129,13 +135,44 @@ function fitFont(ctx, text, font, size, maxWidth) {
 }
 
 /**
+ * Frame on the face: the same face size and place as the photo in the design, whatever the
+ * photo (close-up, standing, off-centre). Measured from the design's own photo.
+ */
+function frameOnFace(face) {
+  const scale = FACE.width / face.width;
+  return {
+    scale,
+    x: FACE.centreX - (face.x + face.width / 2) * scale,
+    y: FACE.centreY - (face.y + face.height / 2) * scale,
+  };
+}
+
+/**
+ * No face found: frame the figure from about the waist up. A full-length photo is zoomed in
+ * on the head and shoulders, and the rest runs down under the lettering.
+ */
+function frameOnFigure(person) {
+  const b = subjectBounds(person);
+  const shown = Math.min(b.height, b.width * 1.3);
+  const scale = Math.min((PHOTO.height * 0.97) / shown, (PHOTO.width * 1.15) / b.width);
+  // Centre on the head (the top of the figure), not on arms or hands further down.
+  const head = subjectBounds(person, { top: b.y, bottom: b.y + b.height * 0.2 });
+  return {
+    scale,
+    x: PHOTO.x + PHOTO.width / 2 - (head.x + head.width / 2) * scale,
+    y: PHOTO.y + 12 - b.y * scale,
+  };
+}
+
+/**
  * Draws the finished graphic onto `canvas`.
  *   kind     'birthday' | 'anniversary'
  *   person   the cut-out photo (a canvas with transparency), or the plain photo
+ *   face     where their face is in `person` ({ x, y, width, height }), if it was found
  *   name     e.g. "Ada Eze";  date e.g. "12 October"
  *   fonts    { display, text }: CSS font families for Bebas Neue and Quicksand
  */
-export async function drawCelebration(canvas, { kind, person, name, date, fonts }) {
+export async function drawCelebration(canvas, { kind, person, face, name, date, fonts }) {
   const { width, height } = SIZE;
   canvas.width = width;
   canvas.height = height;
@@ -153,17 +190,9 @@ export async function drawCelebration(canvas, { kind, person, name, date, fonts 
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, width, height);
 
-  // Frame the person like the design, from about the waist up: a full-length photo is
-  // zoomed in on the head and shoulders, and the rest runs down under the lettering.
-  const b = subjectBounds(person);
-  const shown = Math.min(b.height, b.width * 1.3);
-  const scale = Math.min((PHOTO.height * 0.97) / shown, (PHOTO.width * 1.15) / b.width);
+  const { scale, x, y } = face ? frameOnFace(face) : frameOnFigure(person);
   const w = person.width * scale;
   const h = person.height * scale;
-  // Centre on the head (the top of the figure), not on arms or hands further down.
-  const head = subjectBounds(person, { top: b.y, bottom: b.y + b.height * 0.2 });
-  const x = PHOTO.x + PHOTO.width / 2 - (head.x + head.width / 2) * scale;
-  const y = PHOTO.y + 12 - b.y * scale;
 
   // The design's warm peach glow behind the person…
   const warm = ctx.createRadialGradient(540, 400, 60, 540, 420, 640);
@@ -200,14 +229,17 @@ export async function drawCelebration(canvas, { kind, person, name, date, fonts 
 
   ctx.drawImage(person, x, y, w, h);
 
-  // Fade to white behind the lettering.
-  const fade = ctx.createLinearGradient(0, 760, 0, 1110);
+  // Fade to white behind the lettering, starting higher when the photo itself ends early,
+  // so its bottom edge never shows as a line.
+  const photoEnd = Math.min(y + h, 1110);
+  const fadeFrom = Math.min(760, photoEnd - 220);
+  const fade = ctx.createLinearGradient(0, fadeFrom, 0, photoEnd);
   fade.addColorStop(0, 'rgba(252,252,254,0)');
   fade.addColorStop(1, 'rgba(252,252,254,0.97)');
   ctx.fillStyle = fade;
-  ctx.fillRect(0, 760, width, 350);
+  ctx.fillRect(0, fadeFrom, width, photoEnd - fadeFrom);
   ctx.fillStyle = 'rgba(252,252,254,0.97)';
-  ctx.fillRect(0, 1110, width, height - 1110);
+  ctx.fillRect(0, photoEnd, width, height - photoEnd);
 
   // Church wordmark, top right.
   const mark = await loadImage(WORDMARK.src);
@@ -242,7 +274,8 @@ export async function drawCelebration(canvas, { kind, person, name, date, fonts 
   ctx.fillText(date, left + nameWidth + gap, 1262);
 }
 
-/** A plain photo as a canvas, for when the cut-out isn't possible. */
+/** The photo as it is, for when the cut-out isn't possible: { photo, person }. */
 export async function plainPhoto(file) {
-  return readPhoto(file);
+  const photo = await readPhoto(file);
+  return { photo, person: photo };
 }
