@@ -211,6 +211,74 @@ describe('church services', () => {
     log = await models.SmsLog.findOne().lean();
     expect(log.body).toContain('Services start at 8:00 AM and 10:00 AM.');
   });
+
+  it('uses a different wording each Saturday, in turn', async () => {
+    await sms.ensureTemplates();
+    const t = await models.SmsTemplate.findOne({ key: 'saturday_invite' }).lean();
+    const all = sms.wordings(t);
+    expect(all.length).toBe(6);
+    const saturdays = [0, 7, 14, 21, 28, 35, 42].map(
+      (d) => new Date(Date.UTC(2026, 8, 26 + d, 11)),
+    );
+    const used = saturdays.map((s) => sms.wordingFor(t, s));
+    for (let i = 1; i < used.length; i += 1) expect(used[i]).not.toBe(used[i - 1]);
+    expect(new Set(used.slice(0, 6)).size).toBe(6);
+    expect(used[6]).toBe(used[0]);
+  });
+
+  it('invites members too, not twice, and only those with SMS on', async () => {
+    const { smsSegments } = await import('@/lib/sms/segments');
+    await svc.createFromCard(card({ serviceDate: new Date('2026-09-20T09:00:00Z') }));
+    const firstTimer = await models.Person.findOne().lean();
+    await models.Member.create([
+      { firstName: 'Ada', lastName: 'Eze', phone: '+2348030000501' },
+      { firstName: 'Quiet', lastName: 'One', phone: '+2348030000502', smsOptOut: true },
+      { firstName: 'Gone', lastName: 'Away', phone: '+2348030000503', active: false },
+      // Also a recent first timer: gets the first timers' invite only.
+      { firstName: firstTimer.firstName, lastName: firstTimer.lastName, phone: firstTimer.phone },
+    ]);
+    const saturday = new Date('2026-09-26T11:00:00Z');
+    const results = await sms.runSaturdayInvites({ today: saturday });
+    expect(results.saturday_invite).toMatchObject({ total: 1, sent: 1 });
+    expect(results.member_invite).toMatchObject({ total: 1, sent: 1 });
+    const memberLog = await models.SmsLog.findOne({ template: 'member_invite' }).lean();
+    expect(memberLog.body).toMatch(/Ada/);
+    expect(memberLog.body).toContain('Service starts at 8:00 AM.');
+    // Safe to run twice.
+    const again = await sms.runSaturdayInvites({ today: saturday });
+    expect(again.member_invite).toMatchObject({ sent: 0, alreadySent: 1 });
+
+    // Every default wording fits one plain-text SMS, even with a long name.
+    for (const t of sms.DEFAULT_TEMPLATES.filter((x) => x.variants)) {
+      for (const text of [t.body, ...t.variants]) {
+        const out = text
+          .replace('{FirstName}', 'Oluwaseyifunmi')
+          .replace('{ServiceTimes}', 'Service starts at 8:00 AM.');
+        expect(smsSegments(out)).toMatchObject({ encoding: 'gsm', pages: 1 });
+      }
+    }
+  });
+
+  it('saves a list of wordings for a rotating message', async () => {
+    const saved = await sms.updateTemplate('member_invite', {
+      bodies: ['See you tomorrow, {FirstName}!', 'Church tomorrow, {FirstName}. {ServiceTimes}'],
+      enabled: true,
+    });
+    expect(saved).toMatchObject({
+      body: 'See you tomorrow, {FirstName}!',
+      variants: ['Church tomorrow, {FirstName}. {ServiceTimes}'],
+    });
+    await expect(
+      sms.updateTemplate('member_invite', { bodies: ['Hi {Firstname}'], enabled: true }),
+    ).rejects.toMatchObject({ status: 400 });
+    // Messages that don't rotate keep one wording.
+    const single = await sms.updateTemplate('birthday', {
+      bodies: ['Happy birthday {FirstName}!', 'Another'],
+      body: 'Happy birthday {FirstName}!',
+      enabled: true,
+    });
+    expect(single.variants).toBeUndefined();
+  });
 });
 
 describe('usher Today screen', () => {
@@ -470,6 +538,7 @@ describe('SMS', () => {
       'sunday_thanks',
       'welcome_back',
       'saturday_invite',
+      'member_invite',
       'birthday',
       'anniversary',
       'checkin',

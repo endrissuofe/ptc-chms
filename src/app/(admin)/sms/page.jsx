@@ -42,6 +42,10 @@ export default async function SmsPage() {
       <SmsManager
         templates={overview.templates}
         invite={{ ...overview.invite, serviceDate: isoDay(overview.invite.serviceDate) }}
+        memberInvite={{
+          ...overview.memberInvite,
+          serviceDate: isoDay(overview.memberInvite.serviceDate),
+        }}
         runs={overview.runs}
         audienceCounts={counts}
       />

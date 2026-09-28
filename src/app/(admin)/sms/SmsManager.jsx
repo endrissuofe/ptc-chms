@@ -14,6 +14,7 @@ import {
   AUDIENCES,
   BROADCAST_TAGS,
   TEMPLATE_INFO,
+  MAX_WORDINGS,
   renderTemplate,
   unknownTags,
 } from '@/lib/sms/templates';
@@ -54,7 +55,8 @@ function plainReason(error = '') {
   return error || 'Unknown reason';
 }
 
-export default function SmsManager({ templates, invite, runs, audienceCounts }) {
+export default function SmsManager({ templates, invite, memberInvite, runs, audienceCounts }) {
+  const previews = { saturday_invite: invite, member_invite: memberInvite };
   return (
     <>
       <Broadcast counts={audienceCounts} />
@@ -65,11 +67,7 @@ export default function SmsManager({ templates, invite, runs, audienceCounts }) 
         </div>
         <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
           {templates.map((t) => (
-            <TemplateEditor
-              key={t.key}
-              template={t}
-              invite={t.key === 'saturday_invite' ? invite : null}
-            />
+            <TemplateEditor key={t.key} template={t} invite={previews[t.key] ?? null} />
           ))}
         </div>
       </section>
@@ -406,24 +404,36 @@ function Figure({ label, value, hint }) {
 function TemplateEditor({ template, invite }) {
   const router = useRouter();
   const info = TEMPLATE_INFO[template.key];
-  const [saved, setSaved] = useState({ body: template.body, enabled: template.enabled });
-  const [body, setBody] = useState(template.body);
+  const rotates = Boolean(info.rotates);
+  const initial = template.bodies ?? [template.body];
+  const [saved, setSaved] = useState({ bodies: initial, enabled: template.enabled });
+  const [bodies, setBodies] = useState(initial);
   const [enabled, setEnabled] = useState(template.enabled);
   const [state, setState] = useState({ kind: 'idle' });
-  const dirty = body.trim() !== saved.body || enabled !== saved.enabled;
-  const bad = unknownTags(template.key, body).length > 0;
+  const trimmed = bodies.map((b) => b.trim());
+  const dirty =
+    JSON.stringify(trimmed) !== JSON.stringify(saved.bodies) || enabled !== saved.enabled;
+  const bad = trimmed.some((b) => !b || unknownTags(template.key, b).length > 0);
   const busy = state.kind === 'busy';
+  const body = bodies[0];
+  const setBody = (v) => setBodies((list) => [v, ...list.slice(1)]);
+  const setWording = (i) => (v) => {
+    setBodies((list) => list.map((b, j) => (j === i ? v : b)));
+    setState({ kind: 'idle' });
+  };
 
   async function save() {
     if (busy) return;
     setState({ kind: 'busy' });
     try {
-      const doc = await sendJson(`/api/sms/templates?key=${template.key}`, 'PATCH', {
-        body: body.trim(),
-        enabled,
-      });
-      setSaved({ body: doc.body, enabled: doc.enabled });
-      setBody(doc.body);
+      const doc = await sendJson(
+        `/api/sms/templates?key=${template.key}`,
+        'PATCH',
+        rotates ? { bodies: trimmed, enabled } : { body: trimmed[0], enabled },
+      );
+      const next = rotates ? [doc.body, ...(doc.variants ?? [])] : [doc.body];
+      setSaved({ bodies: next, enabled: doc.enabled });
+      setBodies(next);
       setState({ kind: 'ok', message: 'Changes saved.' });
       router.refresh();
     } catch (err) {
@@ -432,7 +442,7 @@ function TemplateEditor({ template, invite }) {
   }
 
   return (
-    <section className="card flex flex-col gap-4">
+    <section className={`card flex flex-col gap-4 ${rotates ? 'lg:col-span-3' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="card-title">{info.title}</h3>
@@ -469,16 +479,65 @@ function TemplateEditor({ template, invite }) {
         </span>
       </p>
 
-      <MessageBox
-        id={`message-${template.key}`}
-        tagsFor={template.key}
-        value={body}
-        foldPreview
-        onChange={(v) => {
-          setBody(v);
-          setState({ kind: 'idle' });
-        }}
-      />
+      {rotates ? (
+        <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {bodies.map((b, i) => (
+            <li key={i} className="flex flex-col gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-sm font-bold">
+                  Wording {i + 1}
+                  {i === template.nextWording && (
+                    <span className="chip chip-primary">This Saturday</span>
+                  )}
+                </span>
+                {bodies.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBodies((list) => list.filter((_, j) => j !== i));
+                      setState({ kind: 'idle' });
+                    }}
+                    aria-label={`Remove wording ${i + 1}`}
+                    className="icon-btn"
+                  >
+                    <Icon name="close" size={16} />
+                  </button>
+                )}
+              </div>
+              <MessageBox
+                id={`message-${template.key}-${i}`}
+                tagsFor={template.key}
+                value={b}
+                foldPreview
+                onChange={setWording(i)}
+              />
+            </li>
+          ))}
+          {bodies.length < MAX_WORDINGS && (
+            <li>
+              <button
+                type="button"
+                onClick={() => setBodies((list) => [...list, ''])}
+                className="btn btn-soft btn-sm"
+              >
+                <Icon name="add" size={16} />
+                Add a wording
+              </button>
+            </li>
+          )}
+        </ol>
+      ) : (
+        <MessageBox
+          id={`message-${template.key}`}
+          tagsFor={template.key}
+          value={body}
+          foldPreview
+          onChange={(v) => {
+            setBody(v);
+            setState({ kind: 'idle' });
+          }}
+        />
+      )}
       {state.kind === 'error' && <FormAlert error={state.error} />}
       {state.kind === 'ok' && !dirty && <FormAlert success={state.message} />}
       <div className="mt-auto flex flex-wrap items-center justify-end gap-2">
@@ -486,7 +545,7 @@ function TemplateEditor({ template, invite }) {
           <button
             type="button"
             onClick={save}
-            disabled={bad || !body.trim()}
+            disabled={bad}
             aria-disabled={busy}
             className="btn btn-primary"
           >

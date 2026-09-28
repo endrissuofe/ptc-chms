@@ -1,13 +1,13 @@
 import { connectDB } from '@/lib/db';
 import { HttpError } from '@/lib/api';
 import { getSmsProvider } from '@/lib/sms';
-import { renderTemplate, unknownTags } from '@/lib/sms/templates';
+import { TEMPLATE_INFO, renderTemplate, unknownTags, wordingIndex } from '@/lib/sms/templates';
 import { formatPhone } from '@/lib/phone';
 import { toServiceDate, addDays, isoDay } from '@/lib/dates';
 import { STAGES } from '@/lib/stages';
 import { describeServiceTimes } from '@/lib/church';
 import { logger } from '@/lib/logger';
-import { Person, SmsTemplate, SmsLog, Broadcast } from '@/models';
+import { Member, Person, SmsTemplate, SmsLog, Broadcast } from '@/models';
 import { listServices } from './churchService.service';
 
 const CHURCH_NAME = () => process.env.CHURCH_NAME || 'RCCG Peculiar Treasure Chapel';
@@ -27,6 +27,26 @@ export const DEFAULT_TEMPLATES = [
     key: 'saturday_invite',
     name: 'Saturday invite',
     body: 'Hi {FirstName}, we would love to see you in church tomorrow! {ServiceTimes} See you there. PTC Chapel',
+    // Plain characters only: one curly quote or long dash makes an SMS cost double.
+    variants: [
+      'Hi {FirstName}, a seat is waiting for you at PTC Chapel tomorrow. {ServiceTimes} Come as you are!',
+      'Hello {FirstName}, tomorrow is Sunday! Worship with us again at PTC Chapel. {ServiceTimes} God bless you.',
+      'Hi {FirstName}, it was a joy having you with us. Join us again tomorrow at PTC Chapel. {ServiceTimes}',
+      "{FirstName}, you are family at PTC Chapel. We can't wait to see you in church tomorrow! {ServiceTimes}",
+      "Hi {FirstName}, come and experience God's presence with us tomorrow at PTC Chapel. {ServiceTimes}",
+    ],
+  },
+  {
+    key: 'member_invite',
+    name: 'Members’ Saturday invite',
+    body: 'Hi {FirstName}, see you in church tomorrow at PTC Chapel! {ServiceTimes} Come expecting a blessing.',
+    variants: [
+      "Good afternoon {FirstName}! Tomorrow is the Lord's day. Join us at PTC Chapel. {ServiceTimes}",
+      'Hi {FirstName}, let us go into the house of the Lord (Ps 122:1)! See you tomorrow at PTC Chapel. {ServiceTimes}',
+      'Hi {FirstName}, invite a friend and come to church with them tomorrow! {ServiceTimes} PTC Chapel',
+      'Hello {FirstName}, your church family is waiting for you tomorrow at PTC Chapel. {ServiceTimes} God bless you!',
+      "Hi {FirstName}, don't miss service tomorrow at PTC Chapel. Come ready to worship! {ServiceTimes}",
+    ],
   },
   {
     key: 'birthday',
@@ -49,8 +69,24 @@ export async function ensureTemplates() {
   await connectDB();
   for (const t of DEFAULT_TEMPLATES) {
     await SmsTemplate.updateOne({ key: t.key }, { $setOnInsert: t }, { upsert: true });
+    // A message that became rotating keeps its wording and gains the extra ones, once.
+    if (t.variants) {
+      await SmsTemplate.updateOne(
+        { key: t.key, variants: { $exists: false } },
+        { $set: { variants: t.variants } },
+      );
+    }
   }
 }
+
+/** All of a message's wordings: the main one first. */
+export const wordings = (template) => [template.body, ...(template.variants ?? [])];
+
+/** The wording a rotating message uses on a Saturday. */
+export const wordingFor = (template, serviceDate) => {
+  const all = wordings(template);
+  return all[wordingIndex(all.length, serviceDate)];
+};
 
 /** Is SMS really going out? Set in the hosting settings, never shown in the app. */
 export function smsStatus() {
@@ -186,19 +222,48 @@ async function serviceTimesAfter(day) {
   return describeServiceTimes(await listServices({ on: addDays(day, 1) }));
 }
 
-/** The scheduled Saturday invite (cron). Safe to run twice. */
+/** Members for the Sunday invite: SMS on, and not already getting the first timers' invite. */
+async function memberInviteRecipients(day) {
+  const same = (x) =>
+    `${x.phone}|${x.firstName.trim().toLowerCase()}|${(x.lastName || '').trim().toLowerCase()}`;
+  const firstTimers = new Set((await inviteRecipients(day)).filter((p) => p.smsConsent).map(same));
+  const members = await Member.find({ active: true, smsOptOut: { $ne: true } }).lean();
+  return members.filter((m) => !firstTimers.has(same(m)));
+}
+
+const SCHEDULED = {
+  saturday_invite: async (day) =>
+    (await inviteRecipients(day)).filter((p) => p.smsConsent).map(personRecipient),
+  member_invite: async (day) => (await memberInviteRecipients(day)).map(memberRecipient),
+};
+
+/** Both Saturday invites (cron, 12 noon): first timers, then members. Each runs even if the other fails. */
+export async function runSaturdayInvites({ today = new Date() } = {}) {
+  const results = {};
+  for (const key of Object.keys(SCHEDULED)) {
+    try {
+      results[key] = await runScheduledSend(key, { today });
+    } catch (err) {
+      logger.error({ err, templateKey: key }, 'Saturday invite failed');
+      results[key] = { error: 'failed' };
+    }
+  }
+  return results;
+}
+
+/** One scheduled Saturday invite, in this week's wording. Safe to run twice. */
 export async function runScheduledSend(templateKey, { today = new Date() } = {}) {
-  if (templateKey !== 'saturday_invite') throw new Error(`No schedule for "${templateKey}"`);
+  if (!SCHEDULED[templateKey]) throw new Error(`No schedule for "${templateKey}"`);
   await ensureTemplates();
   const template = await SmsTemplate.findOne({ key: templateKey }).lean();
   if (!template.enabled) return { templateKey, skipped: true, reason: 'Template turned off' };
 
   const day = toServiceDate(today);
-  const people = (await inviteRecipients(day)).filter((p) => p.smsConsent);
+  const recipients = await SCHEDULED[templateKey](day);
   const run = `${templateKey}:${isoDay(day)}`;
   const result = await deliver({
-    recipients: people.map(personRecipient),
-    text: template.body,
+    recipients,
+    text: wordingFor(template, day),
     run,
     template: templateKey,
     extraTags: { ServiceTimes: await serviceTimesAfter(day) },
@@ -221,15 +286,17 @@ export async function previewInvite(saturday) {
   };
 }
 
-export async function updateTemplate(key, { body, enabled }, user) {
+export async function updateTemplate(key, { body, bodies, enabled }, user) {
   await ensureTemplates();
-  const bad = unknownTags(key, body);
-  if (bad.length) throw new HttpError(400, `This message can't use {${bad[0]}}`);
-  const doc = await SmsTemplate.findOneAndUpdate(
-    { key },
-    { body, enabled, updatedBy: user?.id },
-    { new: true },
-  ).lean();
+  const list = TEMPLATE_INFO[key]?.rotates && bodies?.length ? bodies : [body];
+  if (!list[0]) throw new HttpError(400, 'The message is empty');
+  for (const text of list) {
+    const bad = unknownTags(key, text);
+    if (bad.length) throw new HttpError(400, `This message can't use {${bad[0]}}`);
+  }
+  const update = { body: list[0], enabled, updatedBy: user?.id };
+  if (TEMPLATE_INFO[key]?.rotates) update.variants = list.slice(1);
+  const doc = await SmsTemplate.findOneAndUpdate({ key }, update, { new: true }).lean();
   if (!doc) throw new HttpError(404, 'Template not found');
   return doc;
 }
@@ -374,10 +441,11 @@ export async function getSmsOverview({ today = new Date() } = {}) {
 
   const nextSaturday = addDays(day, (6 - day.getUTCDay() + 7) % 7);
   const order = Object.fromEntries(DEFAULT_TEMPLATES.map((t, i) => [t.key, i]));
-  const [templates, invite, runs] = await Promise.all([
+  const [templates, invite, runs, members] = await Promise.all([
     SmsTemplate.find({ key: { $in: DEFAULT_TEMPLATES.map((t) => t.key) } }).lean(),
     previewInvite(nextSaturday),
     recentRuns(20),
+    memberInviteRecipients(nextSaturday),
   ]);
 
   return {
@@ -386,8 +454,19 @@ export async function getSmsOverview({ today = new Date() } = {}) {
     balance,
     templates: templates
       .sort((a, b) => order[a.key] - order[b.key])
-      .map(({ key, name, body, enabled, updatedAt }) => ({ key, name, body, enabled, updatedAt })),
+      .map((t) => ({
+        key: t.key,
+        name: t.name,
+        body: t.body,
+        bodies: TEMPLATE_INFO[t.key]?.rotates ? wordings(t) : null,
+        nextWording: TEMPLATE_INFO[t.key]?.rotates
+          ? wordingIndex(wordings(t).length, nextSaturday)
+          : null,
+        enabled: t.enabled,
+        updatedAt: t.updatedAt,
+      })),
     invite,
+    memberInvite: { serviceDate: nextSaturday, toSend: members.length },
     runs,
   };
 }

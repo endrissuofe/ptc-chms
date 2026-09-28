@@ -15,7 +15,8 @@ What it does:
   visit; answers show on their page and in the morning email, and "call me" puts them back on the
   follow-up list.
 - **Media team:** birthdays and wedding anniversaries, with a line ready for the socials.
-- **Admins:** SMS (instant thank-you and welcome back, Saturday invite, birthday wishes,
+- **Admins:** SMS (instant thank-you and welcome back, Saturday invites to first timers and
+  members in a different wording each week, birthday wishes,
   broadcasts to members), the member list (CSV import), email alerts and logins.
 - **Joining:** each team has an invite link; people sign up themselves and an admin approves
   them. Everyone manages their own details and emails on My account.

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AUDIENCES } from '../sms/templates';
+import { AUDIENCES, MAX_WORDINGS } from '../sms/templates';
 
 const body = z
   .string()
@@ -7,7 +7,14 @@ const body = z
   .min(1, 'The message is empty')
   .max(459, 'Keep it to 3 pages or fewer');
 
-export const smsTemplateSchema = z.object({ body, enabled: z.boolean() });
+/** One wording, or (Saturday invites) a list of wordings used in turn. */
+export const smsTemplateSchema = z
+  .object({
+    body: body.optional(),
+    bodies: z.array(body).min(1, 'Keep at least one wording').max(MAX_WORDINGS).optional(),
+    enabled: z.boolean(),
+  })
+  .refine((v) => v.body || v.bodies, { message: 'The message is empty', path: ['body'] });
 
 export const broadcastSchema = z.object({
   audience: z.enum(Object.keys(AUDIENCES)),

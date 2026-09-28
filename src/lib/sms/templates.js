@@ -18,11 +18,19 @@ export const TEMPLATE_INFO = {
     tags: ['FirstName', 'LastName', 'ChurchName'],
   },
   saturday_invite: {
-    title: 'Saturday invite',
-    schedule: 'Saturdays at 12 noon',
+    title: 'First timers’ Saturday invite',
+    schedule: 'Saturdays at 12 noon, a different wording each week',
     recipients:
       'First and second timers from the past 4 weeks who agreed to messages and aren’t regulars yet',
     tags: ['FirstName', 'LastName', 'ChurchName', 'ServiceTimes'],
+    rotates: true,
+  },
+  member_invite: {
+    title: 'Members’ Saturday invite',
+    schedule: 'Saturdays at 12 noon, a different wording each week',
+    recipients: 'Everyone on the Members list with SMS on',
+    tags: ['FirstName', 'LastName', 'ChurchName', 'ServiceTimes'],
+    rotates: true,
   },
   birthday: {
     title: 'Birthday',
@@ -58,6 +66,19 @@ export const AUDIENCES = {
 };
 
 export const BROADCAST_TAGS = ['FirstName', 'LastName', 'ChurchName'];
+
+/** How many wordings a rotating message can have. */
+export const MAX_WORDINGS = 12;
+
+/**
+ * Which of a rotating message's wordings a Saturday uses: the next one each week, round and
+ * round, so nobody gets the same text two weeks running (with 2 or more wordings).
+ */
+export function wordingIndex(count, serviceDate) {
+  if (count <= 1) return 0;
+  const week = Math.floor(new Date(serviceDate).getTime() / (7 * 86400000));
+  return week % count;
+}
 
 /** Fills {FirstName}-style tags in a template. Unknown tags are left as-is. */
 export function renderTemplate(template, values) {
