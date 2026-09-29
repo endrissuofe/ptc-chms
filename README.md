@@ -14,8 +14,11 @@ What it does:
 - **One-month check-in:** first timers get an SMS with a short survey a month after their first
   visit; answers show on their page and in the morning email, and "call me" puts them back on the
   follow-up list.
-- **Media team:** birthdays and wedding anniversaries, with a line ready for the socials and a
-  ready-made graphic in the church design (the photo is cut out on the phone, nothing uploaded).
+- **Media team:** birthdays and wedding anniversaries, with a line ready for the socials.
+
+Coming in a later update: ready-made birthday and anniversary graphics in the church design
+(built, switched off in `src/lib/features.js`).
+
 - **Admins:** SMS (instant thank-you and welcome back, Saturday invites to first timers and
   members in a different wording each week, birthday wishes,
   broadcasts to members), the member list (CSV import), email alerts and logins.

@@ -8,6 +8,7 @@ import { telLink, whatsAppLink } from '@/lib/followup';
 import { listCelebrations } from '@/services/celebration.service';
 import CopyButton from './CopyButton';
 import MakeGraphic from './MakeGraphic';
+import { FEATURES } from '@/lib/features';
 
 export const metadata = { title: 'Birthdays' };
 export const dynamic = 'force-dynamic';
@@ -172,7 +173,7 @@ function Celebrant({ person: p, date, today = false }) {
           WhatsApp
         </a>
         <CopyButton text={socialsText(p.kind, p.name)} />
-        <MakeGraphic kind={p.kind} name={p.name} date={date} />
+        {FEATURES.celebrationGraphics && <MakeGraphic kind={p.kind} name={p.name} date={date} />}
       </div>
     </li>
   );
