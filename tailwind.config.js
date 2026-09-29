@@ -24,7 +24,7 @@ const config = {
           strong: v('primary-strong'),
           soft: v('primary-soft'),
           ink: v('primary-ink'),
-          // Solid button fill (indigo with white text in both themes).
+          // Solid button fill (pine with white text in both themes).
           fill: v('primary-fill'),
           'fill-hover': v('primary-fill-hover'),
           'fill-active': v('primary-fill-active'),
@@ -43,7 +43,7 @@ const config = {
         danger: { DEFAULT: v('danger'), soft: v('danger-soft') },
         teal: { DEFAULT: v('teal'), soft: v('teal-soft') },
         violet: { DEFAULT: v('violet'), soft: v('violet-soft') },
-        // Onefold, the product brand (sign-in first; the rest of the app moves over later).
+        // Onefold, the product brand: the sign-in sky, the page light and the action colour.
         of: {
           night: v('of-night'),
           'night-2': v('of-night-2'),
