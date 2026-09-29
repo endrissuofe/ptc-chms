@@ -116,6 +116,15 @@ export async function getDashboard({ today = new Date() } = {}) {
       newPrayer,
       readyToMove,
     },
+    // The first few people waiting for a call (longest-waiting first), for the dashboard.
+    toCall: followUps.toCall.slice(0, 5).map((p) => ({
+      id: p.id,
+      name: `${p.firstName} ${p.lastName}`,
+      stage: p.stage,
+      days: p.days,
+      overdue: p.overdue,
+      askedForCall: Boolean(p.askedForCall),
+    })),
     callsThisWeek,
     celebrationsToday: celebrants.map((c) => ({
       kind: c.kind,

@@ -49,7 +49,7 @@ function matches(p, q) {
     .every((w) => name.includes(w));
 }
 
-/** The follow-up team's shared list, with Call and WhatsApp buttons on every person. */
+/** The follow-up team's shared list, with Call and WhatsApp on every person. */
 export default function FollowUpList({ lists }) {
   const [tab, setTab] = useState('to_call');
   const [q, setQ] = useState('');
@@ -63,17 +63,17 @@ export default function FollowUpList({ lists }) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div role="group" aria-label="Show" className="seg-tabs self-start">
+        <div role="group" aria-label="Show" className="of-tabs self-start">
           {TABS.map((t) => (
             <button
               key={t.key}
               type="button"
               aria-pressed={tab === t.key}
               onClick={() => setTab(t.key)}
-              className="seg-tab"
+              className="of-tab"
             >
               {t.label}
-              <span className="seg-count">{lists[t.key].length}</span>
+              <span className="of-count">{lists[t.key].length}</span>
             </button>
           ))}
         </div>
@@ -82,7 +82,7 @@ export default function FollowUpList({ lists }) {
           <Icon
             name="search"
             size={20}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
           />
           <input
             type="search"
@@ -90,7 +90,7 @@ export default function FollowUpList({ lists }) {
             onChange={(e) => setQ(e.target.value)}
             enterKeyHint="search"
             placeholder="Search by name or phone"
-            className="input pl-11"
+            className="input rounded-full pl-11 focus:border-of-accent focus:ring-of-accent/30"
           />
         </label>
       </div>
@@ -102,7 +102,7 @@ export default function FollowUpList({ lists }) {
             icon="person_search"
             title={`Nobody matches “${q}”`}
             action={
-              <button type="button" onClick={() => setQ('')} className="btn btn-soft btn-sm">
+              <button type="button" onClick={() => setQ('')} className="of-btn-quiet">
                 Clear search
               </button>
             }
@@ -113,9 +113,9 @@ export default function FollowUpList({ lists }) {
           </EmptyState>
         )
       ) : (
-        <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <ul className="of-panel divide-y divide-line overflow-hidden">
           {shown.map((p) => (
-            <PersonCard key={p.id} person={p} />
+            <PersonRow key={p.id} person={p} />
           ))}
         </ul>
       )}
@@ -142,7 +142,7 @@ function Status({ person: p }) {
   }
   const outcome = p.tried && OUTCOMES[p.lastOutcome];
   return (
-    <span className="flex flex-wrap gap-1.5">
+    <>
       {p.askedForCall && (
         <span className={`chip ${p.overdue ? 'chip-danger' : 'chip-coral'}`}>
           <Icon name="forum" size={14} />
@@ -161,28 +161,29 @@ function Status({ person: p }) {
           {outcome.label} · {formatMoment(p.lastAttemptAt)}
         </span>
       )}
-    </span>
+    </>
   );
 }
 
-function PersonCard({ person: p }) {
+function PersonRow({ person: p }) {
   const name = `${p.firstName} ${p.lastName}`;
   return (
-    <li className="card card-compact flex min-w-0 flex-col gap-4">
-      <div className="flex items-start gap-3">
+    <li className="flex flex-col gap-3 p-4 sm:p-5 md:flex-row md:items-center md:gap-5">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
         <Avatar name={name} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link
-              href={`/newcomers/${p.id}`}
-              className="inline-flex min-h-[44px] min-w-0 items-center break-words font-display text-lg font-black hover:text-primary"
+              href={`/newcomers/${p.id}#log`}
+              className="inline-flex min-h-[32px] min-w-0 items-center break-words font-brand text-lg font-semibold leading-tight hover:text-of-accent-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40"
             >
               {name}
             </Link>
             <StageBadge stage={p.stage} />
           </div>
           <p className="mt-0.5 text-meta text-muted">
-            {formatPhone(p.phone)} · First came {formatServiceDay(p.firstVisitDate)}
+            <span className="tabular-nums">{formatPhone(p.phone)}</span> · First came{' '}
+            {formatServiceDay(p.firstVisitDate)}
             {p.visitCount > 1 && ` · ${plural(p.visitCount, 'visit')}`}
           </p>
           {p.address && (
@@ -191,41 +192,35 @@ function PersonCard({ person: p }) {
               {p.address}
             </p>
           )}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <Status person={p} />
+            {p.cardUnclear && (
+              <span className="chip chip-warning">
+                <Icon name="flag" size={14} />
+                Card hard to read
+              </span>
+            )}
+          </div>
         </div>
-        <Link
-          href={`/newcomers/${p.id}#log`}
-          className="icon-btn -mr-2 -mt-1"
-          aria-label={`Open ${name}`}
-          title="Open profile and log a call"
-        >
-          <Icon name="arrow_forward" size={20} />
-        </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Status person={p} />
-        {p.cardUnclear && (
-          <span className="chip chip-warning">
-            <Icon name="flag" size={14} />
-            Card hard to read
-          </span>
-        )}
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <a href={telLink(p.phone)} className="btn btn-coral px-3">
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2 md:flex md:shrink-0">
+        <a href={telLink(p.phone)} className="of-btn px-4">
           <Icon name="call" size={18} />
           Call
         </a>
-        <a
-          href={whatsAppLink(p.phone)}
-          target="_blank"
-          rel="noreferrer"
-          className="btn btn-soft px-3"
-        >
+        <a href={whatsAppLink(p.phone)} target="_blank" rel="noreferrer" className="of-btn-quiet">
           <Icon name="chat" size={18} />
           WhatsApp
         </a>
+        <Link
+          href={`/newcomers/${p.id}#log`}
+          className="of-btn-quiet w-11 px-0"
+          aria-label={`Open ${name} and log a call`}
+          title="Open and log a call"
+        >
+          <Icon name="chevron_right" size={20} />
+        </Link>
       </div>
     </li>
   );

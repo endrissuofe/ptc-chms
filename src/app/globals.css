@@ -24,6 +24,10 @@
     --of-accent: 20 98 78;
     --of-accent-soft: 223 240 233;
     --of-accent-ink: 14 74 58;
+    --of-on-accent: 255 255 255;
+    /* The warm highlight inside the app (celebrations, the latest point on a chart). */
+    --of-sun: 176 108 30;
+    --of-sun-soft: 252 240 220;
   }
   :root {
     --primary: 79 70 229;
@@ -76,6 +80,9 @@
     --of-accent: 96 200 162;
     --of-accent-soft: 22 50 42;
     --of-accent-ink: 158 226 198;
+    --of-on-accent: 9 18 16;
+    --of-sun: 240 186 110;
+    --of-sun-soft: 56 42 20;
     --primary: 143 136 255;
     --primary-strong: 168 162 255;
     --primary-soft: 44 41 86;
@@ -126,6 +133,9 @@
       --of-accent: 96 200 162;
       --of-accent-soft: 22 50 42;
       --of-accent-ink: 158 226 198;
+      --of-on-accent: 9 18 16;
+      --of-sun: 240 186 110;
+      --of-sun-soft: 56 42 20;
       --primary: 143 136 255;
       --primary-strong: 168 162 255;
       --primary-soft: 44 41 86;
@@ -606,5 +616,52 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+}
+
+/*
+ * Onefold pages (Dashboard and Follow-up so far). Quiet panels with hairline borders, the
+ * Onefold heading face, one pine action per area. Other screens keep the Homeroom classes.
+ */
+@layer components {
+  .of-eyebrow {
+    @apply font-ui text-2xs font-semibold uppercase tracking-[0.1em] text-muted;
+  }
+  .of-h1 {
+    @apply text-balance font-brand font-bold leading-[1.1] tracking-[-0.02em];
+    font-size: clamp(1.9rem, 1.45rem + 1.5vw, 2.6rem);
+  }
+  .of-h2 {
+    @apply font-brand text-xl font-semibold leading-tight tracking-[-0.01em];
+  }
+  .of-panel {
+    @apply rounded-[1.5rem] border border-line bg-surface;
+  }
+  .of-figure {
+    @apply font-brand font-bold tabular-nums leading-none tracking-[-0.02em];
+  }
+  .of-btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-of-accent px-5 font-ui text-sm font-semibold text-of-on-accent transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40 active:scale-[.98];
+  }
+  .of-btn-quiet {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-surface-2 px-4 font-ui text-sm font-semibold text-ink-2 transition hover:bg-surface-3 hover:text-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40;
+  }
+  .of-link {
+    @apply inline-flex min-h-[44px] items-center gap-1 font-ui text-sm font-semibold text-of-accent-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40;
+  }
+  .of-tabs {
+    @apply inline-flex gap-1 rounded-full border border-line bg-surface p-1;
+  }
+  .of-tab {
+    @apply inline-flex min-h-[38px] items-center gap-2 rounded-full px-3.5 font-ui text-sm font-semibold text-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40;
+  }
+  .of-tab[aria-pressed='true'] {
+    @apply bg-of-accent-soft text-of-accent-ink;
+  }
+  .of-count {
+    @apply rounded-full bg-surface-2 px-1.5 text-2xs tabular-nums;
+  }
+  .of-tab[aria-pressed='true'] .of-count {
+    @apply bg-surface text-of-accent-ink;
   }
 }

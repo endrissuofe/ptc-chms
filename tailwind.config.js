@@ -54,6 +54,9 @@ const config = {
           accent: v('of-accent'),
           'accent-soft': v('of-accent-soft'),
           'accent-ink': v('of-accent-ink'),
+          'on-accent': v('of-on-accent'),
+          sun: v('of-sun'),
+          'sun-soft': v('of-sun-soft'),
         },
       },
       fontFamily: {

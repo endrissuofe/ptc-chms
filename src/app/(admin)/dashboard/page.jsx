@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
 import EmptyState from '@/components/ui/EmptyState';
-import StatCard from '@/components/ui/StatCard';
 import { formatServiceDay } from '@/lib/format';
 import { getCurrentUser } from '@/lib/auth';
 import { ROLES } from '@/lib/roles';
+import { STAGE_LABELS } from '@/lib/stages';
 import { getDashboard } from '@/services/dashboard.service';
 import { countPending } from '@/services/user.service';
 import { checkInSummary } from '@/services/checkin.service';
@@ -13,9 +13,22 @@ export const metadata = { title: 'Dashboard' };
 export const dynamic = 'force-dynamic';
 
 // One colour per service in the chart, in the order services are listed.
-const SERVICE_COLOURS = ['bg-primary', 'bg-coral', 'bg-teal', 'bg-violet', 'bg-warning'];
+const SERVICE_COLOURS = ['bg-of-accent', 'bg-of-sun', 'bg-teal', 'bg-violet', 'bg-warning'];
 
 const monthName = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', month: 'long' });
+const lagosHour = () =>
+  Number(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Africa/Lagos',
+      hour: 'numeric',
+      hour12: false,
+    }).format(new Date()),
+  );
+const greeting = () => {
+  const h = lagosHour();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+};
+const signed = (n) => `${n >= 0 ? '+' : ''}${n}`;
 
 export default async function DashboardPage() {
   const me = await getCurrentUser();
@@ -31,89 +44,39 @@ export default async function DashboardPage() {
   const sundayChange =
     d.lastSunday && d.previousSunday ? d.lastSunday.total - d.previousSunday.total : null;
   const monthChange = d.firstTimersThisMonth - d.firstTimersLastMonth;
+  const firstName = (me?.name || '').split(' ')[0];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="page-head">
-        <div>
-          <p className="eyebrow">
-            <Icon name="home" size={16} />
-            Overview
-          </p>
-          <h1 className="page-title">Dashboard</h1>
+    <div className="flex flex-col gap-6 font-ui lg:gap-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <p className="of-eyebrow">Dashboard</p>
+          <h1 className="of-h1">
+            {greeting()}
+            {firstName ? `, ${firstName}` : ''}
+          </h1>
         </div>
-      </div>
+        <Link href="/newcomers/new" className="of-btn">
+          <Icon name="person_add" size={18} />
+          Enter a card
+        </Link>
+      </header>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        <StatCard
-          icon="groups"
-          tone="tone-primary"
-          label="Last Sunday"
-          value={d.lastSunday ? d.lastSunday.total : '—'}
-          sub={
-            d.lastSunday
-              ? `${formatServiceDay(d.lastSunday.serviceDate)}${
-                  sundayChange == null
-                    ? ''
-                    : ` · ${sundayChange >= 0 ? '+' : ''}${sundayChange} on the week before`
-                }`
-              : 'No count recorded yet'
-          }
-        />
-        <StatCard
-          icon="person_add"
-          tone="tone-coral"
-          label={`First timers in ${monthName.format(new Date())}`}
-          value={d.firstTimersThisMonth}
-          sub={`${monthChange >= 0 ? '+' : ''}${monthChange} on last month (${d.firstTimersLastMonth})`}
-        />
-        <StatCard
-          icon="repeat"
-          tone="tone-teal"
-          label="Came back"
-          value={d.secondVisitRate == null ? '—' : `${d.secondVisitRate}%`}
-          sub="Of first timers visited again"
-        />
-        <StatCard
-          icon="how_to_reg"
-          tone="tone-success"
-          label="Became members"
-          value={d.funnel.joined}
-          sub={
-            d.movedThisMonth
-              ? `${d.movedThisMonth} moved to Members this month`
-              : 'First timers who joined'
-          }
-        />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start lg:gap-5">
+        <ToCall people={d.toCall} n={d.needsAttention} />
+        <LastSunday d={d} change={sundayChange} />
       </div>
-
-      {checkIns.sent > 0 && (
-        <section className="card card-compact flex flex-wrap items-center gap-3">
-          <span className="icon-tile tone-coral h-11 w-11">
-            <Icon name="reviews" size={22} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-display text-lg font-black">
-              One-month check-in:{' '}
-              {checkIns.average == null ? 'no answers yet' : `${checkIns.average} out of 5`}
-            </span>
-            <span className="block text-meta text-muted">
-              {checkIns.answered} of {checkIns.sent} first timers answered in the last 90 days
-            </span>
-          </span>
-        </section>
-      )}
 
       {d.celebrationsToday.length > 0 && (
         <Link
           href="/birthdays"
-          className="card card-compact flex flex-wrap items-center gap-3 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary"
+          className="flex flex-wrap items-center gap-4 rounded-[1.5rem] bg-of-sun-soft px-5 py-4 transition hover:brightness-[.98] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40"
         >
-          <span className="icon-tile tone-coral h-11 w-11">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface text-of-sun">
             <Icon name="celebration" size={22} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-display text-lg font-black">
+            <span className="block font-brand text-lg font-semibold leading-snug">
               Today we celebrate{' '}
               {d.celebrationsToday
                 .slice(0, 3)
@@ -121,31 +84,62 @@ export default async function DashboardPage() {
                 .join(', ')}
               {d.celebrationsToday.length > 3 && ` and ${d.celebrationsToday.length - 3} more`}
             </span>
-            <span className="block text-meta text-muted">
+            <span className="block text-meta text-ink-2">
               Birthdays and anniversaries · wish them and post on the church’s socials
             </span>
           </span>
-          <span className="inline-flex items-center gap-1 text-sm font-bold text-primary">
+          <span className="of-link">
             Birthdays
             <Icon name="arrow_forward" size={16} />
           </span>
         </Link>
       )}
 
-      <NeedsAttention n={{ ...d.needsAttention, signups }} />
+      <OtherTasks n={{ ...d.needsAttention, signups }} />
 
-      <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
-        <section className="card flex min-w-0 flex-col gap-4 lg:col-span-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <section aria-label="This month" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Figure
+          value={d.firstTimersThisMonth}
+          label={`First timers in ${monthName.format(new Date())}`}
+          sub={`${signed(monthChange)} on last month (${d.firstTimersLastMonth})`}
+        />
+        <Figure
+          value={d.secondVisitRate == null ? '—' : `${d.secondVisitRate}%`}
+          label="Came back"
+          sub="Of first timers who visited again"
+        />
+        <Figure
+          value={d.funnel.joined}
+          label="Became members"
+          sub={
+            d.movedThisMonth
+              ? `${d.movedThisMonth} moved to Members this month`
+              : 'First timers who joined'
+          }
+        />
+        <Figure
+          value={checkIns.average == null ? '—' : checkIns.average}
+          label="One-month check-in"
+          sub={
+            checkIns.sent
+              ? `Out of 5 · ${checkIns.answered} of ${checkIns.sent} answered (90 days)`
+              : 'Asked a month after a first visit'
+          }
+        />
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-5 lg:gap-5">
+        <section className="of-panel flex min-w-0 flex-col gap-5 p-5 sm:p-6 lg:col-span-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div>
-              <h2 className="card-title">Attendance</h2>
-              <p className="card-sub">Every service day in the last 8 weeks</p>
+              <h2 className="of-h2">Attendance</h2>
+              <p className="text-meta text-muted">Every service day in the last 8 weeks</p>
             </div>
             <div className="flex flex-wrap gap-3">
               {d.services
                 .filter((s) => d.trend.some((t) => t.byService[s.key]))
                 .map((s) => (
-                  <span key={s.key} className="flex items-center gap-1.5 text-meta font-bold">
+                  <span key={s.key} className="flex items-center gap-1.5 text-meta font-medium">
                     <span className={`h-2.5 w-2.5 rounded-full ${colour[s.key]}`} />
                     {s.name}
                   </span>
@@ -155,10 +149,10 @@ export default async function DashboardPage() {
           <AttendanceChart trend={d.trend} colour={colour} />
         </section>
 
-        <section className="card flex min-w-0 flex-col gap-4 lg:col-span-2">
+        <section className="of-panel flex min-w-0 flex-col gap-5 p-5 sm:p-6 lg:col-span-2">
           <div>
-            <h2 className="card-title">First-timer journey</h2>
-            <p className="card-sub">Everyone who has filled a card, and how far they’ve come</p>
+            <h2 className="of-h2">First-timer journey</h2>
+            <p className="text-meta text-muted">Everyone who has filled a card</p>
           </div>
           <Funnel f={d.funnel} />
         </section>
@@ -173,88 +167,205 @@ export default async function DashboardPage() {
   );
 }
 
-function NeedsAttention({ n }) {
+/** The main job: who is waiting for a call, longest first. */
+function ToCall({ people, n }) {
+  if (!n.toCall) {
+    return (
+      <section className="of-panel flex flex-col items-start justify-center gap-3 p-6">
+        <span className="grid h-11 w-11 place-items-center rounded-full bg-of-accent-soft text-of-accent-ink">
+          <Icon name="task_alt" size={22} />
+        </span>
+        <h2 className="of-h2">Everyone has been called</h2>
+        <p className="text-meta text-muted">
+          New first timers appear here as soon as the ushers enter their cards.
+        </p>
+      </section>
+    );
+  }
+  return (
+    <section className="of-panel flex min-w-0 flex-col p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="of-h2">
+          {n.toCall === 1 ? '1 person to call' : `${n.toCall} people to call`}
+        </h2>
+        {n.overdue > 0 && (
+          <span className="chip chip-danger">
+            <Icon name="alarm" size={14} />
+            {n.overdue} over 3 days
+          </span>
+        )}
+      </div>
+      <ul className="mt-3 divide-y divide-line">
+        {people.map((p) => (
+          <li key={p.id}>
+            <Link
+              href={`/newcomers/${p.id}#log`}
+              className="-mx-2 flex min-h-[56px] items-center gap-3 rounded-tile px-2 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold">{p.name}</span>
+                <span className="block text-meta text-muted">
+                  {p.askedForCall ? 'Asked for a call' : STAGE_LABELS[p.stage] || p.stage}
+                </span>
+              </span>
+              <span
+                className={`text-meta tabular-nums ${p.overdue ? 'font-semibold text-danger' : 'text-muted'}`}
+              >
+                {p.days === 0 ? 'Today' : p.days === 1 ? '1 day' : `${p.days} days`}
+              </span>
+              <Icon name="chevron_right" size={20} className="text-muted" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link href="/my-newcomers" className="of-link mt-2 self-start">
+        {n.toCall > people.length ? `See all ${n.toCall}` : 'Open the follow-up list'}
+        <Icon name="arrow_forward" size={16} />
+      </Link>
+    </section>
+  );
+}
+
+/** Last Sunday's count, the change on the week before, and a small line of recent Sundays. */
+function LastSunday({ d, change }) {
+  const sundays = d.trend.filter((t) => new Date(t.serviceDate).getUTCDay() === 0);
+  return (
+    <section className="of-panel flex min-w-0 flex-col gap-3 p-5 sm:p-6">
+      <p className="of-eyebrow">Last Sunday</p>
+      {d.lastSunday ? (
+        <>
+          <div className="flex items-end justify-between gap-4">
+            <p className="of-figure text-[3.25rem]">{d.lastSunday.total}</p>
+            <Sparkline values={sundays.map((t) => t.total)} />
+          </div>
+          <p className="text-meta text-muted">
+            {formatServiceDay(d.lastSunday.serviceDate)}
+            {change != null && (
+              <>
+                {' · '}
+                <span
+                  className={`font-semibold ${change >= 0 ? 'text-of-accent-ink' : 'text-danger'}`}
+                >
+                  {signed(change)}
+                </span>{' '}
+                on the week before
+              </>
+            )}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="of-figure text-[3.25rem] text-muted">—</p>
+          <p className="text-meta text-muted">No count recorded yet.</p>
+          <Link href="/attendance" className="of-link self-start">
+            Record attendance
+            <Icon name="arrow_forward" size={16} />
+          </Link>
+        </>
+      )}
+    </section>
+  );
+}
+
+function Sparkline({ values }) {
+  if (values.length < 2) return null;
+  const w = 160;
+  const h = 52;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const pts = values.map((v, i) => [
+    4 + (i * (w - 8)) / (values.length - 1),
+    h - 6 - ((v - min) / span) * (h - 12),
+  ]);
+  const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const [lx, ly] = pts.at(-1);
+  return (
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      className="h-[52px] w-40 max-w-[45%] shrink-0"
+      role="img"
+      aria-label={`Sundays: ${values.join(', ')}`}
+    >
+      <path d={`${line} L${lx},${h} L4,${h} Z`} fill="rgb(var(--of-accent) / 0.12)" />
+      <path
+        d={line}
+        fill="none"
+        stroke="rgb(var(--of-accent))"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx={lx}
+        cy={ly}
+        r="4"
+        fill="rgb(var(--of-sun))"
+        stroke="rgb(var(--surface))"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function Figure({ value, label, sub }) {
+  return (
+    <div className="of-panel flex min-w-0 flex-col gap-1.5 p-5">
+      <p className="of-figure text-[2rem]">{value}</p>
+      <p className="font-semibold">{label}</p>
+      <p className="text-meta text-muted">{sub}</p>
+    </div>
+  );
+}
+
+/** Everything else that needs someone: sign-ups, prayer, unclear cards, ready for Members. */
+function OtherTasks({ n }) {
   const items = [
     n.signups > 0 && {
       href: '/users',
       icon: 'how_to_reg',
-      tone: 'tone-teal',
       title: n.signups === 1 ? '1 sign-up waiting' : `${n.signups} sign-ups waiting`,
       sub: 'People who used a team invite link',
-      action: 'Logins',
-    },
-    // Everyone still waiting for a call, not only those past 3 days.
-    n.toCall > 0 && {
-      href: '/my-newcomers',
-      icon: n.overdue > 0 ? 'alarm' : 'call',
-      tone: n.overdue > 0 ? 'tone-danger' : 'tone-primary',
-      title: n.toCall === 1 ? '1 person to call' : `${n.toCall} people to call`,
-      sub:
-        n.overdue > 0
-          ? `${n.overdue} waiting over 3 days since their visit`
-          : 'Visited in the last 3 days',
-      action: 'Follow-up list',
     },
     n.newPrayer > 0 && {
       href: '/prayer-requests',
       icon: 'volunteer_activism',
-      tone: 'tone-violet',
       title: n.newPrayer === 1 ? '1 new prayer request' : `${n.newPrayer} new prayer requests`,
       sub: 'Not yet prayed for',
-      action: 'Prayer requests',
     },
     n.unclear > 0 && {
       href: '/first-timers?view=unclear',
       icon: 'flag',
-      tone: 'tone-warning',
       title: n.unclear === 1 ? '1 card hard to read' : `${n.unclear} cards hard to read`,
       sub: 'Check the paper card and correct the details',
-      action: 'Review',
     },
     n.readyToMove > 0 && {
       href: '/first-timers',
       icon: 'group_add',
-      tone: 'tone-success',
       title:
         n.readyToMove === 1
           ? '1 person ready for Members'
           : `${n.readyToMove} people ready for Members`,
       sub: 'First came over a month ago',
-      action: 'Review',
     },
   ].filter(Boolean);
-
-  if (!items.length) {
-    return (
-      <p className="alert alert-success">
-        <Icon name="task_alt" size={19} />
-        All caught up: everyone has been called and nothing needs attention.
-      </p>
-    );
-  }
+  if (!items.length) return null;
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="section-title">Needs attention</h2>
-      <ul className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,16rem),1fr))]">
+    <section className="of-panel p-2 sm:p-3" aria-label="Also needs attention">
+      <ul className="grid gap-1 sm:grid-cols-2">
         {items.map((i) => (
           <li key={i.href + i.icon}>
             <Link
               href={i.href}
-              className="card card-compact flex h-full flex-col gap-3 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary"
+              className="flex min-h-[56px] items-center gap-3 rounded-tile px-3 py-2 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40"
             >
-              <span className={`icon-tile h-10 w-10 ${i.tone}`}>
-                <Icon name={i.icon} size={20} />
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-of-accent-soft text-of-accent-ink">
+                <Icon name={i.icon} size={18} />
               </span>
-              <span className="flex-1">
-                <span className="block font-display text-lg font-black leading-snug">
-                  {i.title}
-                </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">{i.title}</span>
                 <span className="block text-meta text-muted">{i.sub}</span>
               </span>
-              <span className="inline-flex items-center gap-1 text-sm font-bold text-primary">
-                {i.action}
-                <Icon name="arrow_forward" size={16} />
-              </span>
+              <Icon name="chevron_right" size={20} className="text-muted" />
             </Link>
           </li>
         ))}
@@ -279,7 +390,7 @@ function AttendanceChart({ trend, colour }) {
   const max = Math.max(...trend.map((t) => t.total), 1);
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex h-56 items-end gap-1.5 sm:gap-2.5" role="list" aria-label="Attendance">
+      <div className="flex h-52 items-end gap-1.5 sm:gap-2.5" role="list" aria-label="Attendance">
         {trend.map((t) => (
           <div
             key={String(t.serviceDate)}
@@ -287,9 +398,9 @@ function AttendanceChart({ trend, colour }) {
             aria-label={`${formatServiceDay(t.serviceDate)}: ${t.total}`}
             className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
           >
-            <span className="text-2xs font-bold tabular-nums text-ink-2">{t.total}</span>
+            <span className="text-2xs font-semibold tabular-nums text-ink-2">{t.total}</span>
             <div
-              className="flex w-full max-w-[44px] flex-col-reverse overflow-hidden rounded-t-control"
+              className="flex w-full max-w-[40px] flex-col-reverse overflow-hidden rounded-t-[10px]"
               style={{ height: `${Math.max((t.total / max) * 100, 2)}%` }}
             >
               {Object.entries(t.byService).map(([key, n]) => (
@@ -304,7 +415,7 @@ function AttendanceChart({ trend, colour }) {
           </div>
         ))}
       </div>
-      <div className="flex gap-1.5 sm:gap-2.5">
+      <div className="flex gap-1.5 border-t border-line pt-2 sm:gap-2.5">
         {trend.map((t, i) => (
           <span
             key={String(t.serviceDate)}
@@ -322,11 +433,11 @@ function AttendanceChart({ trend, colour }) {
 
 function Funnel({ f }) {
   const steps = [
-    { label: 'Filled a card', n: f.received, bar: 'bg-coral' },
-    { label: 'Came back', n: f.cameBack, bar: 'bg-primary' },
-    { label: 'Regular (3+ visits)', n: f.regular, bar: 'bg-teal' },
-    { label: 'Believers’ Class', n: f.believersClass, bar: 'bg-violet' },
-    { label: 'Became members', n: f.joined, bar: 'bg-success' },
+    { label: 'Filled a card', n: f.received },
+    { label: 'Came back', n: f.cameBack },
+    { label: 'Regular (3+ visits)', n: f.regular },
+    { label: 'Believers’ Class', n: f.believersClass },
+    { label: 'Became members', n: f.joined },
   ];
   if (!f.received) {
     return (
@@ -338,22 +449,26 @@ function Funnel({ f }) {
     );
   }
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className="flex flex-col gap-3.5">
       {steps.map((s, i) => {
         const pct = Math.round((s.n / f.received) * 100);
         return (
           <li key={s.label} className="flex flex-col gap-1.5">
             <span className="flex items-baseline justify-between gap-2 text-sm">
-              <span className="font-bold">
-                <span className="mr-2 text-muted">{i + 1}</span>
+              <span className="font-medium">
+                <span className="mr-2 tabular-nums text-muted">{i + 1}</span>
                 {s.label}
               </span>
               <span className="tabular-nums">
-                <strong>{s.n}</strong> <span className="text-muted">· {pct}%</span>
+                <strong className="font-semibold">{s.n}</strong>{' '}
+                <span className="text-muted">· {pct}%</span>
               </span>
             </span>
-            <span className="h-2 overflow-hidden rounded-full bg-surface-2">
-              <span className={`block h-full rounded-full ${s.bar}`} style={{ width: `${pct}%` }} />
+            <span className="h-1.5 overflow-hidden rounded-full bg-surface-2">
+              <span
+                className="block h-full rounded-full bg-of-accent"
+                style={{ width: `${pct}%`, opacity: 1 - i * 0.12 }}
+              />
             </span>
           </li>
         );

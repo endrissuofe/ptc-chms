@@ -145,6 +145,7 @@ export const ICON_NAMES = [
   'photo_camera',
   'person_remove',
   'star',
+  'chevron_right',
   'reviews',
   'share',
 ];
