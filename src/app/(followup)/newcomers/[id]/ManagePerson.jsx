@@ -63,11 +63,11 @@ export default function ManagePerson({ person }) {
   }
 
   return (
-    <section className="card flex flex-col gap-4">
-      <h2 className="card-title flex items-center gap-2">
-        <Icon name="shield_person" size={22} className="text-primary" />
-        Pastors and admins
-      </h2>
+    <section className="of-panel flex flex-col gap-4 p-5 sm:p-6">
+      <div>
+        <h2 className="of-h2">Pastors and admins</h2>
+        <p className="text-meta text-muted">Milestones and corrections</p>
+      </div>
 
       <div className="flex flex-col gap-2">
         <Toggle
@@ -99,7 +99,7 @@ export default function ManagePerson({ person }) {
           type="button"
           onClick={move}
           aria-disabled={state.kind === 'busy'}
-          className="btn btn-soft self-start"
+          className="of-btn-quiet self-start"
         >
           <Busy
             busy={state.kind === 'busy'}
@@ -136,7 +136,7 @@ export default function ManagePerson({ person }) {
               setEditing(true);
               setState({ kind: 'idle' });
             }}
-            className="btn btn-ghost btn-sm"
+            className="of-link"
           >
             <Icon name="edit_note" size={17} />
             Correct details

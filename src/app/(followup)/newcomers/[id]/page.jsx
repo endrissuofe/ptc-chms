@@ -62,78 +62,83 @@ export default async function NewcomerPage({ params }) {
   ].sort((a, b) => new Date(b.at) - new Date(a.at));
 
   return (
-    <div className="flex flex-col gap-5 lg:gap-6">
+    <div className="flex flex-col gap-6 font-ui lg:gap-7">
       <Link
         href={canManage ? '/first-timers' : '/my-newcomers'}
-        className="tap-link self-start text-sm"
+        className="of-link -my-2 self-start text-muted hover:text-ink"
       >
         <Icon name="arrow_back" size={18} />
         {canManage ? 'First timers' : 'Follow-up list'}
       </Link>
 
-      <section className="card flex flex-col gap-5">
-        <div className="flex items-start gap-4">
-          <Avatar name={name} size="lg" />
-          <div className="min-w-0 flex-1">
-            <h1 className="page-title break-words">{name}</h1>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              <StageBadge stage={person.stage} />
-              {person.movedToMembersAt && (
-                <span className="chip chip-success">
-                  <Icon name="how_to_reg" size={14} />
-                  In Members since {formatServiceDate(person.movedToMembersAt)}
-                </span>
-              )}
-              {person.cardUnclear && (
-                <span className="chip chip-warning">
-                  <Icon name="flag" size={14} />
-                  Card hard to read
-                </span>
-              )}
+      <header className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <Avatar name={name} size="lg" />
+            <div className="min-w-0">
+              <h1 className="of-h1 break-words">{name}</h1>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <StageBadge stage={person.stage} />
+                {person.movedToMembersAt && (
+                  <span className="chip chip-success">
+                    <Icon name="how_to_reg" size={14} />
+                    In Members since {formatServiceDate(person.movedToMembersAt)}
+                  </span>
+                )}
+                {person.cardUnclear && (
+                  <span className="chip chip-warning">
+                    <Icon name="flag" size={14} />
+                    Card hard to read
+                  </span>
+                )}
+              </div>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:flex md:shrink-0">
+            <a href={telLink(person.phone)} className="of-btn px-6">
+              <Icon name="call" size={18} />
+              Call
+            </a>
+            <a
+              href={whatsAppLink(person.phone)}
+              target="_blank"
+              rel="noreferrer"
+              className="of-btn-quiet px-5"
+            >
+              <Icon name="chat" size={18} />
+              WhatsApp
+            </a>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:max-w-md">
-          <a href={telLink(person.phone)} className="btn btn-coral">
-            <Icon name="call" size={18} />
-            Call
-          </a>
-          <a
-            href={whatsAppLink(person.phone)}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-soft"
-          >
-            <Icon name="chat" size={18} />
-            WhatsApp
-          </a>
-        </div>
-
-        <dl className="grid gap-x-6 gap-y-3 rounded-tile bg-surface-2 p-4 sm:grid-cols-2">
-          <Detail icon="smartphone" label="Phone" value={formatPhone(person.phone)} />
-          <Detail icon="home" label="Address" value={person.address || '—'} />
+        <dl className="grid gap-px overflow-hidden rounded-[1.5rem] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          <Detail icon="smartphone" label="Phone" value={formatPhone(person.phone)} numeric />
+          <Detail
+            icon="home"
+            label="Address"
+            value={person.address || '—'}
+            className="lg:col-span-2 2xl:col-span-1"
+          />
           <Detail icon="mail" label="Email" value={person.email || '—'} />
           <Detail icon="cake" label="Birthday" value={birthday || '—'} />
           <Detail
             icon="sms"
-            label="SMS"
-            value={person.smsConsent ? 'Agreed to messages' : 'No messages'}
+            label="Messages"
+            className="sm:max-lg:col-span-2"
+            value={person.smsConsent ? 'Agreed to SMS' : 'No SMS'}
           />
         </dl>
-      </section>
+      </header>
 
-      <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] lg:gap-6">
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
-          <Journey stage={person.stage} />
-          {checkIn?.answeredAt && <CheckInAnswer checkIn={checkIn} />}
           <LogCall
             personId={String(person._id)}
             firstName={person.firstName}
             callerName={me?.personal ? me.name : null}
           />
-          <section className="card flex flex-col gap-4">
-            <h2 className="card-title">History</h2>
+          <section className="of-panel flex flex-col gap-4 p-5 sm:p-6">
+            <h2 className="of-h2">History</h2>
             {history.length === 0 ? (
               <EmptyState icon="history_toggle_off" title="No calls or messages yet">
                 Log the first call above.
@@ -149,25 +154,28 @@ export default async function NewcomerPage({ params }) {
         </div>
 
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
-          <section className="card flex flex-col gap-3">
+          <Journey stage={person.stage} />
+          {checkIn?.answeredAt && <CheckInAnswer checkIn={checkIn} />}
+
+          <section className="of-panel flex flex-col gap-3 p-5 sm:p-6">
             <div className="flex items-baseline justify-between gap-2">
-              <h2 className="card-title">Visits</h2>
-              <span className="label-caps">{visits.length} in total</span>
+              <h2 className="of-h2">Visits</h2>
+              <span className="of-eyebrow">{visits.length} in total</span>
             </div>
-            <ul className="flex flex-col gap-2">
+            <ol className="flex flex-col divide-y divide-line">
               {visits.map((v, i) => (
                 <li
                   key={String(v._id)}
-                  className="flex items-center gap-3 rounded-tile bg-surface-2 px-4 py-3"
+                  className="flex items-center gap-3 py-3 first:pt-1 last:pb-0"
                 >
-                  <span className="icon-tile tone-primary h-9 w-9">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-of-accent-soft text-of-accent-ink">
                     <Icon name="church" size={18} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold">{formatServiceDay(v.serviceDate)}</p>
+                    <p className="font-semibold">{formatServiceDay(v.serviceDate)}</p>
                     <p className="text-meta text-muted">
                       {serviceName[v.service] || v.service} ·{' '}
-                      {v.source === 'card' ? 'Card' : 'Came back'}
+                      {v.source === 'card' ? 'Filled a card' : 'Came back'}
                     </p>
                   </div>
                   {i === visits.length - 1 && (
@@ -175,26 +183,23 @@ export default async function NewcomerPage({ params }) {
                   )}
                 </li>
               ))}
-            </ul>
+            </ol>
           </section>
 
           {prayerRequests && (
-            <section className="card flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <span className="icon-tile tone-violet h-9 w-9">
-                  <Icon name="volunteer_activism" size={18} />
-                </span>
-                <h2 className="card-title flex-1">Prayer requests</h2>
-                <Link href="/prayer-requests" className="tap-link text-sm text-primary">
+            <section className="of-panel flex flex-col gap-3 p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="of-h2">Prayer requests</h2>
+                <Link href="/prayer-requests" className="of-link">
                   All requests
                 </Link>
               </div>
               {prayerRequests.length === 0 ? (
-                <p className="text-muted">No prayer request on their cards.</p>
+                <p className="text-meta text-muted">No prayer request on their cards.</p>
               ) : (
                 prayerRequests.map((r) => (
                   <figure key={String(r._id)} className="rounded-tile bg-surface-2 p-4">
-                    <blockquote className="italic">“{r.text}”</blockquote>
+                    <blockquote className="break-words">“{r.text}”</blockquote>
                     <figcaption className="mt-2 flex flex-wrap items-center gap-2 text-meta text-muted">
                       {formatServiceDay(r.serviceDate || r.createdAt)}
                       <span className="chip">{PRAYER_STATUSES[r.status]?.label}</span>
@@ -202,6 +207,10 @@ export default async function NewcomerPage({ params }) {
                   </figure>
                 ))
               )}
+              <p className="flex items-center gap-1.5 text-2xs text-muted">
+                <Icon name="lock" size={14} />
+                Only the prayer team, pastors and admins see these.
+              </p>
             </section>
           )}
 
@@ -230,48 +239,69 @@ export default async function NewcomerPage({ params }) {
   );
 }
 
-function Detail({ icon, label, value }) {
+function Detail({ icon, label, value, numeric = false, className = '' }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
-      <Icon name={icon} size={18} className="text-muted" />
-      <dt className="min-w-[5rem] text-muted">{label}</dt>
-      <dd className="min-w-0 break-words font-bold">{value}</dd>
+    <div className={`flex min-w-0 items-start gap-3 bg-surface px-5 py-4 ${className}`}>
+      <Icon name={icon} size={18} className="mt-0.5 shrink-0 text-muted" />
+      <div className="min-w-0">
+        <dt className="of-eyebrow">{label}</dt>
+        <dd
+          className={`mt-0.5 font-semibold [overflow-wrap:anywhere] ${numeric ? 'tabular-nums' : ''}`}
+        >
+          {value}
+        </dd>
+      </div>
     </div>
   );
 }
 
-/** The five-step newcomer journey; Lost is shown as a note under it. */
+/** The five-step newcomer journey as one connected line; Lost is a note under it. */
 function Journey({ stage }) {
   const current = JOURNEY.indexOf(stage);
   return (
-    <section className="card flex flex-col gap-4">
+    <section className="of-panel flex flex-col gap-5 p-5 sm:p-6">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="card-title">Journey</h2>
+        <h2 className="of-h2">Journey</h2>
         {current >= 0 && (
-          <span className="chip chip-primary">
+          <span className="of-eyebrow">
             Step {current + 1} of {JOURNEY.length}
           </span>
         )}
       </div>
-      <ol className="grid grid-cols-5 gap-1">
+      <ol className="relative grid grid-cols-5">
+        <span
+          aria-hidden="true"
+          className="absolute left-[10%] right-[10%] top-[17px] h-0.5 bg-line"
+        />
+        {current > 0 && (
+          <span
+            aria-hidden="true"
+            className="absolute left-[10%] top-[17px] h-0.5 bg-of-accent"
+            style={{ width: `${(current / (JOURNEY.length - 1)) * 80}%` }}
+          />
+        )}
         {JOURNEY.map((s, i) => {
           const done = i < current;
           const now = i === current;
           return (
-            <li key={s} className="flex flex-col items-center gap-1.5 text-center">
+            <li
+              key={s}
+              aria-current={now ? 'step' : undefined}
+              className="relative flex flex-col items-center gap-2 text-center"
+            >
               <span
-                className={`grid h-9 w-9 place-items-center rounded-full font-display text-sm font-black ${
+                className={`grid h-9 w-9 place-items-center rounded-full text-sm font-semibold tabular-nums ring-4 ring-surface ${
                   done
-                    ? 'bg-success text-on-primary'
+                    ? 'bg-of-accent text-of-on-accent'
                     : now
-                      ? 'bg-primary-fill text-on-primary-fill shadow-primary-glow'
+                      ? 'bg-of-accent-soft text-of-accent-ink outline outline-2 outline-of-accent'
                       : 'bg-surface-2 text-muted'
                 }`}
               >
                 {done ? <Icon name="check" size={18} /> : i + 1}
               </span>
               <span
-                className={`text-2xs font-bold leading-tight ${now ? 'text-primary-ink' : 'text-muted'}`}
+                className={`text-2xs font-semibold leading-tight ${now ? 'text-of-accent-ink' : 'text-muted'}`}
               >
                 {STAGE_LABELS[s]}
               </span>
@@ -295,18 +325,20 @@ function HistoryItem({ entry: { kind, item } }) {
     const channel = CHANNELS[item.channel];
     const who = item.callerName || item.worker?.displayName;
     return (
-      <li className="relative flex gap-3 pb-5 last:pb-0">
-        <span className={`icon-tile h-9 w-9 ${outcome?.chip?.replace('chip-', 'tone-')}`}>
+      <li className="relative flex gap-3 pb-5 before:absolute before:bottom-0 before:left-[17px] before:top-10 before:w-px before:bg-line last:pb-0 last:before:hidden">
+        <span
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${outcome?.chip?.replace('chip-', 'tone-') || 'bg-surface-2'}`}
+        >
           <Icon name={channel?.icon || 'call'} size={17} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-baseline justify-between gap-x-2">
-            <span className="font-bold">
+            <span className="font-semibold">
               {channel?.label}: {outcome?.label}
             </span>
             <span className="text-xs text-muted">{formatMoment(item.createdAt)}</span>
           </p>
-          {item.note && <p className="mt-0.5 text-sm">{item.note}</p>}
+          {item.note && <p className="mt-0.5 break-words text-sm">{item.note}</p>}
           {who && <p className="mt-0.5 text-xs text-muted">By {who}</p>}
         </div>
       </li>
@@ -317,17 +349,19 @@ function HistoryItem({ entry: { kind, item } }) {
     (item.template === 'broadcast' ? 'Broadcast' : 'Message');
   const sent = item.status === 'sent';
   return (
-    <li className="relative flex gap-3 pb-5 last:pb-0">
-      <span className={`icon-tile h-9 w-9 ${sent ? 'tone-teal' : 'tone-danger'}`}>
+    <li className="relative flex gap-3 pb-5 before:absolute before:bottom-0 before:left-[17px] before:top-10 before:w-px before:bg-line last:pb-0 last:before:hidden">
+      <span
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${sent ? 'tone-teal' : 'tone-danger'}`}
+      >
         <Icon name="sms" size={17} />
       </span>
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-baseline justify-between gap-x-2">
-          <span className="font-bold">SMS: {title}</span>
+          <span className="font-semibold">SMS: {title}</span>
           <span className="text-xs text-muted">{formatMoment(item.createdAt)}</span>
         </p>
-        <p className="mt-0.5 line-clamp-2 text-sm text-ink-2">“{item.body}”</p>
-        <p className={`mt-0.5 text-xs font-bold ${sent ? 'text-success' : 'text-danger'}`}>
+        <p className="mt-0.5 line-clamp-2 break-words text-sm text-ink-2">“{item.body}”</p>
+        <p className={`mt-0.5 text-xs font-semibold ${sent ? 'text-success' : 'text-danger'}`}>
           {sent ? 'Sent' : 'Not delivered'}
         </p>
       </div>
@@ -339,15 +373,10 @@ function HistoryItem({ entry: { kind, item } }) {
 function CheckInAnswer({ checkIn: c }) {
   const rating = RATINGS[c.rating];
   return (
-    <section className="card flex flex-col gap-3">
-      <div className="flex items-start gap-3">
-        <span className="icon-tile tone-coral">
-          <Icon name="reviews" size={22} />
-        </span>
-        <div>
-          <h2 className="card-title">One-month check-in</h2>
-          <p className="card-sub">Answered {formatMoment(c.answeredAt)}</p>
-        </div>
+    <section className="of-panel flex flex-col gap-3 p-5 sm:p-6">
+      <div>
+        <h2 className="of-h2">One-month check-in</h2>
+        <p className="text-meta text-muted">Answered {formatMoment(c.answeredAt)}</p>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {rating && (

@@ -69,9 +69,12 @@ export default function LogCall({ personId, firstName, callerName: ownName = nul
   }
 
   return (
-    <form id="log" onSubmit={save} className="card flex scroll-mt-24 flex-col gap-5">
-      <h2 ref={heading} tabIndex={-1} className="card-title flex items-center gap-2 outline-none">
-        <Icon name="edit_note" size={22} className="text-primary" />
+    <form
+      id="log"
+      onSubmit={save}
+      className="of-panel flex scroll-mt-24 flex-col gap-5 border-of-accent/30 p-5 sm:p-6"
+    >
+      <h2 ref={heading} tabIndex={-1} className="of-h2 outline-none">
         Log a call
       </h2>
 
@@ -106,11 +109,11 @@ export default function LogCall({ personId, firstName, callerName: ownName = nul
 
       <fieldset className="flex flex-col gap-2">
         <legend className="field-label">How</legend>
-        <div className="seg-tabs self-start">
+        <div className="of-tabs flex-wrap self-start">
           {Object.entries(CHANNELS).map(([key, c]) => (
             <label
               key={key}
-              className="seg-tab cursor-pointer has-[:checked]:bg-surface has-[:checked]:text-ink has-[:checked]:shadow-soft has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-primary"
+              className="of-tab cursor-pointer has-[:checked]:bg-of-accent-soft has-[:checked]:text-of-accent-ink has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-of-accent/40"
             >
               <input
                 type="radio"
@@ -157,7 +160,7 @@ export default function LogCall({ personId, firstName, callerName: ownName = nul
       {state.kind === 'error' && <FormAlert error={state.error} />}
       {state.kind === 'ok' && <FormAlert success={state.message} />}
 
-      <button type="submit" aria-disabled={busy} className="btn btn-primary btn-lg">
+      <button type="submit" aria-disabled={busy} className="of-btn min-h-[48px] w-full text-base">
         <Busy busy={busy} icon="save" label="Save call" size={19} />
       </button>
     </form>
