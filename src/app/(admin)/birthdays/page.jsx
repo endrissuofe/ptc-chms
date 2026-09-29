@@ -125,8 +125,8 @@ function Celebrant({ person: p, date, today = false }) {
   const kind = CELEBRATIONS[p.kind];
   const wish =
     p.kind === 'anniversary'
-      ? `Happy wedding anniversary, ${p.firstName}! Wishing you a joyful day. From your church family at PTC Chapel.`
-      : `Happy birthday, ${p.firstName}! Wishing you a wonderful day. From your church family at PTC Chapel.`;
+      ? `Happy wedding anniversary, ${p.firstName}! Wishing you a joyful day. From your church family at Ptchapel.`
+      : `Happy birthday, ${p.firstName}! Wishing you a wonderful day. From your church family at Ptchapel.`;
   return (
     <li className="flex flex-col gap-3 rounded-tile bg-surface-2 p-4">
       <div className="flex items-start gap-3">

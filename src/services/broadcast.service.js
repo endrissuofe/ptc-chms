@@ -72,7 +72,7 @@ export async function previewBroadcast({ audience, body }) {
   const sample = renderTemplate(body, {
     FirstName: longest.firstName,
     LastName: longest.lastName,
-    ChurchName: process.env.CHURCH_NAME || 'RCCG Peculiar Treasure Chapel',
+    ChurchName: process.env.CHURCH_NAME || 'Ptchapel',
   });
   const { pages } = smsSegments(sample);
   return { count: recipients.length, pages, units: recipients.length * pages, sample };

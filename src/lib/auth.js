@@ -11,7 +11,7 @@ export const authOptions = {
   pages: { signIn: '/login' },
   providers: [
     CredentialsProvider({
-      name: 'PTC Chapel',
+      name: 'Ptchapel',
       credentials: {
         username: { label: 'Username', type: 'text' },
         password: { label: 'Password', type: 'password' },

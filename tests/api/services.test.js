@@ -493,7 +493,7 @@ describe('SMS', () => {
 
     const log = await models.SmsLog.findOne().lean();
     expect(log.body).toBe(
-      'Hi Kemi, thank you for worshipping with us at RCCG Peculiar Treasure Chapel. You are welcome here, and we look forward to seeing you again. God bless you!',
+      'Hi Kemi, thank you for worshipping with us at Ptchapel. You are welcome here, and we look forward to seeing you again. God bless you!',
     );
     expect(log).toMatchObject({ recipientKey: `p:${kemi._id}`, name: 'Kemi Adebayo' });
   });

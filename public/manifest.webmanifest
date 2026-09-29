@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "PTC Chapel",
-  "short_name": "PTC Chapel",
-  "description": "Attendance, first-timer cards, follow-up and prayer for RCCG Peculiar Treasure Chapel.",
+  "name": "Ptchapel",
+  "short_name": "Ptchapel",
+  "description": "Attendance, first-timer cards, follow-up and prayer for Ptchapel (Peculiar Treasure Chapel, RCCG Youth Province 2).",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

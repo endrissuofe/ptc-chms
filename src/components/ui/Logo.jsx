@@ -14,7 +14,7 @@ export default function Logo({ size = 40, withName = false, subtitle, badge }) {
       >
         <Image
           src="/ptc-logo.png"
-          alt="PTC Chapel logo"
+          alt="Ptchapel logo"
           width={Math.round(size * 0.8)}
           height={Math.round(size * 0.8)}
           priority
@@ -24,7 +24,7 @@ export default function Logo({ size = 40, withName = false, subtitle, badge }) {
         <div className="flex min-w-0 flex-col leading-none">
           <div className="flex min-w-0 items-center gap-2">
             <span className="truncate font-display text-lg font-black tracking-[-0.01em]">
-              PTC Chapel
+              Ptchapel
             </span>
             {badge}
           </div>

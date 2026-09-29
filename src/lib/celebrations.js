@@ -38,6 +38,6 @@ export function celebrationDays(from, days) {
 /** A ready-to-post line for WhatsApp, Instagram or Facebook. */
 export function socialsText(kind, name) {
   return kind === 'anniversary'
-    ? `Happy wedding anniversary to ${name}! The RCCG Peculiar Treasure Chapel family celebrates with you and prays God keeps your home in love and joy. 💍`
-    : `Happy birthday to ${name}! The RCCG Peculiar Treasure Chapel family celebrates you today. May this new year be filled with God's favour. 🎉`;
+    ? `Happy wedding anniversary to ${name}! The Ptchapel family celebrates with you and prays God keeps your home in love and joy. 💍`
+    : `Happy birthday to ${name}! The Ptchapel family celebrates you today. May this new year be filled with God's favour. 🎉`;
 }

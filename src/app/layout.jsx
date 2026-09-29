@@ -6,7 +6,7 @@ import { SITE_DESCRIPTION, SITE_NAME } from '@/lib/site';
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://ptc-chms.vercel.app'),
-  title: { default: SITE_NAME, template: '%s · PTC Chapel' },
+  title: { default: SITE_NAME, template: '%s · Ptchapel' },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   manifest: '/manifest.webmanifest',
@@ -15,9 +15,9 @@ export const metadata = {
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
-    title: 'PTC Chapel — sign in',
+    title: 'Ptchapel — sign in',
     description: SITE_DESCRIPTION,
-    images: [{ url: '/icons/icon-512.png', width: 512, height: 512, alt: 'PTC Chapel logo' }],
+    images: [{ url: '/icons/icon-512.png', width: 512, height: 512, alt: 'Ptchapel logo' }],
   },
   appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: 'default' },
 };

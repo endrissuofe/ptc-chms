@@ -64,7 +64,7 @@ describe('who gets the check-in', () => {
     const log = await models.SmsLog.findOne({ person: due._id }).lean();
     const doc = await models.CheckIn.findOne({ person: due._id }).lean();
     expect(log.body).toBe(
-      `Hi Kemi, it's been a month since your first visit to PTC Chapel. How has it been? Tell us here: https://church.example/c/${doc.token}`,
+      `Hi Kemi, it's been a month since your first visit to Ptchapel. How has it been? Tell us here: https://church.example/c/${doc.token}`,
     );
     expect(log.body.length).toBeLessThanOrEqual(160);
 

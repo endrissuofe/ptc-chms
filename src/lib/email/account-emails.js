@@ -29,11 +29,11 @@ export function renderSignupNotice({ name, teamLabel, email, phone }, baseUrl) {
 export function renderApproved({ name, teamLabel }, baseUrl) {
   const lines = [
     `Hello ${name},`,
-    `You’ve been approved to join the ${teamLabel} on the PTC Chapel app.`,
+    `You’ve been approved to join the ${teamLabel} on the Ptchapel app.`,
     'Sign in with your email address and the password you chose.',
   ];
   return {
-    subject: 'You’re in: PTC Chapel app',
+    subject: 'You’re in: Ptchapel app',
     html: layout(lines, { href: `${baseUrl}/login`, label: 'Sign in' }),
     text: `${lines.join('\n')}\n\nSign in: ${baseUrl}/login`,
   };

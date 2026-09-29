@@ -116,7 +116,7 @@ export function renderFollowUpReport(report, baseUrl) {
 
   const html = `<!doctype html><html><body style="margin:0;background:#faf7f2;">
   <div style="max-width:600px;margin:0 auto;padding:24px 16px;font:15px/1.5 Arial,sans-serif;color:#1e1b3a;">
-    <p style="margin:0 0 4px;color:#b1361b;font:800 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;">PTC Chapel · Follow-up</p>
+    <p style="margin:0 0 4px;color:#b1361b;font:800 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;">Ptchapel · Follow-up</p>
     <h1 style="font:900 24px Arial,sans-serif;margin:0 0 8px;">Good morning, follow-up team</h1>
     <p style="margin:0;color:#3d3960;">Here is who needs a call. Report for ${esc(day)}.</p>
     ${came.html}${back.html}${overdue.html}${answers.html}

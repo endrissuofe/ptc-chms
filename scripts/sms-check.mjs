@@ -10,8 +10,8 @@
  */
 import 'dotenv/config';
 
-const from = process.env.SMS_SENDER_ID || 'PTCChapel';
-const TEST_TEXT = 'Test from PTC Chapel church management system. If you got this, SMS is working.';
+const from = process.env.SMS_SENDER_ID || 'PTCHAPEL';
+const TEST_TEXT = 'Test from Ptchapel church management system. If you got this, SMS is working.';
 
 const PROVIDERS = {
   termii: {

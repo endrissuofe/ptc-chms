@@ -10,58 +10,58 @@ import { logger } from '@/lib/logger';
 import { Member, Person, SmsTemplate, SmsLog, Broadcast } from '@/models';
 import { listServices } from './churchService.service';
 
-const CHURCH_NAME = () => process.env.CHURCH_NAME || 'RCCG Peculiar Treasure Chapel';
+const CHURCH_NAME = () => process.env.CHURCH_NAME || 'Ptchapel';
 
 export const DEFAULT_TEMPLATES = [
   {
     key: 'sunday_thanks',
     name: 'First-timer thank-you',
-    body: 'Hi {FirstName}, thank you for worshipping with us at RCCG Peculiar Treasure Chapel. You are welcome here, and we look forward to seeing you again. God bless you!',
+    body: 'Hi {FirstName}, thank you for worshipping with us at Ptchapel. You are welcome here, and we look forward to seeing you again. God bless you!',
   },
   {
     key: 'welcome_back',
     name: 'Welcome back',
-    body: 'Hi {FirstName}, welcome back to RCCG Peculiar Treasure Chapel! We are glad you worshipped with us again. God bless you!',
+    body: 'Hi {FirstName}, welcome back to Ptchapel! We are glad you worshipped with us again. God bless you!',
   },
   {
     key: 'saturday_invite',
     name: 'Saturday invite',
-    body: 'Hi {FirstName}, we would love to see you in church tomorrow! {ServiceTimes} See you there. PTC Chapel',
+    body: 'Hi {FirstName}, we would love to see you in church tomorrow! {ServiceTimes} See you there. Ptchapel',
     // Plain characters only: one curly quote or long dash makes an SMS cost double.
     variants: [
-      'Hi {FirstName}, a seat is waiting for you at PTC Chapel tomorrow. {ServiceTimes} Come as you are!',
-      'Hello {FirstName}, tomorrow is Sunday! Worship with us again at PTC Chapel. {ServiceTimes} God bless you.',
-      'Hi {FirstName}, it was a joy having you with us. Join us again tomorrow at PTC Chapel. {ServiceTimes}',
-      "{FirstName}, you are family at PTC Chapel. We can't wait to see you in church tomorrow! {ServiceTimes}",
-      "Hi {FirstName}, come and experience God's presence with us tomorrow at PTC Chapel. {ServiceTimes}",
+      'Hi {FirstName}, a seat is waiting for you at Ptchapel tomorrow. {ServiceTimes} Come as you are!',
+      'Hello {FirstName}, tomorrow is Sunday! Worship with us again at Ptchapel. {ServiceTimes} God bless you.',
+      'Hi {FirstName}, it was a joy having you with us. Join us again tomorrow at Ptchapel. {ServiceTimes}',
+      "{FirstName}, you are family at Ptchapel. We can't wait to see you in church tomorrow! {ServiceTimes}",
+      "Hi {FirstName}, come and experience God's presence with us tomorrow at Ptchapel. {ServiceTimes}",
     ],
   },
   {
     key: 'member_invite',
     name: 'Members’ Saturday invite',
-    body: 'Hi {FirstName}, see you in church tomorrow at PTC Chapel! {ServiceTimes} Come expecting a blessing.',
+    body: 'Hi {FirstName}, see you in church tomorrow at Ptchapel! {ServiceTimes} Come expecting a blessing.',
     variants: [
-      "Good afternoon {FirstName}! Tomorrow is the Lord's day. Join us at PTC Chapel. {ServiceTimes}",
-      'Hi {FirstName}, let us go into the house of the Lord (Ps 122:1)! See you tomorrow at PTC Chapel. {ServiceTimes}',
-      'Hi {FirstName}, invite a friend and come to church with them tomorrow! {ServiceTimes} PTC Chapel',
-      'Hello {FirstName}, your church family is waiting for you tomorrow at PTC Chapel. {ServiceTimes} God bless you!',
-      "Hi {FirstName}, don't miss service tomorrow at PTC Chapel. Come ready to worship! {ServiceTimes}",
+      "Good afternoon {FirstName}! Tomorrow is the Lord's day. Join us at Ptchapel. {ServiceTimes}",
+      'Hi {FirstName}, let us go into the house of the Lord (Ps 122:1)! See you tomorrow at Ptchapel. {ServiceTimes}',
+      'Hi {FirstName}, invite a friend and come to church with them tomorrow! {ServiceTimes} Ptchapel',
+      'Hello {FirstName}, your church family is waiting for you tomorrow at Ptchapel. {ServiceTimes} God bless you!',
+      "Hi {FirstName}, don't miss service tomorrow at Ptchapel. Come ready to worship! {ServiceTimes}",
     ],
   },
   {
     key: 'birthday',
     name: 'Birthday',
-    body: "Happy birthday, {FirstName}! Everyone at RCCG Peculiar Treasure Chapel celebrates you today. May this new year be full of God's favour and joy.",
+    body: "Happy birthday, {FirstName}! Everyone at Ptchapel celebrates you today. May this new year be full of God's favour and joy.",
   },
   {
     key: 'anniversary',
     name: 'Wedding anniversary',
-    body: 'Happy wedding anniversary, {FirstName}! RCCG Peculiar Treasure Chapel celebrates with you today. May God keep your home in love, peace and joy.',
+    body: 'Happy wedding anniversary, {FirstName}! Ptchapel celebrates with you today. May God keep your home in love, peace and joy.',
   },
   {
     key: 'checkin',
     name: 'One-month check-in',
-    body: "Hi {FirstName}, it's been a month since your first visit to PTC Chapel. How has it been? Tell us here: {Link}",
+    body: "Hi {FirstName}, it's been a month since your first visit to Ptchapel. How has it been? Tell us here: {Link}",
   },
 ];
 
@@ -94,7 +94,7 @@ export function smsStatus() {
   return {
     provider,
     live: provider !== 'mock',
-    senderId: process.env.SMS_SENDER_ID || 'PTCChapel',
+    senderId: process.env.SMS_SENDER_ID || 'PTCHAPEL',
   };
 }
 

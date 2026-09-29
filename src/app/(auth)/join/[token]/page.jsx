@@ -20,8 +20,8 @@ export default async function JoinPage({ params }) {
         <div className="mb-6 flex items-center gap-3">
           <Logo size={44} />
           <div>
-            <p className="font-display text-lg font-black">PTC Chapel</p>
-            <p className="text-meta text-muted">RCCG Peculiar Treasure Chapel</p>
+            <p className="font-display text-lg font-black">Ptchapel</p>
+            <p className="text-meta text-muted">Peculiar Treasure Chapel · RCCG Youth Province 2</p>
           </div>
         </div>
         <div className="card flex flex-col gap-5">

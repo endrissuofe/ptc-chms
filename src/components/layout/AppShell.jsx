@@ -38,7 +38,7 @@ export default async function AppShell({ children }) {
       <header className="sticky top-0 z-40 h-[68px] border-b border-line bg-paper/85 backdrop-blur-md">
         <div className="flex h-full items-center gap-2 px-4 sm:gap-3 lg:pl-7 lg:pr-6">
           <div className="mr-auto min-w-0">
-            <Logo size={38} withName subtitle="RCCG Peculiar Treasure Chapel" />
+            <Logo size={38} withName subtitle="Peculiar Treasure Chapel · RCCG Youth Province 2" />
           </div>
           <span className="hidden items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-meta font-bold text-ink-2 xl:inline-flex">
             <Icon name="calendar_today" size={16} className="text-coral-ink" />

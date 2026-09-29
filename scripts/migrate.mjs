@@ -176,6 +176,30 @@ const MIGRATIONS = [
       await db.collection('people').createIndex({ firstVisitDate: 1 });
     },
   },
+  {
+    // (011 was the AI SMS writer, since removed.)
+    id: '012-church-name-ptchapel',
+    async up(db) {
+      // The church's name is Ptchapel: fix saved SMS wordings, keeping any other edits.
+      const rename = (text) =>
+        text
+          .replace(/The RCCG Peculiar Treasure Chapel family/g, 'The Ptchapel family')
+          .replace(/RCCG Peculiar Treasure Chapel/g, 'Ptchapel')
+          .replace(/PTC Chapel/g, 'Ptchapel');
+      const templates = db.collection('smstemplates');
+      for (const t of await templates.find().toArray()) {
+        const body = rename(t.body);
+        const variants = t.variants?.map(rename);
+        const changed = body !== t.body || JSON.stringify(variants) !== JSON.stringify(t.variants);
+        if (changed) {
+          await templates.updateOne(
+            { _id: t._id },
+            { $set: { body, ...(variants && { variants }) } },
+          );
+        }
+      }
+    },
+  },
 ];
 
 async function main() {

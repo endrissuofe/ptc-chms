@@ -56,7 +56,7 @@ export default async function LoginPage() {
       <header className="hero rounded-b-card px-5 pb-8 pt-8 lg:hidden">
         <div className="flex items-center gap-3">
           <Logo size={48} />
-          <p className="font-display text-xl font-black text-white">PTC Chapel</p>
+          <p className="font-display text-xl font-black text-white">Ptchapel</p>
         </div>
         <p className="mt-4 max-w-[34ch] text-white/90">{ONE_LINER}</p>
       </header>
@@ -67,7 +67,7 @@ export default async function LoginPage() {
           <div className="flex flex-col gap-4">
             <p className="inline-flex items-center gap-1.5 text-meta font-extrabold uppercase tracking-[0.08em] text-white/90">
               <Icon name="church" size={17} />
-              RCCG Peculiar Treasure Chapel
+              Peculiar Treasure Chapel · RCCG Youth Province 2
             </p>
             <h2 className="hero-title max-w-[16ch]">
               Every visitor welcomed, every soul followed up.

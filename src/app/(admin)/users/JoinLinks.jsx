@@ -37,7 +37,7 @@ function LinkRow({ link }) {
   const [copied, setCopied] = useState(false);
   const [state, setState] = useState({ kind: 'idle' });
   const role = ROLE_INFO[link.role];
-  const message = `Join the ${link.label} on the PTC Chapel app: ${link.url}`;
+  const message = `Join the ${link.label} on the Ptchapel app: ${link.url}`;
 
   async function copy() {
     try {

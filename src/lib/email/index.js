@@ -38,7 +38,7 @@ export async function sendEmail({ to, cc = [], subject, html, text }) {
 
   try {
     const { transport: t, user } = gmail();
-    const name = process.env.EMAIL_FROM_NAME || 'PTC Chapel';
+    const name = process.env.EMAIL_FROM_NAME || 'Ptchapel';
     const info = await t.sendMail({
       from: `"${name}" <${user}>`,
       to: recipients,

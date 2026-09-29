@@ -55,7 +55,7 @@ export function renderCelebrations({ date, today, week }, baseUrl) {
   const link = `${baseUrl}/birthdays`;
   const html = `<!doctype html><html><body style="margin:0;background:#faf7f2;">
   <div style="max-width:600px;margin:0 auto;padding:24px 16px;font:15px/1.5 Arial,sans-serif;color:#1e1b3a;">
-    <p style="margin:0 0 4px;color:#b1361b;font:800 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;">PTC Chapel · Celebrations</p>
+    <p style="margin:0 0 4px;color:#b1361b;font:800 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;">Ptchapel · Celebrations</p>
     <h1 style="font:900 24px Arial,sans-serif;margin:0 0 8px;">${today.length ? 'Today we celebrate' : 'This week we celebrate'}</h1>
     <p style="margin:0 0 16px;color:#3d3960;">${esc(dayName.format(new Date(date)))}. Wish them, and copy a line for the church’s WhatsApp, Instagram or Facebook.</p>
     ${blocks.map((b) => b.html).join('')}

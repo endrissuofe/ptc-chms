@@ -22,7 +22,7 @@ import {
 const SAMPLE = {
   FirstName: 'Chinedu',
   LastName: 'Okafor',
-  ChurchName: 'RCCG Peculiar Treasure Chapel',
+  ChurchName: 'Ptchapel',
   ServiceTimes: 'Service starts at 8:00 AM.',
   Link: 'https://ptc-chms.vercel.app/c/Ab3dE9xY',
 };

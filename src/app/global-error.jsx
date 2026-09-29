@@ -20,7 +20,7 @@ export default function GlobalError({ reset }) {
         }}
       >
         <main style={{ maxWidth: 420, textAlign: 'center' }}>
-          <h1 style={{ fontSize: 24 }}>PTC Chapel didn’t load</h1>
+          <h1 style={{ fontSize: 24 }}>Ptchapel didn’t load</h1>
           <p style={{ color: '#625e7d' }}>
             Something went wrong. Check your connection and try again.
           </p>
