@@ -54,24 +54,26 @@ export default function MoveToMembers({ people }) {
   }
 
   return (
-    <section className="card flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="icon-tile tone-success h-11 w-11">
+    <section className="of-panel overflow-hidden">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 p-5 sm:px-6">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-of-accent-soft text-of-accent-ink">
           <Icon name="group_add" size={22} />
         </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="card-title">
+        <div className="min-w-[12rem] flex-1">
+          <h2 className="of-h2">
             {people.length === 1 ? '1 person' : `${people.length} people`} ready for the Members
             list
           </h2>
-          <p className="card-sub">First came over {MOVE_AFTER_DAYS} days ago.</p>
+          <p className="text-meta text-muted">
+            First came over {MOVE_AFTER_DAYS} days ago. Tick who has joined and move them.
+          </p>
         </div>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-controls="ready-to-move"
-          className="btn btn-soft"
+          className="of-btn-quiet"
         >
           {open ? 'Hide' : 'Review'}
           <Icon
@@ -82,11 +84,18 @@ export default function MoveToMembers({ people }) {
         </button>
       </div>
 
-      {state.kind === 'error' && <FormAlert error={state.error} />}
+      {state.kind === 'error' && (
+        <div className="px-5 pb-4 sm:px-6">
+          <FormAlert error={state.error} />
+        </div>
+      )}
 
       {open && (
-        <div id="ready-to-move" className="flex flex-col gap-3 motion-safe:animate-fade-in">
-          <label className="check-row font-bold">
+        <div
+          id="ready-to-move"
+          className="flex flex-col border-t border-line motion-safe:animate-fade-in"
+        >
+          <label className="flex min-h-[52px] cursor-pointer items-center gap-3 border-b border-line px-5 py-2 font-semibold sm:px-6">
             <input
               type="checkbox"
               checked={allPicked}
@@ -95,10 +104,10 @@ export default function MoveToMembers({ people }) {
             />
             Select all
           </label>
-          <ul className="flex max-h-[420px] flex-col gap-1 overflow-y-auto">
+          <ul className="flex max-h-[420px] flex-col divide-y divide-line overflow-y-auto">
             {people.map((p) => (
               <li key={p.id}>
-                <label className="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-tile px-3 py-2 hover:bg-surface-2">
+                <label className="flex min-h-[56px] cursor-pointer items-center gap-3 px-5 py-3 transition-colors hover:bg-surface-2/60 sm:px-6">
                   <input
                     type="checkbox"
                     checked={picked.has(p.id)}
@@ -106,9 +115,10 @@ export default function MoveToMembers({ people }) {
                     className="checkbox"
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block break-words font-bold">{p.name}</span>
+                    <span className="block break-words font-brand font-semibold">{p.name}</span>
                     <span className="block text-meta text-muted">
-                      {p.phone} · first came {formatServiceDate(p.firstVisitDate)} · {p.visitCount}{' '}
+                      <span className="tabular-nums">{p.phone}</span> · first came{' '}
+                      {formatServiceDate(p.firstVisitDate)} · {p.visitCount}{' '}
                       {p.visitCount === 1 ? 'visit' : 'visits'}
                     </span>
                   </span>
@@ -117,20 +127,23 @@ export default function MoveToMembers({ people }) {
               </li>
             ))}
           </ul>
-          <button
-            type="button"
-            onClick={move}
-            disabled={picked.size === 0}
-            aria-disabled={state.kind === 'busy'}
-            className="btn btn-primary self-start"
-          >
-            <Busy
-              busy={state.kind === 'busy'}
-              busyLabel="Moving…"
-              icon="how_to_reg"
-              label={picked.size ? `Move ${picked.size} to Members` : 'Tick people to move'}
-            />
-          </button>
+          <div className="flex flex-wrap items-center gap-3 border-t border-line p-5 sm:px-6">
+            <button
+              type="button"
+              onClick={move}
+              disabled={picked.size === 0}
+              aria-disabled={state.kind === 'busy'}
+              className="of-btn disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:opacity-70"
+            >
+              <Busy
+                busy={state.kind === 'busy'}
+                busyLabel="Moving…"
+                icon="how_to_reg"
+                label={picked.size ? `Move ${picked.size} to Members` : 'Tick people to move'}
+              />
+            </button>
+            <p className="text-meta text-muted">Their visits and calls stay linked.</p>
+          </div>
         </div>
       )}
     </section>

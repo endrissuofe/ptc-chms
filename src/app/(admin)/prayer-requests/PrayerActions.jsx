@@ -12,15 +12,20 @@ const ACTIONS = {
     label: 'Prayed for',
     done: 'Marked as prayed for',
     icon: 'check_circle',
-    className: 'btn-primary',
+    className: 'of-btn',
   },
   needs_visit: {
     label: 'Needs a visit',
     done: 'Marked as needing a visit',
     icon: 'home_pin',
-    className: 'btn-soft',
+    className: 'of-btn-quiet',
   },
-  new: { label: 'Back to New', done: 'Moved back to New', icon: 'replay', className: 'btn-ghost' },
+  new: {
+    label: 'Back to New',
+    done: 'Moved back to New',
+    icon: 'replay',
+    className: 'of-link px-2',
+  },
 };
 
 /** Mark a prayer request prayed for / needs a visit, or put it back to New. */
@@ -48,7 +53,7 @@ export default function PrayerActions({ id, status }) {
   if (done) return <FormAlert success={`${done}.`} />;
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {Object.entries(ACTIONS)
           .filter(([key]) => key !== status)
           .map(([key, a]) => (
@@ -57,7 +62,7 @@ export default function PrayerActions({ id, status }) {
               type="button"
               aria-disabled={Boolean(pressed)}
               onClick={() => set(key)}
-              className={`btn btn-sm ${a.className}`}
+              className={`${a.className} aria-disabled:opacity-70`}
             >
               <Busy busy={pressed === key} icon={a.icon} label={a.label} size={16} />
             </button>

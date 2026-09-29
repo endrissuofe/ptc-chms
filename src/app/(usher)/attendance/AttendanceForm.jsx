@@ -20,14 +20,12 @@ import {
 } from '@/lib/attendance';
 
 const GROUPS = {
-  men: { label: 'Men', hint: 'Adults', icon: 'man', tone: 'tone-primary', bar: 'bg-primary' },
-  women: { label: 'Women', hint: 'Adults', icon: 'woman', tone: 'tone-coral', bar: 'bg-coral' },
-  teens: { label: 'Teens', hint: 'Ages 13–17', icon: 'school', tone: 'tone-teal', bar: 'bg-teal' },
+  men: { label: 'Men', hint: 'Adults', bar: 'bg-primary' },
+  women: { label: 'Women', hint: 'Adults', bar: 'bg-coral' },
+  teens: { label: 'Teens', hint: 'Ages 13–17', bar: 'bg-teal' },
   children: {
     label: 'Children',
     hint: 'Under 13',
-    icon: 'child_care',
-    tone: 'tone-violet',
     bar: 'bg-violet',
   },
 };
@@ -180,15 +178,12 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="page-head">
-        <div>
-          <p className="eyebrow">
-            <Icon name="calendar_today" size={16} />
-            {dayLabel.format(new Date(serviceDate))}
-          </p>
-          <h1 className="page-title">{service.name} attendance</h1>
-          <p className="page-sub">Enter the count. Tap a number to type it, or use − and +.</p>
+    <div className="flex flex-col gap-6 font-ui lg:gap-7">
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="of-eyebrow">Attendance · {dayLabel.format(new Date(serviceDate))}</p>
+          <h1 className="of-h1 break-words">{service.name}</h1>
+          <p className="text-meta text-muted">Tap a number to type it, or use − and +.</p>
         </div>
         {savedHere?.savedAt && (
           <span className="chip chip-success">
@@ -196,7 +191,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
             Saved {clock.format(new Date(savedHere.savedAt))}
           </span>
         )}
-      </div>
+      </header>
 
       <div className="flex min-w-0 flex-wrap gap-4">
         <DayChips days={serviceDays} selected={serviceDate} onSelect={goToDay} />
@@ -224,15 +219,12 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
         </div>
 
         <div className="flex flex-col gap-5 lg:sticky lg:top-[92px] lg:self-start">
-          <section className="card flex flex-col gap-4">
+          <section className="of-panel flex flex-col gap-4 p-5 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="label-caps">Total count</p>
-                <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span
-                    className="font-display text-stat-lg font-bold tabular-nums"
-                    aria-live="polite"
-                  >
+                <p className="of-eyebrow">Total count</p>
+                <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="of-figure text-stat-lg" aria-live="polite">
                     {total}
                   </span>
                   {change !== null && total > 0 && (
@@ -248,9 +240,6 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
                   )}
                 </div>
               </div>
-              <span className="icon-tile tone-primary h-12 w-12">
-                <Icon name="groups" size={24} />
-              </span>
             </div>
             <div
               className="flex h-3 w-full overflow-hidden rounded-full bg-surface-3"
@@ -287,7 +276,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
             )}
           </section>
 
-          <section className="card flex flex-col gap-2">
+          <section className="of-panel flex flex-col gap-2 p-5 sm:p-6">
             <label htmlFor="attendance-note" className="field-label">
               <span className="flex items-center gap-1.5">
                 <Icon name="edit_note" size={19} className="text-muted" />
@@ -329,7 +318,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
               onClick={save}
               disabled={!dirty || total === 0}
               aria-disabled={busy}
-              className="btn btn-primary btn-lg w-full"
+              className="of-btn min-h-[56px] w-full text-base disabled:opacity-50"
             >
               <Busy
                 busy={status.state === 'saving'}
@@ -350,7 +339,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
               type="button"
               onClick={remove}
               aria-disabled={busy}
-              className="btn btn-ghost btn-sm self-center"
+              className="of-btn-quiet self-center bg-transparent"
             >
               <Busy
                 busy={status.state === 'removing'}
@@ -372,13 +361,11 @@ function Counter({ group, value, onChange }) {
   const step =
     'grid place-items-center rounded-full bg-surface-2 text-ink transition hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary active:scale-90';
   return (
-    <div className="card flex flex-col gap-4">
+    <div className="of-panel flex flex-col gap-4 p-5">
       <label htmlFor={id} className="flex items-center gap-3">
-        <span className={`icon-tile ${group.tone}`}>
-          <Icon name={group.icon} size={22} />
-        </span>
+        <span className={`h-9 w-1.5 shrink-0 rounded-full ${group.bar}`} aria-hidden="true" />
         <span className="flex flex-col leading-tight">
-          <span className="font-display text-lg font-semibold">{group.label}</span>
+          <span className="font-brand text-lg font-semibold">{group.label}</span>
           <span className="text-meta text-muted">{group.hint}</span>
         </span>
       </label>
@@ -401,7 +388,7 @@ function Counter({ group, value, onChange }) {
           value={value}
           onFocus={(e) => e.target.select()}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '') || 0)}
-          className={`h-14 w-full min-w-0 rounded-tile bg-transparent text-center font-display font-bold tabular-nums focus:bg-surface-2 focus:outline-none focus:ring-4 focus:ring-primary/20 ${
+          className={`of-figure h-14 w-full min-w-0 rounded-tile bg-transparent text-center focus:bg-surface-2 focus:outline-none focus:ring-4 focus:ring-of-accent/20 ${
             value >= 1000 ? 'text-2xl' : 'text-stat'
           }`}
         />
@@ -421,7 +408,7 @@ function Counter({ group, value, onChange }) {
             type="button"
             aria-label={`Add ${n} ${group.label.toLowerCase()}`}
             onClick={() => onChange(value + n)}
-            className="btn btn-soft btn-sm min-w-[64px]"
+            className="of-btn-quiet min-h-[40px] min-w-[64px] tabular-nums"
           >
             +{n}
           </button>

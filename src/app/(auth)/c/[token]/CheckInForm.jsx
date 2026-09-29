@@ -45,7 +45,7 @@ export default function CheckInForm({ token, answered }) {
         <span className="icon-tile tone-success">
           <Icon name="favorite" size={22} />
         </span>
-        <p className="font-display text-xl font-bold">Thank you!</p>
+        <p className="of-h2">Thank you!</p>
         <p>
           {state.wantsCall
             ? 'Someone from the church will call you soon.'
@@ -55,7 +55,7 @@ export default function CheckInForm({ token, answered }) {
           <button
             type="button"
             onClick={() => setState({ kind: 'idle' })}
-            className="tap-link self-start text-primary"
+            className="tap-link self-start text-of-accent-ink"
           >
             Change my answer
           </button>
@@ -76,9 +76,9 @@ export default function CheckInForm({ token, answered }) {
           {ORDER.map((n) => (
             <label
               key={n}
-              className={`flex min-h-[48px] cursor-pointer items-center gap-3 rounded-tile border-[1.5px] px-4 font-bold transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-primary ${
+              className={`flex min-h-[48px] cursor-pointer items-center gap-3 rounded-tile border-[1.5px] px-4 font-bold transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-of-accent ${
                 rating === n
-                  ? 'border-primary bg-primary-soft text-primary-ink'
+                  ? 'border-of-accent bg-of-accent-soft text-of-accent-ink'
                   : 'border-field/50 hover:bg-surface-2'
               }`}
             >
@@ -130,7 +130,7 @@ export default function CheckInForm({ token, answered }) {
       </label>
 
       {banner && <FormAlert error={banner} />}
-      <button type="submit" aria-disabled={busy} className="btn btn-primary btn-lg">
+      <button type="submit" aria-disabled={busy} className="of-btn min-h-[52px] text-base">
         <Busy busy={busy} busyLabel="Sending…" icon="send" label="Send" />
       </button>
     </form>

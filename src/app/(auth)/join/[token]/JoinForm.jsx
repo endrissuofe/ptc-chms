@@ -41,14 +41,12 @@ export default function JoinForm({ token }) {
         <span className="icon-tile tone-success">
           <Icon name="task_alt" size={22} />
         </span>
-        <p className="font-display text-xl font-bold">
-          Thank you, {f.displayName.trim().split(/\s+/)[0]}!
-        </p>
+        <p className="of-h2">Thank you, {f.displayName.trim().split(/\s+/)[0]}!</p>
         <p>
           Your sign-up for the {state.team} is waiting for an admin. We’ll email {f.email.trim()}{' '}
           when you can sign in.
         </p>
-        <Link href="/login" className="btn btn-soft self-start">
+        <Link href="/login" className="of-btn-quiet self-start">
           Go to sign in
         </Link>
       </div>
@@ -132,7 +130,7 @@ export default function JoinForm({ token }) {
         className="sr-only"
       />
       {banner && <FormAlert error={banner} />}
-      <button type="submit" aria-disabled={busy} className="btn btn-primary btn-lg">
+      <button type="submit" aria-disabled={busy} className="of-btn min-h-[52px] text-base">
         <Busy busy={busy} busyLabel="Sending…" icon="how_to_reg" label="Ask to join" />
       </button>
     </form>

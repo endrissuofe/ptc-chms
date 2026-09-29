@@ -1,7 +1,6 @@
 import { getSession } from '@/lib/auth';
 import { toServiceDate, isoDay } from '@/lib/dates';
 import { listServices } from '@/services/churchService.service';
-import Icon from '@/components/ui/Icon';
 import ServicesManager from './ServicesManager';
 
 export const metadata = { title: 'Services' };
@@ -13,16 +12,11 @@ export default async function ServicesPage() {
     listServices({ includeInactive: true }),
   ]);
   return (
-    <div className="flex max-w-5xl flex-col gap-6">
-      <div className="page-head">
-        <div>
-          <p className="eyebrow">
-            <Icon name="event" size={16} />
-            Church calendar
-          </p>
-          <h1 className="page-title">Services</h1>
-        </div>
-      </div>
+    <div className="flex max-w-5xl flex-col gap-6 font-ui lg:gap-7">
+      <header className="flex flex-col gap-2">
+        <p className="of-eyebrow">Church calendar</p>
+        <h1 className="of-h1">Services</h1>
+      </header>
       <ServicesManager
         initial={services.map((s) => ({ ...s, date: s.date ? isoDay(s.date) : undefined }))}
         isAdmin={session?.user?.role === 'admin'}

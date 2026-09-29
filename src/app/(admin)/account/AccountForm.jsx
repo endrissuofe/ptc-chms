@@ -59,8 +59,8 @@ function Details({ account }) {
   }
 
   return (
-    <form onSubmit={submit} className="card flex flex-col gap-4">
-      <h2 className="card-title">Your details</h2>
+    <form onSubmit={submit} className="of-panel flex flex-col gap-4 p-5 sm:p-6">
+      <h2 className="of-h2">Your details</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col sm:col-span-2">
           <span className="field-label">Name</span>
@@ -113,7 +113,7 @@ function Details({ account }) {
       </p>
       {state.kind === 'error' && !Object.keys(fields).length && <FormAlert error={state.error} />}
       {state.kind === 'ok' && <FormAlert success={state.message} />}
-      <button type="submit" aria-disabled={busy} className="btn btn-primary self-start">
+      <button type="submit" aria-disabled={busy} className="of-btn self-start">
         <Busy busy={busy} icon="save" label="Save" />
       </button>
     </form>
@@ -136,8 +136,8 @@ function Emails({ account }) {
   }
 
   return (
-    <section className="card flex flex-col gap-3">
-      <h2 className="card-title">Emails you get</h2>
+    <section className="of-panel flex flex-col gap-3 p-5 sm:p-6">
+      <h2 className="of-h2">Emails you get</h2>
       {!account.email && (
         <p className="alert alert-warning">
           <Icon name="mail" size={19} />
@@ -176,8 +176,8 @@ function Password() {
   }
 
   return (
-    <form onSubmit={submit} className="card flex flex-col gap-4">
-      <h2 className="card-title">Change password</h2>
+    <form onSubmit={submit} className="of-panel flex flex-col gap-4 p-5 sm:p-6">
+      <h2 className="of-h2">Change password</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col">
           <span className="field-label">Current password</span>
@@ -210,7 +210,7 @@ function Password() {
       </div>
       {state.kind === 'error' && !Object.keys(fields).length && <FormAlert error={state.error} />}
       {state.kind === 'ok' && <FormAlert success={state.message} />}
-      <button type="submit" aria-disabled={busy} className="btn btn-soft self-start">
+      <button type="submit" aria-disabled={busy} className="of-btn-quiet self-start">
         <Busy busy={busy} icon="lock" label="Change password" />
       </button>
     </form>

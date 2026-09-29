@@ -12,15 +12,26 @@ import { JOINABLE_ROLES, ROLE_INFO } from '@/lib/users';
 import { formatPhone } from '@/lib/phone';
 import { formatMoment } from '@/lib/format';
 
-/** Sign-ups from invite links, waiting for an admin. */
+/** Sign-ups from invite links, waiting for an admin: the first job on this screen. */
 export default function PendingSignups({ pending }) {
   const [done, setDone] = useState(null);
   if (!pending.length) return done ? <FormAlert success={done} /> : null;
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="section-title">Waiting for approval · {pending.length}</h2>
-      {done && <FormAlert success={done} />}
-      <ul className="flex flex-col gap-3">
+    <section className="of-panel flex min-w-0 flex-col p-5 sm:p-6" aria-labelledby="pending-title">
+      <div className="flex flex-col gap-1">
+        <h2 id="pending-title" className="of-h2">
+          Waiting for approval
+        </h2>
+        <p className="text-meta text-muted">
+          They used a team invite link. Check the team, then approve them.
+        </p>
+      </div>
+      {done && (
+        <div className="mt-4">
+          <FormAlert success={done} />
+        </div>
+      )}
+      <ul className="mt-2 divide-y divide-line">
         {pending.map((p) => (
           <Signup key={p.id} person={p} onDone={setDone} />
         ))}
@@ -70,18 +81,22 @@ function Signup({ person: p, onDone }) {
   }
 
   return (
-    <li className="card card-compact flex flex-col gap-3 border-warning/40">
-      <div className="flex flex-wrap items-center gap-3">
+    <li className="flex flex-col gap-3 py-4 last:pb-0">
+      <div className="flex items-start gap-3">
         <Avatar name={p.displayName} />
         <div className="min-w-0 flex-1">
-          <p className="break-words font-display text-lg font-bold">{p.displayName}</p>
-          <p className="break-words text-meta text-muted">
-            {p.email} · {formatPhone(p.phone)} · signed up {formatMoment(p.createdAt)}
+          <p className="break-words font-brand text-lg font-semibold leading-tight">
+            {p.displayName}
+          </p>
+          <p className="mt-0.5 break-words text-meta text-muted">
+            {p.email} · <span className="tabular-nums">{formatPhone(p.phone)}</span> · signed up{' '}
+            {formatMoment(p.createdAt)}
           </p>
         </div>
       </div>
-      <div className="flex flex-wrap items-end gap-2">
-        <label htmlFor={selectId} className="flex min-w-[12rem] flex-col">
+
+      <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap md:pl-14">
+        <label htmlFor={selectId} className="col-span-2 flex flex-col sm:min-w-[14rem]">
           <span className="field-label">Team</span>
           <select
             id={selectId}
@@ -97,25 +112,31 @@ function Signup({ person: p, onDone }) {
             ))}
           </select>
         </label>
-        <button type="button" onClick={approve} aria-disabled={busy} className="btn btn-primary">
+        <button
+          type="button"
+          onClick={approve}
+          aria-disabled={busy}
+          className="of-btn min-h-[48px]"
+        >
           <Busy busy={state.kind === 'approving'} icon="how_to_reg" label="Approve" />
         </button>
         <button
           type="button"
           onClick={decline}
           aria-disabled={busy}
-          className="btn btn-danger-ghost"
+          className="of-btn-quiet min-h-[48px] text-danger hover:text-danger"
         >
           <Busy busy={state.kind === 'declining'} icon="close" label="Decline" />
         </button>
       </div>
-      {state.kind === 'error' && <FormAlert error={state.error} />}
+
       {role !== p.role && (
-        <p className="field-hint mt-0 flex items-center gap-1.5">
+        <p className="flex items-center gap-1.5 text-meta text-muted md:pl-14">
           <Icon name="info" size={15} />
           They asked for {ROLE_INFO[p.role].label}.
         </p>
       )}
+      {state.kind === 'error' && <FormAlert error={state.error} />}
     </li>
   );
 }

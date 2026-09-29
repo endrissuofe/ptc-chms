@@ -31,14 +31,38 @@ function splitError(err) {
   return { fields, banner: err && !Object.keys(fields).length ? err : null };
 }
 
+/** Everyone with a login, as rows in one panel; "Add a login" is this area's one main action. */
 export default function UserManager({ users, meId }) {
   const [adding, setAdding] = useState(false);
   const [done, setDone] = useState(null);
   const addButton = useRef(null);
 
   return (
-    <div className="flex flex-col gap-5">
-      {adding ? (
+    <section className="flex min-w-0 flex-col gap-4" aria-labelledby="logins-title">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 id="logins-title" className="of-h2">
+            Everyone with a login
+          </h2>
+          <p className="text-meta text-muted">Change a role or password, or switch a login off.</p>
+        </div>
+        {!adding && (
+          <button
+            ref={addButton}
+            type="button"
+            onClick={() => {
+              setAdding(true);
+              setDone(null);
+            }}
+            className="of-btn"
+          >
+            <Icon name="person_add" size={18} />
+            Add a login
+          </button>
+        )}
+      </div>
+
+      {adding && (
         <AddUser
           onCancel={() => {
             setAdding(false);
@@ -50,30 +74,15 @@ export default function UserManager({ users, meId }) {
             requestAnimationFrame(() => addButton.current?.focus());
           }}
         />
-      ) : (
-        <div className="flex flex-col gap-3">
-          <button
-            ref={addButton}
-            type="button"
-            onClick={() => {
-              setAdding(true);
-              setDone(null);
-            }}
-            className="btn btn-primary self-start"
-          >
-            <Icon name="person_add" size={18} />
-            Add a login
-          </button>
-          {done && <FormAlert success={done} />}
-        </div>
       )}
+      {!adding && done && <FormAlert success={done} />}
 
-      <ul className="flex flex-col gap-3">
+      <ul className="of-panel divide-y divide-line overflow-hidden">
         {users.map((u) => (
           <UserRow key={u.id} user={u} isMe={u.id === meId} />
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
 
@@ -85,7 +94,7 @@ function PasswordField({ value, onChange, label, required, error, errorId }) {
         <button
           type="button"
           onClick={() => onChange(suggestPassword())}
-          className="tap-link text-sm text-primary"
+          className="tap-link text-sm text-of-accent-ink hover:text-of-accent-ink hover:underline"
         >
           Suggest one
         </button>
@@ -113,30 +122,37 @@ function RolePicker({ value, onChange, name }) {
     <fieldset className="flex flex-col">
       <legend className="field-label">What can they do?</legend>
       <div className="grid gap-2 sm:grid-cols-2">
-        {Object.entries(ROLE_INFO).map(([key, r]) => (
-          <label
-            key={key}
-            className={`flex cursor-pointer items-start gap-3 rounded-tile border-[1.5px] p-3 transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-primary ${
-              value === key
-                ? 'border-primary bg-primary-soft'
-                : 'border-field/50 hover:bg-surface-2'
-            }`}
-          >
-            <input
-              type="radio"
-              name={name}
-              value={key}
-              checked={value === key}
-              onChange={() => onChange(key)}
-              className="sr-only"
-            />
-            <Icon name={r.icon} size={20} className="mt-0.5 text-primary" />
-            <span>
-              <span className="block font-bold">{r.label}</span>
-              <span className="block text-meta text-muted">{r.does}</span>
-            </span>
-          </label>
-        ))}
+        {Object.entries(ROLE_INFO).map(([key, r]) => {
+          const on = value === key;
+          return (
+            <label
+              key={key}
+              className={`flex cursor-pointer items-start gap-3 rounded-tile border p-3 transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-of-accent/40 ${
+                on ? 'border-of-accent bg-of-accent-soft' : 'border-line hover:bg-surface-2'
+              }`}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={key}
+                checked={on}
+                onChange={() => onChange(key)}
+                className="sr-only"
+              />
+              <Icon
+                name={r.icon}
+                size={20}
+                className={`mt-0.5 ${on ? 'text-of-accent-ink' : 'text-muted'}`}
+              />
+              <span className="min-w-0">
+                <span className={`block font-semibold ${on ? 'text-of-accent-ink' : ''}`}>
+                  {r.label}
+                </span>
+                <span className="block text-meta text-muted">{r.does}</span>
+              </span>
+            </label>
+          );
+        })}
       </div>
       {value === 'admin' && (
         <p className="alert alert-warning mt-2">
@@ -197,9 +213,17 @@ function AddUser({ onCancel, onDone }) {
       ref={form}
       onSubmit={submit}
       onKeyDown={(e) => e.key === 'Escape' && onCancel()}
-      className="card flex flex-col gap-4 motion-safe:animate-fade-in"
+      aria-labelledby="add-login-title"
+      className="of-panel flex flex-col gap-5 p-5 motion-safe:animate-fade-in sm:p-6"
     >
-      <h2 className="card-title">Add a login</h2>
+      <div className="flex flex-col gap-1">
+        <h3 id="add-login-title" className="of-h2">
+          Add a login
+        </h3>
+        <p className="text-meta text-muted">
+          For one person or a team’s shared phone. Give them the username and password yourself.
+        </p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col">
           <span className="field-label">Name shown in the app</span>
@@ -268,11 +292,11 @@ function AddUser({ onCancel, onDone }) {
       </div>
 
       {banner && <FormAlert error={banner} />}
-      <div className="flex flex-wrap gap-2">
-        <button type="submit" aria-disabled={busy} className="btn btn-primary">
+      <div className="flex flex-wrap gap-2 border-t border-line pt-4">
+        <button type="submit" aria-disabled={busy} className="of-btn">
           <Busy busy={busy} icon="save" label="Add login" />
         </button>
-        <button type="button" onClick={onCancel} className="btn btn-ghost">
+        <button type="button" onClick={onCancel} className="of-btn-quiet">
           Cancel
         </button>
       </div>
@@ -362,24 +386,34 @@ function UserRow({ user: u, isMe }) {
   }
 
   return (
-    <li className={`card card-compact flex flex-col gap-4 ${u.active ? '' : 'bg-surface-2'}`}>
-      <div className="flex flex-wrap items-center gap-3">
-        <Avatar name={u.displayName} />
+    <li className={`flex flex-col gap-4 p-4 sm:p-5 ${u.active ? '' : 'bg-surface-2'}`}>
+      <div className="flex items-start gap-3 sm:items-center">
+        <Avatar name={u.displayName} className={u.active ? '' : 'opacity-60'} />
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="break-words font-display text-lg font-bold">{u.displayName}</span>
-            {isMe && <span className="chip chip-primary">You</span>}
+            <span
+              className={`break-words font-brand text-lg font-semibold leading-tight ${u.active ? '' : 'text-ink-2'}`}
+            >
+              {u.displayName}
+            </span>
+            {isMe && <span className="chip bg-of-accent-soft text-of-accent-ink">You</span>}
             {!u.active && <span className="chip chip-danger">Switched off</span>}
           </p>
-          <p className="text-meta text-muted">
-            {u.email || u.username} ·{' '}
-            {u.lastSignInAt ? `Last signed in ${formatMoment(u.lastSignInAt)}` : 'Never signed in'}
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-meta text-muted">
+            <span className="inline-flex items-center gap-1 font-semibold text-ink-2">
+              <Icon name={role?.icon || 'person'} size={15} />
+              {role?.label || u.role}
+            </span>
+            <span aria-hidden="true">·</span>
+            <span className="break-all">{u.email || u.username}</span>
+            <span aria-hidden="true">·</span>
+            <span>
+              {u.lastSignInAt
+                ? `Last signed in ${formatMoment(u.lastSignInAt)}`
+                : 'Never signed in'}
+            </span>
           </p>
         </div>
-        <span className="chip">
-          <Icon name={role?.icon || 'person'} size={14} />
-          {role?.label || u.role}
-        </span>
         {!editing && (
           <button
             ref={changeButton}
@@ -388,10 +422,11 @@ function UserRow({ user: u, isMe }) {
               setEditing(true);
               setState({ kind: 'idle' });
             }}
-            className="btn btn-ghost btn-sm"
+            className="of-btn-quiet shrink-0 px-3.5"
           >
             <Icon name="edit_note" size={17} />
             Change
+            <span className="sr-only"> {u.displayName}</span>
           </button>
         )}
       </div>
@@ -403,7 +438,7 @@ function UserRow({ user: u, isMe }) {
           ref={form}
           onSubmit={submit}
           onKeyDown={(e) => e.key === 'Escape' && close()}
-          className="flex flex-col gap-4 border-t border-line pt-4 motion-safe:animate-fade-in"
+          className="flex flex-col gap-4 border-t border-line pt-4 motion-safe:animate-fade-in md:ml-14"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col">
@@ -441,7 +476,7 @@ function UserRow({ user: u, isMe }) {
             </label>
           </div>
           {isMe ? (
-            <p className="field-hint">You can’t change your own role.</p>
+            <p className="field-hint mt-0">You can’t change your own role.</p>
           ) : (
             <RolePicker
               name={`role-${u.id}`}
@@ -460,11 +495,11 @@ function UserRow({ user: u, isMe }) {
           </div>
 
           {banner && <FormAlert error={banner} />}
-          <div className="flex flex-wrap gap-2">
-            <button type="submit" aria-disabled={busy} className="btn btn-primary">
+          <div className="flex flex-wrap gap-2 border-t border-line pt-4">
+            <button type="submit" aria-disabled={busy} className="of-btn">
               <Busy busy={state.kind === 'busy'} icon="save" label="Save" />
             </button>
-            <button type="button" onClick={close} className="btn btn-ghost">
+            <button type="button" onClick={close} className="of-btn-quiet">
               Cancel
             </button>
             {!isMe && (
@@ -472,7 +507,7 @@ function UserRow({ user: u, isMe }) {
                 type="button"
                 aria-disabled={busy}
                 onClick={switchActive}
-                className={`btn sm:ml-auto ${u.active ? 'btn-danger-ghost' : 'btn-soft'}`}
+                className={`of-btn-quiet sm:ml-auto ${u.active ? 'text-danger hover:text-danger' : ''}`}
               >
                 <Busy
                   busy={state.kind === 'switching'}

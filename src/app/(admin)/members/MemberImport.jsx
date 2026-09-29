@@ -72,7 +72,7 @@ export default function MemberImport({ empty }) {
   if (!open) {
     return (
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={() => setOpen(true)} className="btn btn-soft">
+        <button type="button" onClick={() => setOpen(true)} className="of-btn-quiet">
           <Icon name="upload_file" size={18} />
           Upload more members (CSV)
         </button>
@@ -90,14 +90,11 @@ export default function MemberImport({ empty }) {
   const shown = preview?.rows.slice(0, 200) ?? [];
 
   return (
-    <section className="card flex flex-col gap-5">
+    <section className="of-panel flex flex-col gap-5 p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <span className="icon-tile tone-primary h-12 w-12">
-          <Icon name="upload_file" size={24} />
-        </span>
-        <div className="flex-1">
-          <h2 className="section-title">Upload your member list</h2>
-          <p className="card-sub">
+        <div className="flex flex-1 flex-col gap-1">
+          <h2 className="of-h2">Upload your member list</h2>
+          <p className="max-w-[70ch] text-meta text-muted">
             A CSV file with the columns <strong className="text-ink">Name, Phone</strong> and, if
             you have them, <strong className="text-ink">Gender, Birthday, Anniversary</strong>{' '}
             (Excel: File → Save As → CSV). Dates like 14/10 or 14 Oct. Nothing is saved until you
@@ -119,7 +116,7 @@ export default function MemberImport({ empty }) {
           type="button"
           onClick={() => input.current?.click()}
           disabled={state.kind === 'busy'}
-          className="btn btn-primary"
+          className="of-btn disabled:opacity-50"
         >
           <Icon name="add" size={18} />
           {file ? 'Choose a different file' : 'Choose CSV file'}
@@ -141,8 +138,8 @@ export default function MemberImport({ empty }) {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {['new', 'update', 'duplicate', 'invalid'].map((s) => (
               <div key={s} className="rounded-tile bg-surface-2 p-4">
-                <p className="label-caps">{STATUS[s].label}</p>
-                <p className="stat-value mt-1">{preview.summary[s]}</p>
+                <p className="of-eyebrow">{STATUS[s].label}</p>
+                <p className="of-figure mt-2 text-stat">{preview.summary[s]}</p>
               </div>
             ))}
           </div>
@@ -222,7 +219,7 @@ export default function MemberImport({ empty }) {
                 setFile(null);
                 if (!empty) setOpen(false);
               }}
-              className="btn btn-ghost btn-lg"
+              className="of-btn-quiet min-h-[48px] bg-transparent"
             >
               Cancel
             </button>
@@ -230,7 +227,7 @@ export default function MemberImport({ empty }) {
               type="button"
               onClick={commit}
               disabled={state.kind === 'busy' || preview.summary.new + preview.summary.update === 0}
-              className="btn btn-primary btn-lg"
+              className="of-btn min-h-[48px] disabled:opacity-50"
             >
               <Icon name="check" size={20} />
               Import {preview.summary.new} new {preview.summary.new === 1 ? 'member' : 'members'}

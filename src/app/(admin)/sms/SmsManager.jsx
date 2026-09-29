@@ -43,6 +43,11 @@ const when = new Intl.DateTimeFormat('en-GB', {
 });
 const naira = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' });
 
+// The Onefold buttons have no disabled look of their own yet.
+const OFF =
+  'disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50';
+const FOCUS = 'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent/40';
+
 /** The SMS company's reasons, in words a church admin can act on. */
 function plainReason(error = '') {
   if (/insufficient|balance|credit|unit/i.test(error)) return 'Not enough SMS credit';
@@ -61,15 +66,20 @@ export default function SmsManager({ templates, invite, memberInvite, runs, audi
     <>
       <Broadcast counts={audienceCounts} />
 
-      <section className="flex flex-col gap-4">
+      <section aria-labelledby="automatic-title" className="flex flex-col gap-3">
         <div>
-          <h2 className="section-title">Automatic messages</h2>
+          <h2 id="automatic-title" className="of-h2">
+            Automatic messages
+          </h2>
+          <p className="text-meta text-muted">
+            Sent by the app on their own. Open one to see who gets it or change the wording.
+          </p>
         </div>
-        <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
+        <ul className="of-panel divide-y divide-line">
           {templates.map((t) => (
             <TemplateEditor key={t.key} template={t} invite={previews[t.key] ?? null} />
           ))}
-        </div>
+        </ul>
       </section>
 
       <RunHistory runs={runs} />
@@ -103,9 +113,9 @@ function MessageBox({ tagsFor, value, onChange, id, rows = 4, foldPreview = fals
   );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <label htmlFor={id} className="label-caps">
+        <label htmlFor={id} className="of-eyebrow">
           Message
         </label>
         <span className={`chip ${seg.pages > 1 ? 'chip-warning' : 'chip-success'}`}>
@@ -121,10 +131,10 @@ function MessageBox({ tagsFor, value, onChange, id, rows = 4, foldPreview = fals
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={bad.length ? true : undefined}
         aria-describedby={bad.length ? errorId : undefined}
-        className="input resize-y leading-relaxed"
+        className="input resize-y leading-relaxed focus:border-of-accent focus:ring-of-accent/30"
       />
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="label-caps">Insert</span>
+        <span className="of-eyebrow">Insert</span>
         {tags.map((tag) => (
           <button key={tag} type="button" onClick={() => insert(tag)} className="chip-btn">
             <Icon name="add" size={15} />
@@ -147,7 +157,7 @@ function MessageBox({ tagsFor, value, onChange, id, rows = 4, foldPreview = fals
       )}
       {foldPreview ? (
         <details className="group">
-          <summary className="tap-link cursor-pointer list-none text-sm text-primary">
+          <summary className={`of-link cursor-pointer list-none ${FOCUS}`}>
             <Icon
               name="expand_more"
               size={18}
@@ -159,11 +169,45 @@ function MessageBox({ tagsFor, value, onChange, id, rows = 4, foldPreview = fals
         </details>
       ) : (
         <div className="flex flex-col gap-1">
-          <p className="label-caps">Preview</p>
+          <p className="of-eyebrow">Preview</p>
           {preview}
         </div>
       )}
     </div>
+  );
+}
+
+const STEPS = ['Write', 'Check', 'Send'];
+
+/** Where the broadcast is: write → check → send. */
+function Steps({ step }) {
+  const at = { write: 0, check: 1, sending: 2, done: 3 }[step];
+  return (
+    <ol aria-label="Steps" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-meta">
+      {STEPS.map((label, i) => (
+        <li
+          key={label}
+          aria-current={i === at ? 'step' : undefined}
+          className={`flex items-center gap-1.5 ${i === at ? 'font-semibold text-ink' : 'text-muted'}`}
+        >
+          {i > 0 && <span aria-hidden="true" className="h-px w-3 bg-line-2" />}
+          <span
+            aria-hidden="true"
+            className={`grid h-6 w-6 place-items-center rounded-full text-2xs font-semibold tabular-nums ${
+              i < at
+                ? 'bg-of-accent text-of-on-accent'
+                : i === at
+                  ? 'bg-of-accent-soft text-of-accent-ink'
+                  : 'bg-surface-2'
+            }`}
+          >
+            {i < at ? <Icon name="check" size={14} /> : i + 1}
+          </span>
+          {label}
+          {i < at && <span className="sr-only"> (done)</span>}
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -234,32 +278,40 @@ function Broadcast({ counts }) {
   const pct = job ? Math.round((job.processed / job.total) * 100) : 0;
 
   return (
-    <section id="broadcast" className="card flex scroll-mt-24 flex-col gap-5">
-      <div className="flex items-start gap-3">
-        <span className="icon-tile tone-coral h-12 w-12">
-          <Icon name="send" size={24} />
-        </span>
+    <section
+      id="broadcast"
+      aria-labelledby="broadcast-title"
+      className="of-panel flex scroll-mt-24 flex-col gap-5 p-5 sm:p-6"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div>
-          <h2 className="section-title">Send a message</h2>
-          <p className="card-sub">One SMS to a whole group, e.g. all members.</p>
+          <h2 id="broadcast-title" className="of-h2">
+            Send a message
+          </h2>
+          <p className="text-meta text-muted">One SMS to a whole group, such as all members.</p>
         </div>
+        <Steps step={step} />
       </div>
 
       {step === 'write' && (
         <>
           <div className="flex flex-col gap-1.5">
-            <span className="label-caps">Send to</span>
-            <div role="group" aria-label="Send to" className="seg-tabs self-start">
+            <span className="of-eyebrow">Send to</span>
+            <div
+              role="group"
+              aria-label="Send to"
+              className="of-tabs max-w-full self-start overflow-x-auto"
+            >
               {Object.entries(AUDIENCES).map(([key, a]) => (
                 <button
                   key={key}
                   type="button"
                   aria-pressed={audience === key}
                   onClick={() => setAudience(key)}
-                  className="seg-tab"
+                  className="of-tab shrink-0"
                 >
                   {a.label}
-                  <span className="seg-count">{counts[key]}</span>
+                  <span className="of-count">{counts[key]}</span>
                 </button>
               ))}
             </div>
@@ -285,20 +337,20 @@ function Broadcast({ counts }) {
             rows={5}
           />
           {state.kind === 'error' && <FormAlert error={state.error} />}
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
             <button
               type="button"
               onClick={check}
               disabled={bad || !body.trim() || !counts[audience]}
               aria-disabled={state.kind === 'busy'}
-              className="btn btn-primary btn-lg"
+              className={`of-btn ${OFF}`}
             >
               <Busy
                 busy={state.kind === 'busy'}
                 busyLabel="Checking…"
                 label="Check before sending"
               />
-              {state.kind !== 'busy' && <Icon name="arrow_forward" size={20} />}
+              {state.kind !== 'busy' && <Icon name="arrow_forward" size={18} />}
             </button>
           </div>
         </>
@@ -306,23 +358,23 @@ function Broadcast({ counts }) {
 
       {step === 'check' && preview && (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <dl className="grid grid-cols-3 divide-x divide-line border-y border-line py-4">
             <Figure label="People" value={preview.count} />
             <Figure label="Pages each" value={preview.pages} />
             <Figure label="SMS units" value={preview.units} hint="People × pages" />
-          </div>
+          </dl>
           <div className="flex flex-col gap-1">
-            <p className="label-caps">The longest message will read</p>
+            <p className="of-eyebrow">The longest message will read</p>
             <div className="rounded-tile bg-surface-2 p-4 text-sm">{preview.sample}</div>
           </div>
           {state.kind === 'error' && <FormAlert error={state.error} />}
-          <div className="flex flex-wrap justify-end gap-2">
-            <button type="button" onClick={() => setStep('write')} className="btn btn-ghost btn-lg">
-              <Icon name="arrow_back" size={20} />
+          <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
+            <button type="button" onClick={() => setStep('write')} className="of-btn-quiet">
+              <Icon name="arrow_back" size={18} />
               Change it
             </button>
-            <button type="button" onClick={() => sendAll(null)} className="btn btn-primary btn-lg">
-              <Icon name="send" size={20} />
+            <button type="button" onClick={() => sendAll(null)} className="of-btn">
+              <Icon name="send" size={18} />
               Send to {preview.count} {preview.count === 1 ? 'person' : 'people'}
             </button>
           </div>
@@ -332,18 +384,23 @@ function Broadcast({ counts }) {
       {(step === 'sending' || step === 'done') && (
         <div className="flex flex-col gap-3" aria-live="polite">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="font-display text-lg font-semibold">
+            <p className="font-brand text-lg font-semibold">
               {step === 'done' ? 'Sent' : 'Sending…'} {job?.processed ?? 0} of{' '}
               {job?.total ?? preview?.count}
             </p>
             {job && (
-              <p className="text-sm text-muted">
-                {job.sent} sent{job.failed ? ` · ${job.failed} failed` : ''}
+              <p className="text-meta text-muted">
+                {job.sent} sent
+                {job.failed ? (
+                  <span className="font-semibold text-danger"> · {job.failed} failed</span>
+                ) : (
+                  ''
+                )}
               </p>
             )}
           </div>
           <div
-            className="h-3 overflow-hidden rounded-full bg-surface-3"
+            className="h-2 overflow-hidden rounded-full bg-surface-2"
             role="progressbar"
             aria-valuenow={pct}
             aria-valuemin={0}
@@ -351,7 +408,7 @@ function Broadcast({ counts }) {
             aria-label="Sending progress"
           >
             <div
-              className="h-full rounded-full bg-primary-fill transition-all"
+              className="h-full rounded-full bg-of-accent transition-all"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -360,7 +417,7 @@ function Broadcast({ counts }) {
             <button
               type="button"
               onClick={() => (job ? sendAll(job) : setStep('check'))}
-              className="btn btn-primary self-start"
+              className="of-btn self-start"
             >
               <Icon name="refresh" size={18} />
               {job ? 'Continue sending' : 'Back'}
@@ -379,7 +436,7 @@ function Broadcast({ counts }) {
                   setJob(null);
                   setBody('Hi {FirstName}, ');
                 }}
-                className="btn btn-ghost"
+                className="of-btn-quiet"
               >
                 Write another
               </button>
@@ -393,14 +450,15 @@ function Broadcast({ counts }) {
 
 function Figure({ label, value, hint }) {
   return (
-    <div className="rounded-tile bg-surface-2 p-4">
-      <p className="label-caps">{label}</p>
-      <p className="stat-value mt-1">{value}</p>
-      {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
+    <div className="flex min-w-0 flex-col gap-1 px-3 first:pl-0 sm:px-5">
+      <dt className="of-eyebrow">{label}</dt>
+      <dd className="of-figure text-[2rem]">{value}</dd>
+      {hint && <dd className="text-xs text-muted">{hint}</dd>}
     </div>
   );
 }
 
+/** One automatic message as a row: name, when it goes and an on/off switch; opens to edit. */
 function TemplateEditor({ template, invite }) {
   const router = useRouter();
   const info = TEMPLATE_INFO[template.key];
@@ -409,6 +467,7 @@ function TemplateEditor({ template, invite }) {
   const [saved, setSaved] = useState({ bodies: initial, enabled: template.enabled });
   const [bodies, setBodies] = useState(initial);
   const [enabled, setEnabled] = useState(template.enabled);
+  const [open, setOpen] = useState(false);
   const [state, setState] = useState({ kind: 'idle' });
   const trimmed = bodies.map((b) => b.trim());
   const dirty =
@@ -416,6 +475,7 @@ function TemplateEditor({ template, invite }) {
   const bad = trimmed.some((b) => !b || unknownTags(template.key, b).length > 0);
   const busy = state.kind === 'busy';
   const body = bodies[0];
+  const panelId = `sms-${template.key}-panel`;
   const setBody = (v) => setBodies((list) => [v, ...list.slice(1)]);
   const setWording = (i) => (v) => {
     setBodies((list) => list.map((b, j) => (j === i ? v : b)));
@@ -442,17 +502,39 @@ function TemplateEditor({ template, invite }) {
   }
 
   return (
-    <section className={`card flex flex-col gap-4 ${rotates ? 'lg:col-span-3' : ''}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="card-title">{info.title}</h3>
-          <p className="card-sub flex items-center gap-1">
-            <Icon name="bolt" size={15} className="text-coral-ink" />
-            {info.schedule}
-          </p>
-        </div>
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-bold">
-          {enabled ? 'On' : 'Off'}
+    <li>
+      <div className="flex items-center gap-2 px-3 py-2 sm:px-4">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls={panelId}
+          className={`flex min-h-[56px] min-w-0 flex-1 items-center gap-3 rounded-tile px-2 py-1.5 text-left transition-colors hover:bg-surface-2 ${FOCUS}`}
+        >
+          <Icon
+            name="expand_more"
+            size={20}
+            className={`text-muted transition-transform ${open ? 'rotate-180' : ''}`}
+          />
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-semibold">{info.title}</span>
+              {dirty && <span className="chip chip-warning">Not saved</span>}
+            </span>
+            <span className="block text-meta text-muted">
+              {info.schedule}
+              {rotates && ` · ${bodies.length} ${bodies.length === 1 ? 'wording' : 'wordings'}`}
+            </span>
+            {invite && (
+              <span className="block text-meta font-semibold text-ink-2">
+                Next: {dayLabel.format(new Date(invite.serviceDate))} · {invite.toSend}{' '}
+                {invite.toSend === 1 ? 'person' : 'people'}
+              </span>
+            )}
+          </span>
+        </button>
+        <label className="flex min-h-[44px] shrink-0 cursor-pointer items-center gap-2 text-sm font-semibold">
+          <span className={enabled ? 'text-ink' : 'text-muted'}>{enabled ? 'On' : 'Off'}</span>
           <input
             type="checkbox"
             role="switch"
@@ -460,107 +542,110 @@ function TemplateEditor({ template, invite }) {
             onChange={(e) => {
               setEnabled(e.target.checked);
               setState({ kind: 'idle' });
+              // The switch is saved with the wording, so show the Save button.
+              setOpen(true);
             }}
             aria-label={`${info.title}: ${enabled ? 'on' : 'off'}`}
             className="switch"
           />
         </label>
       </div>
-      <p className="flex items-start gap-2 rounded-tile bg-surface-2 px-3.5 py-2.5 text-sm">
-        <Icon name="group" size={16} className="mt-0.5 text-muted" />
-        <span>
-          {info.recipients}
-          {invite && (
-            <strong className="mt-1 block text-ink">
-              Next: {dayLabel.format(new Date(invite.serviceDate))} · {invite.toSend}{' '}
-              {invite.toSend === 1 ? 'person' : 'people'}
-            </strong>
-          )}
-        </span>
-      </p>
 
-      {rotates ? (
-        <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {bodies.map((b, i) => (
-            <li key={i} className="flex flex-col gap-1.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="flex items-center gap-2 text-sm font-bold">
-                  Wording {i + 1}
-                  {i === template.nextWording && (
-                    <span className="chip chip-primary">This Saturday</span>
+      <div
+        id={panelId}
+        hidden={!open}
+        className={`${open ? 'flex' : 'hidden'} flex-col gap-4 border-t border-line px-5 pb-5 pt-4 motion-safe:animate-fade-in sm:px-6`}
+      >
+        <p className="flex items-start gap-2 text-sm text-ink-2">
+          <Icon name="group" size={16} className="mt-0.5 text-muted" />
+          <span>{info.recipients}</span>
+        </p>
+
+        {rotates ? (
+          <ol className="grid gap-x-6 gap-y-5 lg:grid-cols-2">
+            {bodies.map((b, i) => (
+              <li key={i} className="flex min-w-0 flex-col gap-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    Wording {i + 1}
+                    {i === template.nextWording && (
+                      <span className="chip bg-of-accent-soft text-of-accent-ink">
+                        This Saturday
+                      </span>
+                    )}
+                  </span>
+                  {bodies.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBodies((list) => list.filter((_, j) => j !== i));
+                        setState({ kind: 'idle' });
+                      }}
+                      aria-label={`Remove wording ${i + 1}`}
+                      className="icon-btn"
+                    >
+                      <Icon name="close" size={16} />
+                    </button>
                   )}
-                </span>
-                {bodies.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBodies((list) => list.filter((_, j) => j !== i));
-                      setState({ kind: 'idle' });
-                    }}
-                    aria-label={`Remove wording ${i + 1}`}
-                    className="icon-btn"
-                  >
-                    <Icon name="close" size={16} />
-                  </button>
-                )}
-              </div>
-              <MessageBox
-                id={`message-${template.key}-${i}`}
-                tagsFor={template.key}
-                value={b}
-                foldPreview
-                onChange={setWording(i)}
-              />
-            </li>
-          ))}
-          {bodies.length < MAX_WORDINGS && (
-            <li>
-              <button
-                type="button"
-                onClick={() => setBodies((list) => [...list, ''])}
-                className="btn btn-soft btn-sm"
-              >
-                <Icon name="add" size={16} />
-                Add a wording
-              </button>
-            </li>
-          )}
-        </ol>
-      ) : (
-        <MessageBox
-          id={`message-${template.key}`}
-          tagsFor={template.key}
-          value={body}
-          foldPreview
-          onChange={(v) => {
-            setBody(v);
-            setState({ kind: 'idle' });
-          }}
-        />
-      )}
-      {state.kind === 'error' && <FormAlert error={state.error} />}
-      {state.kind === 'ok' && !dirty && <FormAlert success={state.message} />}
-      <div className="mt-auto flex flex-wrap items-center justify-end gap-2">
-        {dirty ? (
-          <button
-            type="button"
-            onClick={save}
-            disabled={bad}
-            aria-disabled={busy}
-            className="btn btn-primary"
-          >
-            <Busy busy={busy} icon="save" label="Save changes" />
-          </button>
+                </div>
+                <MessageBox
+                  id={`message-${template.key}-${i}`}
+                  tagsFor={template.key}
+                  value={b}
+                  foldPreview
+                  onChange={setWording(i)}
+                />
+              </li>
+            ))}
+            {bodies.length < MAX_WORDINGS && (
+              <li className="lg:col-span-2">
+                <button
+                  type="button"
+                  onClick={() => setBodies((list) => [...list, ''])}
+                  className="of-btn-quiet"
+                >
+                  <Icon name="add" size={16} />
+                  Add a wording
+                </button>
+              </li>
+            )}
+          </ol>
         ) : (
-          state.kind !== 'ok' && (
-            <span className="chip chip-success">
-              <Icon name="check" size={14} />
-              Saved
-            </span>
-          )
+          <MessageBox
+            id={`message-${template.key}`}
+            tagsFor={template.key}
+            value={body}
+            foldPreview
+            onChange={(v) => {
+              setBody(v);
+              setState({ kind: 'idle' });
+            }}
+          />
         )}
+        {state.kind === 'error' && <FormAlert error={state.error} />}
+        {state.kind === 'ok' && !dirty && <FormAlert success={state.message} />}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {dirty ? (
+            <button
+              type="button"
+              onClick={save}
+              disabled={bad}
+              aria-disabled={busy}
+              className={`of-btn ${OFF}`}
+            >
+              <Busy busy={busy} icon="save" label="Save changes" />
+            </button>
+          ) : (
+            state.kind !== 'ok' && (
+              <span className="chip chip-success">
+                <Icon name="check" size={14} />
+                Saved
+              </span>
+            )
+          )}
+        </div>
       </div>
-    </section>
+    </li>
   );
 }
 
@@ -573,10 +658,20 @@ const runTitle = (run) => {
 };
 
 function RunHistory({ runs }) {
+  const failed = runs.filter((r) => r.failed > 0 && !r.test).length;
   return (
-    <section className="flex flex-col gap-3">
+    <section aria-labelledby="runs-title" className="flex flex-col gap-3">
       <div>
-        <h2 className="section-title">Recent sends</h2>
+        <h2 id="runs-title" className="of-h2">
+          Recent sends
+        </h2>
+        {runs.length > 0 && (
+          <p className="text-meta text-muted">
+            {failed
+              ? `${failed} ${failed === 1 ? 'send has' : 'sends have'} failed messages you can resend`
+              : 'Nothing failed'}
+          </p>
+        )}
       </div>
       {runs.length === 0 ? (
         <EmptyState
@@ -586,7 +681,7 @@ function RunHistory({ runs }) {
           action={{ href: '#broadcast', label: 'Send a message', icon: 'send' }}
         />
       ) : (
-        <div className="relative overflow-x-auto rounded-[1.5rem] border border-line bg-surface">
+        <div className="of-panel relative overflow-x-auto">
           <table className="table min-w-[680px]">
             <thead>
               <tr>
@@ -670,9 +765,9 @@ function RunRow({ run }) {
   return (
     <>
       <tr>
-        <td className="whitespace-nowrap pl-5">{when.format(new Date(run.lastAt))}</td>
+        <td className="whitespace-nowrap pl-5 text-muted">{when.format(new Date(run.lastAt))}</td>
         <td>
-          <span className="font-display font-semibold">{runTitle(run)}</span>
+          <span className="font-semibold">{runTitle(run)}</span>
           {run.broadcast && (
             <span className="block max-w-[340px] truncate text-meta text-muted">
               {run.broadcast.body}
@@ -685,13 +780,13 @@ function RunRow({ run }) {
         </td>
         <td className="text-right tabular-nums">{run.cost ? naira.format(run.cost) : '—'}</td>
         <td className="pr-5 text-right">
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-1">
             {run.failed > 0 && !run.test && (
               <button
                 type="button"
                 onClick={retry}
                 aria-disabled={resend.kind === 'busy'}
-                className="btn btn-soft btn-sm"
+                className={`of-btn-quiet ${OFF}`}
               >
                 <Busy
                   busy={resend.kind === 'busy'}
@@ -702,12 +797,7 @@ function RunRow({ run }) {
                 />
               </button>
             )}
-            <button
-              type="button"
-              onClick={toggle}
-              aria-expanded={open}
-              className="btn btn-ghost btn-sm"
-            >
+            <button type="button" onClick={toggle} aria-expanded={open} className="of-link px-2">
               {open ? 'Hide' : 'See who'}
             </button>
           </div>
@@ -727,7 +817,7 @@ function RunRow({ run }) {
             {error ? (
               <p className="flex flex-wrap items-center gap-2 text-danger">
                 {error.message}
-                <button type="button" onClick={load} className="tap-link text-primary">
+                <button type="button" onClick={load} className="of-link">
                   Try again
                 </button>
               </p>
@@ -737,11 +827,11 @@ function RunRow({ run }) {
                 Loading…
               </p>
             ) : (
-              <ul className="flex flex-col gap-1 motion-safe:animate-fade-in">
+              <ul className="flex flex-col divide-y divide-line motion-safe:animate-fade-in">
                 {people.map((p, i) => (
-                  <li key={i} className="flex flex-wrap gap-x-3">
+                  <li key={i} className="flex flex-wrap gap-x-3 py-1.5">
                     <span className="font-semibold">{p.name}</span>
-                    <span className="text-muted">{p.to}</span>
+                    <span className="tabular-nums text-muted">{p.to}</span>
                     <span
                       className={
                         p.status === 'sent' ? 'font-bold text-success' : 'font-bold text-danger'

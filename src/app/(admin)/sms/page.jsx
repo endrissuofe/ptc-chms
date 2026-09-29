@@ -12,16 +12,17 @@ const naira = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN
 export default async function SmsPage() {
   const [overview, counts] = await Promise.all([getSmsOverview(), audienceCounts()]);
   const balance = overview.balance;
+  const on = overview.templates.filter((t) => t.enabled).length;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="page-head">
-        <div>
-          <p className="eyebrow">
-            <Icon name="sms" size={16} />
-            Messages
+    <div className="flex flex-col gap-6 font-ui lg:gap-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <p className="of-eyebrow">Messages</p>
+          <h1 className="of-h1">SMS messages</h1>
+          <p className="text-meta text-muted">
+            {on} of {overview.templates.length} automatic messages switched on
           </p>
-          <h1 className="page-title">SMS messages</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <span className="chip chip-primary">
@@ -38,7 +39,7 @@ export default async function SmsPage() {
             </span>
           )}
         </div>
-      </div>
+      </header>
       <SmsManager
         templates={overview.templates}
         invite={{ ...overview.invite, serviceDate: isoDay(overview.invite.serviceDate) }}

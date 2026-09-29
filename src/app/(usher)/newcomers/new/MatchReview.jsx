@@ -46,13 +46,13 @@ export default function MatchReview({
         Back to the card
       </button>
 
-      <section className="card flex items-start gap-4 border-coral/40 bg-coral-soft">
-        <span className="icon-tile h-12 w-12 bg-surface text-coral-ink">
+      <section className="of-panel flex items-start gap-4 border-coral/40 bg-coral-soft p-5 sm:p-6">
+        <span className="icon-tile h-12 w-12 shrink-0 bg-surface text-coral-ink">
           <Icon name="contact_phone" size={24} filled />
         </span>
         <div>
-          <p className="eyebrow">Returning visitor?</p>
-          <h1 ref={heading} tabIndex={-1} className="section-title outline-none">
+          <p className="of-eyebrow">Returning visitor?</p>
+          <h1 ref={heading} tabIndex={-1} className="of-h2 mt-1 outline-none">
             This phone number is already in our records
           </h1>
           <p className="mt-1 text-body text-ink-2">
@@ -68,11 +68,11 @@ export default function MatchReview({
         {matches.map((m) => {
           const alreadyToday = m.lastVisitDate && iso(m.lastVisitDate) === serviceDate;
           return (
-            <section key={m.id} className="card flex flex-col gap-4">
+            <section key={m.id} className="of-panel flex flex-col gap-4 p-5 sm:p-6">
               <div className="flex items-center gap-3">
                 <Avatar name={`${m.firstName} ${m.lastName}`} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <h2 className="section-title break-words">
+                  <h2 className="break-words font-brand text-lg font-semibold leading-tight">
                     {m.firstName} {m.lastName}
                   </h2>
                   <StageBadge stage={m.stage} />
@@ -81,20 +81,20 @@ export default function MatchReview({
 
               <dl className="grid grid-cols-2 gap-2.5 text-sm">
                 <div className="rounded-tile bg-surface-2 p-3">
-                  <dt className="label-caps flex items-center gap-1">
+                  <dt className="of-eyebrow flex items-center gap-1">
                     <Icon name="event" size={14} />
                     First visit
                   </dt>
-                  <dd className="mt-1 font-display text-base font-semibold">
+                  <dd className="of-figure mt-1.5 text-lg">
                     {date.format(new Date(m.firstVisitDate))}
                   </dd>
                 </div>
                 <div className="rounded-tile bg-surface-2 p-3">
-                  <dt className="label-caps flex items-center gap-1">
+                  <dt className="of-eyebrow flex items-center gap-1">
                     <Icon name="repeat" size={14} />
                     Visits so far
                   </dt>
-                  <dd className="mt-1 font-display text-base font-semibold">{m.visitCount}</dd>
+                  <dd className="of-figure mt-1.5 text-lg">{m.visitCount}</dd>
                 </div>
               </dl>
 
@@ -112,7 +112,7 @@ export default function MatchReview({
                   setPressed(m.id);
                   onPick(m);
                 }}
-                className="btn btn-primary btn-lg mt-auto w-full"
+                className="of-btn mt-auto min-h-[52px] w-full text-base"
               >
                 <Busy
                   busy={saving && pressed === m.id}
@@ -145,7 +145,7 @@ export default function MatchReview({
             setPressed('new');
             onNewPerson();
           }}
-          className="btn btn-ghost btn-lg w-full sm:w-auto"
+          className="of-btn-quiet min-h-[52px] w-full sm:w-auto"
         >
           <Busy
             busy={saving && pressed === 'new'}

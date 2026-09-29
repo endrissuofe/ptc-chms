@@ -17,9 +17,8 @@ const EMAILS = {
   followUp: {
     setting: 'followUpReport',
     lists: ['followupEmails', 'pastorEmails'],
-    tone: 'tone-primary',
   },
-  celebrations: { setting: 'celebrationReport', lists: ['celebrationEmails'], tone: 'tone-coral' },
+  celebrations: { setting: 'celebrationReport', lists: ['celebrationEmails'] },
 };
 
 export default function AlertsManager({ settings, people, report, email, recent }) {
@@ -37,7 +36,7 @@ export default function AlertsManager({ settings, people, report, email, recent 
 function EmailCard({ kind, settings, people }) {
   const router = useRouter();
   const info = ALERTS[kind];
-  const { setting, lists, tone } = EMAILS[kind];
+  const { setting, lists } = EMAILS[kind];
   const [on, setOn] = useState(settings[setting]);
   const [state, setState] = useState({ kind: 'idle' });
   const eligible = people.filter((p) => info.roles.includes(p.role));
@@ -70,18 +69,13 @@ function EmailCard({ kind, settings, people }) {
   }
 
   return (
-    <section className="card flex flex-col gap-5">
+    <section className="of-panel flex flex-col gap-5 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <span className={`icon-tile ${tone}`}>
-            <Icon name={info.icon} size={22} />
-          </span>
-          <div>
-            <h2 className="card-title">{info.label}</h2>
-            <p className="card-sub">
-              {total} {total === 1 ? 'person gets' : 'people get'} it
-            </p>
-          </div>
+        <div className="flex flex-col gap-1">
+          <h2 className="of-h2">{info.label}</h2>
+          <p className="text-meta text-muted">
+            {total} {total === 1 ? 'person gets' : 'people get'} it
+          </p>
         </div>
         <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm font-bold">
           {on ? 'On' : 'Off'}
@@ -232,7 +226,7 @@ function OtherAddresses({ kind, settings, others, onChange }) {
           aria-describedby={error ? `${inputId}-error` : undefined}
           className="input min-w-[12rem] flex-1 sm:max-w-sm"
         />
-        <button type="submit" aria-disabled={busy} className="btn btn-soft">
+        <button type="submit" aria-disabled={busy} className="of-btn-quiet">
           <Busy busy={busy} icon="add" label="Add" />
         </button>
       </div>
@@ -243,14 +237,11 @@ function OtherAddresses({ kind, settings, others, onChange }) {
 
 function Preview({ report, email }) {
   return (
-    <section className="card flex flex-col gap-5">
+    <section className="of-panel flex flex-col gap-5 p-5 sm:p-6">
       <div className="flex items-start gap-3">
-        <span className="icon-tile tone-coral">
-          <Icon name="forward_to_inbox" size={22} />
-        </span>
-        <div>
-          <h2 className="card-title">Tomorrow morning’s email</h2>
-          <p className="card-sub">
+        <div className="flex flex-col gap-1">
+          <h2 className="of-h2">Tomorrow morning’s email</h2>
+          <p className="text-meta text-muted">
             {report.firstTimers.length} first {report.firstTimers.length === 1 ? 'timer' : 'timers'}{' '}
             and {report.returning.length} returning today · {report.overdue.length} waiting over 72
             hours
@@ -261,7 +252,7 @@ function Preview({ report, email }) {
       {email ? (
         <div className="overflow-hidden rounded-tile border border-line">
           <p className="border-b border-line bg-surface-2 px-4 py-3 text-sm">
-            <span className="label-caps mr-2">Subject</span>
+            <span className="of-eyebrow mr-2">Subject</span>
             <strong>{email.subject}</strong>
           </p>
           <iframe
@@ -289,7 +280,7 @@ const KIND_LABEL = {
 function History({ recent }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="section-title">Recent emails</h2>
+      <h2 className="of-h2">Recent emails</h2>
       {recent.length === 0 ? (
         <EmptyState card icon="mail" title="No emails sent yet" />
       ) : (

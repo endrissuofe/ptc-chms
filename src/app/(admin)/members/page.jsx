@@ -17,36 +17,40 @@ export default async function MembersPage({ searchParams }) {
   const link = (p) => `/members?${new URLSearchParams({ ...(q && { q }), page: String(p) })}`;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="page-head">
-        <div>
-          <p className="eyebrow">
-            <Icon name="contacts" size={16} />
-            Church family
-          </p>
-          <h1 className="page-title">Members</h1>
-          <p className="page-sub">{list.all === 1 ? '1 member' : `${list.all} members`}</p>
-        </div>
+    <div className="flex flex-col gap-6 font-ui lg:gap-7">
+      <header className="flex flex-col gap-2">
+        <p className="of-eyebrow">Members</p>
+        <h1 className="of-h1">
+          {list.all === 0 ? 'No members yet' : list.all === 1 ? '1 member' : `${list.all} members`}
+        </h1>
+        <p className="max-w-[65ch] text-meta text-muted">
+          {list.all === 0
+            ? 'Add people one at a time, or upload your list from a spreadsheet.'
+            : 'Their birthdays and anniversaries show on the Birthdays screen. Members with SMS on get church messages and wishes.'}
+        </p>
+      </header>
+
+      {/* Buttons first; a form or upload that is opened drops below them (order-last). */}
+      <div className="flex flex-wrap items-center gap-2">
+        <AddMember />
+        <MemberImport empty={list.all === 0} />
         {list.all > 0 && (
-          <Link href="/sms#broadcast" className="btn btn-soft">
+          <Link href="/sms#broadcast" className="of-btn-quiet">
             <Icon name="send" size={18} />
             Send them a message
           </Link>
         )}
       </div>
 
-      <AddMember />
-      <MemberImport empty={list.all === 0} />
-
       {list.all > 0 && (
-        <section className="card flex flex-col gap-4">
-          <form className="flex flex-wrap gap-2" action="/members">
-            <label className="relative min-w-[220px] flex-1">
+        <section className="flex flex-col gap-4" aria-label="Member list">
+          <form className="flex flex-wrap items-center gap-2" action="/members">
+            <label className="relative min-w-[200px] flex-1">
               <span className="sr-only">Search by name or phone</span>
               <Icon
                 name="search"
                 size={20}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
               />
               <input
                 name="q"
@@ -54,21 +58,28 @@ export default async function MembersPage({ searchParams }) {
                 type="search"
                 enterKeyHint="search"
                 placeholder="Search by name or phone"
-                className="input pl-11"
+                className="input rounded-full pl-11 focus:border-of-accent focus:ring-of-accent/30"
               />
             </label>
-            <button type="submit" className="btn btn-soft">
+            <button type="submit" className="of-btn-quiet">
               Search
             </button>
             {q && (
-              <Link href="/members" className="btn btn-ghost">
+              <Link href="/members" className="of-link px-2">
                 Clear
               </Link>
             )}
           </form>
 
+          {q && list.items.length > 0 && (
+            <p className="text-meta text-muted">
+              {list.total === 1 ? '1 found' : `${list.total} found`} for “{q}”
+            </p>
+          )}
+
           {list.items.length === 0 ? (
             <EmptyState
+              card
               icon="person_search"
               title={`Nobody matches “${q}”`}
               action={{ href: '/members', label: 'Clear search' }}
@@ -94,25 +105,25 @@ export default async function MembersPage({ searchParams }) {
           )}
 
           {pages > 1 && (
-            <div className="flex items-center justify-between gap-2 border-t border-line pt-4">
+            <nav aria-label="Pages" className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-meta text-muted">
                 Page {current} of {pages} · {list.total} {q ? 'found' : 'members'}
               </span>
               <div className="flex gap-2">
                 {current > 1 && (
-                  <Link href={link(current - 1)} className="btn btn-ghost btn-sm">
-                    <Icon name="arrow_back" size={16} />
+                  <Link href={link(current - 1)} className="of-btn-quiet">
+                    <Icon name="arrow_back" size={18} />
                     Previous
                   </Link>
                 )}
                 {current < pages && (
-                  <Link href={link(current + 1)} className="btn btn-ghost btn-sm">
+                  <Link href={link(current + 1)} className="of-btn-quiet">
                     Next
-                    <Icon name="arrow_forward" size={16} />
+                    <Icon name="arrow_forward" size={18} />
                   </Link>
                 )}
               </div>
-            </div>
+            </nav>
           )}
         </section>
       )}

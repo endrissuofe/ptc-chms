@@ -41,135 +41,100 @@ function greeting() {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
+/** The headline says what is left to do today. */
+function headline({ services, attendance, firstTimers }) {
+  if (!services.length) return 'No service today';
+  const pending = services.filter((s) => !attendance[s.key]?.recorded);
+  if (pending.length === 1) return `Record the ${pending[0].name} count`;
+  if (pending.length > 1) return `${pending.length} counts to record`;
+  if (firstTimers === 0)
+    return `${services.length > 1 ? 'Counts' : 'Count'} saved · ready for cards`;
+  return firstTimers === 1 ? '1 card entered today' : `${firstTimers} cards entered today`;
+}
+
 export default async function TodayPage() {
   const [session, today] = await Promise.all([getSession(), getUsherToday()]);
   const name = session?.user?.name;
   const services = today.services;
-  const firstService = services[0];
-
-  return (
-    <div className="flex flex-col gap-5 lg:gap-6">
-      <Hero
-        greeting={greeting()}
-        name={name}
-        stats={[
-          firstService
-            ? {
-                icon: 'schedule',
-                label: services.length > 1 ? `${services.length} services today` : 'Service today',
-                value: firstService.name,
-                sub: services.map((s) => formatServiceTime(s.startTime)).join(' · '),
-              }
-            : {
-                icon: 'event',
-                label: 'No service today',
-                value: today.nextServiceDay
-                  ? serviceDay.format(new Date(today.nextServiceDay.serviceDate))
-                  : '—',
-                sub: today.nextServiceDay
-                  ? today.nextServiceDay.services
-                      .map((s) => `${s.name} ${formatServiceTime(s.startTime)}`)
-                      .join(' · ')
-                  : 'Nothing in the next two weeks',
-              },
-          {
-            icon: 'pin',
-            label: 'Count',
-            value: today.headcountToday,
-            sub: today.lastServiceDay
-              ? `Last ${shortWeekday.format(today.lastServiceDay.serviceDate)}: ${today.lastServiceDay.total}`
-              : 'All services today',
-          },
-          {
-            icon: 'person_add',
-            label: 'First timers',
-            value: today.firstTimers,
-            sub: `${today.returning} came back`,
-          },
-        ]}
-      />
-
-      <div>
-        {services.length ? (
-          <ServicePanel
-            services={services}
-            attendance={today.attendance}
-            firstTimers={today.firstTimers}
-            recentInitials={today.recentInitials}
-            lastCardTime={today.lastCardAt ? clock.format(today.lastCardAt) : null}
-          />
-        ) : (
-          <NoServiceToday />
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** The template's gradient greeting card, with glassy tiles for today's figures. */
-function Hero({ greeting: hello, name, stats }) {
   const verse = verseOfTheDay();
+
+  const facts = services.length
+    ? [
+        services.map((s) => `${s.name} ${formatServiceTime(s.startTime)}`).join(', '),
+        `${today.headcountToday} counted today`,
+        today.lastServiceDay
+          ? `Last ${shortWeekday.format(today.lastServiceDay.serviceDate)}: ${today.lastServiceDay.total}`
+          : null,
+        today.firstTimers === 1 ? '1 first timer' : `${today.firstTimers} first timers`,
+        `${today.returning} came back`,
+      ]
+    : [
+        today.nextServiceDay
+          ? `Next: ${serviceDay.format(new Date(today.nextServiceDay.serviceDate))}, ${today.nextServiceDay.services
+              .map((s) => `${s.name} ${formatServiceTime(s.startTime)}`)
+              .join(', ')}`
+          : 'No service in the next two weeks',
+        today.lastServiceDay
+          ? `Last ${shortWeekday.format(today.lastServiceDay.serviceDate)}: ${today.lastServiceDay.total}`
+          : null,
+      ];
+
   return (
-    <section className="hero rounded-card p-6 sm:p-8 lg:p-10">
-      <svg
-        viewBox="0 0 320 220"
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-10 -z-10 w-[220px] opacity-40 sm:-right-6 sm:-top-4 sm:w-[300px] sm:opacity-70"
-      >
-        <circle cx="248" cy="70" r="46" fill="rgb(var(--hero-glow) / .55)" />
-        <path
-          d="M120 196c26-18 52-18 78 0s52 18 78 0 52-18 78 0"
-          fill="none"
-          stroke="rgba(255,255,255,.25)"
-          strokeWidth="6"
-          strokeLinecap="round"
+    <div className="flex flex-col gap-6 font-ui lg:gap-7">
+      <header className="flex flex-col gap-2">
+        <p className="of-eyebrow">
+          {greeting()}
+          {name ? `, ${name}` : ''} · {longDate.format(new Date())}
+        </p>
+        <h1 className="of-h1 break-words">{headline(today)}</h1>
+        <p className="flex flex-wrap gap-x-2 text-meta text-muted">
+          {facts.filter(Boolean).map((f, i) => (
+            <span key={f} className="tabular-nums">
+              {i > 0 && <span aria-hidden="true">· </span>}
+              {f}
+            </span>
+          ))}
+        </p>
+      </header>
+
+      {services.length ? (
+        <ServicePanel
+          services={services}
+          attendance={today.attendance}
+          firstTimers={today.firstTimers}
+          recentInitials={today.recentInitials}
+          lastCardTime={today.lastCardAt ? clock.format(today.lastCardAt) : null}
         />
-      </svg>
-      <p className="mb-1.5 text-sm font-bold text-white/90">{longDate.format(new Date())}</p>
-      <h1 className="hero-title mb-2 break-words">{name ? `${hello}, ${name}` : hello}</h1>
-      <p className="mb-2 max-w-[52ch] text-base font-semibold text-white">
-        Record the count and type up first-timer cards for today’s service.
+      ) : (
+        <NoServiceToday />
+      )}
+
+      <p className="flex max-w-[60ch] gap-2 text-meta text-muted">
+        <Icon name="format_quote" size={18} className="mt-px text-of-accent-ink" />
+        <span>
+          “{verse.text}” <cite className="font-semibold not-italic">— {verse.reference}</cite>
+        </span>
       </p>
-      <p className="mb-6 max-w-[52ch] text-white/90">
-        “{verse.text}” <span className="text-white/90">— {verse.reference}</span>
-      </p>
-      <div className="grid max-w-4xl grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
-        {stats.map((s, i) => (
-          <div key={s.label} className={`tile-glass ${i === 0 ? 'col-span-2 sm:col-span-1' : ''}`}>
-            <span className="inline-flex items-center gap-1.5 text-2xs font-bold uppercase tracking-[0.06em] text-white">
-              <Icon name={s.icon} size={15} />
-              {s.label}
-            </span>
-            <span className="break-words font-display text-xl font-bold leading-tight tabular-nums">
-              {s.value}
-            </span>
-            <span className="text-meta text-white/90">{s.sub}</span>
-          </div>
-        ))}
-      </div>
-    </section>
+    </div>
   );
 }
 
 /** No service today: point to late entry for recent services. */
 function NoServiceToday() {
   return (
-    <section className="card flex flex-col gap-4 sm:flex-row sm:items-center">
-      <span className="icon-tile tone-primary h-12 w-12">
-        <Icon name="event" size={24} />
-      </span>
-      <div className="flex-1">
-        <h2 className="card-title">No service today</h2>
-        <p className="card-sub">
+    <section className="of-panel flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+      <div className="min-w-0 flex-1">
+        <h2 className="of-h2">Catching up?</h2>
+        <p className="mt-1 text-meta text-muted">
           Missed a count or some cards? You can still enter them for any service in the past week.
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Link href="/attendance" className="btn btn-primary">
+      <div className="grid gap-2 sm:flex sm:shrink-0">
+        <Link href="/attendance" className="of-btn min-h-[52px] text-base sm:min-h-[44px]">
           <Icon name="pin" size={18} />
           Record attendance
         </Link>
-        <Link href="/newcomers/new" className="btn btn-ghost">
+        <Link href="/newcomers/new" className="of-btn-quiet min-h-[52px] sm:min-h-[44px]">
           <Icon name="person_add" size={18} />
           Enter cards
         </Link>

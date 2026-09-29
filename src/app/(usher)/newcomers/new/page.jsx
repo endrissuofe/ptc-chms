@@ -21,7 +21,7 @@ export default async function NewNewcomerPage({ searchParams }) {
 
   if (!initialService) {
     return (
-      <p className="card text-body text-muted">
+      <p className="of-panel p-5 text-body text-muted sm:p-6">
         There has been no service in the past week to enter cards for. Ask an admin if a service is
         missing from the Services list.
       </p>

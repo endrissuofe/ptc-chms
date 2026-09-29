@@ -21,7 +21,7 @@ export function AddMember() {
   const button = useRef(null);
   if (open) {
     return (
-      <section className="card">
+      <section className="of-panel order-last w-full p-5 sm:p-6">
         <MemberForm
           title="Add a member"
           onCancel={() => {
@@ -38,7 +38,7 @@ export function AddMember() {
     );
   }
   return (
-    <div className="flex flex-col gap-3">
+    <>
       <button
         ref={button}
         type="button"
@@ -46,19 +46,23 @@ export function AddMember() {
           setOpen(true);
           setDone(null);
         }}
-        className="btn btn-primary self-start"
+        className="of-btn"
       >
         <Icon name="person_add" size={18} />
         Add a member
       </button>
-      {done && <FormAlert success={done} />}
-    </div>
+      {done && (
+        <div className="order-last w-full">
+          <FormAlert success={done} />
+        </div>
+      )}
+    </>
   );
 }
 
 export default function MemberList({ members }) {
   return (
-    <ul className="divide-y divide-line">
+    <ul className="of-panel divide-y divide-line overflow-hidden">
       {members.map((m) => (
         <MemberRow key={m.id} member={m} />
       ))}
@@ -73,41 +77,43 @@ function MemberRow({ member: m }) {
   const name = `${m.firstName} ${m.lastName}`.trim();
 
   return (
-    <li className="flex flex-col gap-3 py-3">
-      <div className="flex flex-wrap items-center gap-3">
+    <li className="flex flex-col gap-3 p-4 sm:p-5">
+      <div className="flex items-start gap-3 sm:items-center">
         <Avatar name={name} />
-        <div className="min-w-0 flex-1">
-          <p className="break-words font-display font-semibold">{name}</p>
-          <p className="text-meta text-muted">
-            {formatPhone(m.phone)}
-            {m.address && <span className="break-words"> · {m.address}</span>}
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-end gap-1.5">
-          {m.source === 'first_timer' && m.person && (
-            <Link
-              href={`/newcomers/${m.person}`}
-              className="-my-2.5 inline-flex min-h-[44px] items-center"
-            >
-              <span className="chip chip-primary">
-                <Icon name="person_add" size={14} />
-                Was a first timer
+        <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="break-words font-brand text-lg font-semibold leading-tight">{name}</p>
+            <p className="mt-0.5 text-meta text-muted">
+              <span className="tabular-nums">{formatPhone(m.phone)}</span>
+              {m.address && <span className="break-words"> · {m.address}</span>}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5 sm:justify-end">
+            {m.source === 'first_timer' && m.person && (
+              <Link
+                href={`/newcomers/${m.person}`}
+                className="-my-2.5 inline-flex min-h-[44px] items-center"
+              >
+                <span className="chip chip-primary">
+                  <Icon name="person_add" size={14} />
+                  Was a first timer
+                </span>
+              </Link>
+            )}
+            {m.birthDay && (
+              <span className="chip chip-coral" title="Birthday">
+                <Icon name="cake" size={14} />
+                {short(m.birthDay, m.birthMonth)}
               </span>
-            </Link>
-          )}
-          {m.birthDay && (
-            <span className="chip chip-coral" title="Birthday">
-              <Icon name="cake" size={14} />
-              {short(m.birthDay, m.birthMonth)}
-            </span>
-          )}
-          {m.anniversaryDay && (
-            <span className="chip chip-violet" title="Wedding anniversary">
-              <Icon name="favorite" size={14} />
-              {short(m.anniversaryDay, m.anniversaryMonth)}
-            </span>
-          )}
-          {m.smsOptOut && <span className="chip">No SMS</span>}
+            )}
+            {m.anniversaryDay && (
+              <span className="chip chip-violet" title="Wedding anniversary">
+                <Icon name="favorite" size={14} />
+                {short(m.anniversaryDay, m.anniversaryMonth)}
+              </span>
+            )}
+            {m.smsOptOut && <span className="chip">No SMS</span>}
+          </div>
         </div>
         {!editing && (
           <button
@@ -117,7 +123,7 @@ function MemberRow({ member: m }) {
               setEditing(true);
               setDone(null);
             }}
-            className="btn btn-ghost btn-sm"
+            className="of-btn-quiet shrink-0 px-3.5"
             aria-label={`Edit ${name}`}
           >
             <Icon name="edit_note" size={17} />
@@ -126,7 +132,7 @@ function MemberRow({ member: m }) {
         )}
       </div>
       {editing && (
-        <div className="rounded-tile border border-line p-4">
+        <div className="border-t border-line pt-4">
           <MemberForm
             member={m}
             onCancel={() => {
@@ -288,7 +294,7 @@ function MemberForm({ member, title, onCancel, onSaved }) {
       onKeyDown={(e) => e.key === 'Escape' && onCancel()}
       className="flex flex-col gap-4 motion-safe:animate-fade-in"
     >
-      {title && <h2 className="card-title">{title}</h2>}
+      {title && <h2 className="of-h2">{title}</h2>}
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col">
           <span className="field-label">First name</span>
@@ -388,10 +394,10 @@ function MemberForm({ member, title, onCancel, onSaved }) {
       </label>
       {state.kind === 'error' && !Object.keys(fields).length && <FormAlert error={state.error} />}
       <div className="flex flex-wrap gap-2">
-        <button type="submit" aria-disabled={busy} className="btn btn-primary">
+        <button type="submit" aria-disabled={busy} className="of-btn">
           <Busy busy={state.kind === 'busy'} icon="save" label={member ? 'Save' : 'Add member'} />
         </button>
-        <button type="button" onClick={onCancel} className="btn btn-ghost">
+        <button type="button" onClick={onCancel} className="of-btn-quiet">
           Cancel
         </button>
         {member && (
@@ -399,7 +405,7 @@ function MemberForm({ member, title, onCancel, onSaved }) {
             type="button"
             onClick={remove}
             aria-disabled={busy}
-            className="btn btn-danger-ghost sm:ml-auto"
+            className="of-btn-quiet text-danger hover:text-danger sm:ml-auto"
           >
             <Busy
               busy={state.kind === 'removing'}

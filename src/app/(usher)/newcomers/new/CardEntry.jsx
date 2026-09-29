@@ -278,23 +278,20 @@ export default function CardEntry({
   const monthDays = daysInMonth(Number(card.birthMonth) || 1);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-5">
-      <div className="page-head">
-        <div>
-          <p className="eyebrow">
-            <Icon name="person_add" size={16} />
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 font-ui lg:gap-7">
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-col gap-2">
+          <p className="of-eyebrow">
             {service.name} · {dayLabel.format(new Date(serviceDate))}
           </p>
-          <h1 className="page-title">First-timer card {count + 1}</h1>
-          <p className="page-sub">
-            Type the card exactly as written, in the same order as the paper.
-          </p>
+          <h1 className="of-h1">Card {count + 1}</h1>
+          <p className="text-meta text-muted">Type it as written, in the order of the paper.</p>
         </div>
         <span className="chip chip-primary">
           <Icon name="fact_check" size={15} />
           {count === 1 ? '1 card saved' : `${count} cards saved`}
         </span>
-      </div>
+      </header>
 
       {lastSaved && <FormAlert success={lastSaved} />}
 
@@ -312,7 +309,7 @@ export default function CardEntry({
           if (matches.length && validate()) setReviewing(true);
           else saveNew();
         }}
-        className="card flex flex-col gap-5"
+        className="of-panel flex flex-col gap-5 p-5 sm:p-6"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="firstName" label="First name" required error={errors.firstName}>
@@ -502,7 +499,11 @@ export default function CardEntry({
         )}
 
         <div className="flex flex-col gap-2.5 sm:flex-row-reverse sm:justify-start">
-          <button type="submit" aria-disabled={saving} className="btn btn-primary btn-lg">
+          <button
+            type="submit"
+            aria-disabled={saving}
+            className="of-btn min-h-[56px] px-6 text-base sm:min-h-[48px]"
+          >
             <Busy busy={saving} icon="add_circle" label="Save & next card" size={20} />
           </button>
           <button
@@ -513,7 +514,7 @@ export default function CardEntry({
               setCard(EMPTY);
               router.push('/today');
             }}
-            className="btn btn-ghost btn-lg"
+            className="of-btn-quiet min-h-[56px] bg-transparent sm:min-h-[48px]"
           >
             <Icon name="task_alt" size={20} className="text-muted" />
             Done for now

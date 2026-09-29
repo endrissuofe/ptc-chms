@@ -48,8 +48,6 @@ export default function ServicesManager({ initial, isAdmin, today }) {
   return (
     <>
       <Section
-        icon="repeat"
-        tone="tone-primary"
         title="Regular services"
         hint={
           isAdmin
@@ -71,8 +69,6 @@ export default function ServicesManager({ initial, isAdmin, today }) {
       </Section>
 
       <Section
-        icon="event"
-        tone="tone-coral"
         title="Special services"
         hint="One-off services such as Thanksgiving or a crusade. Ushers see them on the day."
       >
@@ -88,8 +84,8 @@ export default function ServicesManager({ initial, isAdmin, today }) {
       </Section>
 
       {past.length > 0 && (
-        <details className="card group">
-          <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 font-display text-lg font-semibold">
+        <details className="of-panel group p-5 sm:p-6">
+          <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 font-brand text-lg font-semibold">
             <Icon
               name="expand_more"
               size={22}
@@ -108,17 +104,12 @@ export default function ServicesManager({ initial, isAdmin, today }) {
   );
 }
 
-function Section({ icon, tone, title, hint, children }) {
+function Section({ title, hint, children }) {
   return (
-    <section className="card flex flex-col gap-4">
-      <div className="flex items-start gap-3">
-        <span className={`icon-tile ${tone}`}>
-          <Icon name={icon} size={22} />
-        </span>
-        <div>
-          <h2 className="card-title">{title}</h2>
-          <p className="card-sub">{hint}</p>
-        </div>
+    <section className="of-panel flex flex-col gap-4 p-5 sm:p-6">
+      <div className="flex flex-col gap-1">
+        <h2 className="of-h2">{title}</h2>
+        <p className="text-meta text-muted">{hint}</p>
       </div>
       {children}
     </section>
@@ -311,7 +302,7 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
     >
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="break-words font-display text-lg font-semibold">{service.name}</p>
+          <p className="break-words font-brand text-lg font-semibold">{service.name}</p>
           <p className="text-meta text-muted">{when}</p>
         </div>
         <span className={`chip ${service.active ? 'chip-success' : 'chip-warning'}`}>
@@ -327,7 +318,7 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
               setState({ kind: 'idle' });
             }}
             aria-expanded={false}
-            className="btn btn-ghost btn-sm"
+            className="of-btn-quiet min-h-[40px]"
           >
             <Icon name="edit_note" size={17} />
             Change
@@ -359,11 +350,11 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
               type="submit"
               disabled={!dirty}
               aria-disabled={busy}
-              className="btn btn-primary"
+              className="of-btn disabled:opacity-50"
             >
               <Busy busy={state.kind === 'busy'} icon="save" label="Save" />
             </button>
-            <button type="button" onClick={close} className="btn btn-ghost">
+            <button type="button" onClick={close} className="of-btn-quiet bg-transparent">
               Cancel
             </button>
             <button
@@ -426,8 +417,8 @@ function AddService({ kind, today, onAdded }) {
 
   return (
     <div className="rounded-tile border-[1.5px] border-dashed border-field/60 bg-surface-2/60 p-4">
-      <h3 className="flex items-center gap-2 font-display text-body font-semibold">
-        <Icon name="add_circle" size={20} className="text-primary" />
+      <h3 className="flex items-center gap-2 font-brand text-body font-semibold">
+        <Icon name="add_circle" size={20} className="text-of-accent-ink" />
         {isRegular ? 'Add a regular service' : 'Add a special service'}
       </h3>
       <form className="mt-3 flex flex-col gap-3" onSubmit={submit}>
@@ -444,7 +435,7 @@ function AddService({ kind, today, onAdded }) {
         />
         {banner && <FormAlert error={banner} />}
         {state.kind === 'ok' && <FormAlert success={state.message} />}
-        <button type="submit" aria-disabled={busy} className="btn btn-primary self-start">
+        <button type="submit" aria-disabled={busy} className="of-btn self-start">
           <Busy busy={busy} busyLabel="Adding…" icon="add" label="Add service" />
         </button>
       </form>

@@ -1,5 +1,5 @@
-import Icon from '@/components/ui/Icon';
 import { alertPeople, previewFollowUpReport, recentEmails } from '@/services/alerts.service';
+import { ALERTS } from '@/lib/users';
 import AlertsManager from './AlertsManager';
 
 export const metadata = { title: 'Email alerts' };
@@ -11,19 +11,29 @@ export default async function AlertsPage() {
     recentEmails(10),
     alertPeople(),
   ]);
+  const { settings } = preview;
+  const status = [
+    [ALERTS.followUp.label, settings.followUpReport],
+    [ALERTS.celebrations.label, settings.celebrationReport],
+  ];
+
   return (
-    <div className="flex max-w-5xl flex-col gap-6">
-      <div className="page-head">
-        <div>
-          <p className="eyebrow">
-            <Icon name="mail" size={16} />
-            Admin
-          </p>
-          <h1 className="page-title">Email alerts</h1>
-        </div>
-      </div>
+    <div className="flex max-w-5xl flex-col gap-6 font-ui lg:gap-8">
+      <header className="flex flex-col gap-1">
+        <p className="of-eyebrow">Admin</p>
+        <h1 className="of-h1">Email alerts</h1>
+        <p className="flex flex-wrap gap-x-2 text-meta text-muted">
+          {status.map(([label, on], i) => (
+            <span key={label}>
+              {i > 0 && <span aria-hidden="true">· </span>}
+              {label}{' '}
+              <span className={on ? 'font-semibold text-ink-2' : ''}>{on ? 'on' : 'off'}</span>
+            </span>
+          ))}
+        </p>
+      </header>
       <AlertsManager
-        settings={preview.settings}
+        settings={settings}
         people={people}
         report={preview.report}
         email={preview.email}
