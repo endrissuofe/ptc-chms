@@ -52,7 +52,10 @@ export function Sidebar({ items, children }) {
                   }`}
                 >
                   <Icon name={item.icon} size={20} filled={active} className="shrink-0" />
-                  <span className="of-rail-label">{item.label}</span>
+                  <span className="of-rail-label flex items-center gap-2">
+                    {item.label}
+                    {item.soon && <SoonTag />}
+                  </span>
                 </Link>
               </li>
             );
@@ -60,6 +63,15 @@ export function Sidebar({ items, children }) {
         </ul>
       </nav>
     </aside>
+  );
+}
+
+/** Marks a menu item whose screen isn't built yet. */
+function SoonTag() {
+  return (
+    <span className="rounded-full bg-coral-soft px-1.5 py-px text-2xs font-semibold text-coral-ink">
+      Soon
+    </span>
   );
 }
 
@@ -188,7 +200,10 @@ function MoreSheet({ items, pathname, onClose }) {
                   }`}
                 >
                   <Icon name={item.icon} size={22} filled={active} />
-                  {item.label}
+                  <span className="flex min-w-0 flex-col items-start leading-tight">
+                    {item.label}
+                    {item.soon && <SoonTag />}
+                  </span>
                 </Link>
               </li>
             );

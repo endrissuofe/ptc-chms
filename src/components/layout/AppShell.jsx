@@ -18,7 +18,7 @@ const today = new Intl.DateTimeFormat('en-GB', {
   month: 'long',
 });
 
-const pick = ({ href, label, icon }) => ({ href, label, icon });
+const pick = ({ href, label, icon, soon }) => ({ href, label, icon, soon });
 
 /**
  * The frame around every signed-in screen, in the Onefold brand:

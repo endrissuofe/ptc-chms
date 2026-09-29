@@ -2,7 +2,10 @@ import { ROLES } from './roles';
 
 const { USHER, FOLLOWUP, PASTOR, ADMIN, PRAYER, MEDIA } = ROLES;
 
-/** The app's menu, in order. The desktop rail shows every item the role can open. */
+/**
+ * The app's menu, in order. The desktop rail shows every item the role can open.
+ * `soon`: the screen isn't built yet; the menu tags it "Soon" and the page says so.
+ */
 export const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: 'home', roles: [PASTOR, ADMIN] },
   { href: '/today', label: 'Today', icon: 'dashboard', roles: [USHER, PASTOR, ADMIN] },
@@ -22,6 +25,27 @@ export const NAV = [
   { href: '/services', label: 'Services', icon: 'event', roles: [PASTOR, ADMIN] },
   { href: '/alerts', label: 'Alerts', icon: 'mail', roles: [ADMIN] },
   { href: '/users', label: 'Logins', icon: 'supervisor_account', roles: [ADMIN] },
+  {
+    href: '/departments',
+    label: 'Departments',
+    icon: 'diversity_3',
+    roles: [PASTOR, ADMIN],
+    soon: true,
+  },
+  {
+    href: '/giving',
+    label: 'Giving',
+    icon: 'account_balance_wallet',
+    roles: [PASTOR, ADMIN],
+    soon: true,
+  },
+  {
+    href: '/media',
+    label: 'Media',
+    icon: 'photo_library',
+    roles: [MEDIA, PASTOR, ADMIN],
+    soon: true,
+  },
 ];
 
 /**
