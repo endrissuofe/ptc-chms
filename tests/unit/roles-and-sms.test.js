@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { canAccess, ROLES } from '@/lib/roles';
-import { navFor } from '@/lib/nav';
+import { groupNav, navFor } from '@/lib/nav';
 
 describe('route access', () => {
   it('keeps prayer requests to the prayer team, pastors and admins', () => {
@@ -50,5 +50,24 @@ describe('menu', () => {
     expect(labels(ROLES.ADMIN)).toEqual(['Departments', 'Giving', 'Media']);
     expect(labels(ROLES.MEDIA)).toEqual(['Media']);
     expect(labels(ROLES.USHER)).toEqual([]);
+  });
+});
+
+describe('menu sections', () => {
+  it('groups the menu into People, Ushering, Church and Settings for admins', () => {
+    const groups = groupNav(navFor(ROLES.ADMIN).rail);
+    expect(groups.map((g) => g.label)).toEqual(['People', 'Ushering', 'Church', 'Settings']);
+    expect(groups[0].items[0].label).toBe('Dashboard');
+  });
+
+  it('drops the heading when a role has a single section', () => {
+    expect(groupNav(navFor(ROLES.USHER).rail).map((g) => g.label)).toEqual([null]);
+  });
+
+  it('keeps the phone tabs in their usual order', () => {
+    const tabs = (role) => navFor(role).tabs.map((i) => i.label);
+    expect(tabs(ROLES.ADMIN)).toEqual(['Dashboard', 'Cards', 'Follow-up', 'First timers']);
+    expect(tabs(ROLES.PASTOR)).toEqual(['Dashboard', 'Follow-up', 'First timers', 'Prayer']);
+    expect(tabs(ROLES.USHER)).toEqual(['Today', 'Attendance', 'Cards']);
   });
 });

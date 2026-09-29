@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
 import { OnefoldMark } from '@/components/brand/Onefold';
+import { groupNav } from '@/lib/nav';
 
 const isActive = (pathname, href) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -34,35 +35,56 @@ export function Sidebar({ items, children }) {
       <div className="relative flex flex-col gap-4 px-3.5 pb-3 pt-5">{children}</div>
       <nav
         aria-label="Main"
-        className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3.5 pb-4"
+        className="of-rail-scroll relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3.5 pb-4"
       >
-        <ul className="flex flex-col gap-0.5">
-          {items.map((item) => {
-            const active = pending ? pending === item.href : isActive(pathname, item.href);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={() => setPending(item.href)}
-                  aria-current={isActive(pathname, item.href) ? 'page' : undefined}
-                  className={`flex min-h-[44px] items-center gap-3 whitespace-nowrap rounded-control px-3.5 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-of-accent ${
-                    active
-                      ? 'of-rail-active font-semibold text-of-accent-ink'
-                      : 'font-medium text-ink-2 hover:bg-surface-2/70 hover:text-ink'
-                  }`}
-                >
-                  <Icon name={item.icon} size={20} filled={active} className="shrink-0" />
-                  <span className="of-rail-label flex items-center gap-2">
-                    {item.label}
-                    {item.soon && <SoonTag />}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {groupNav(items).map((group, g) => (
+          <div key={group.key} className={g > 0 ? 'mt-2' : ''}>
+            {group.label && <RailHeading id={`rail-${group.key}`}>{group.label}</RailHeading>}
+            <ul
+              aria-labelledby={group.label ? `rail-${group.key}` : undefined}
+              className="flex flex-col gap-0.5"
+            >
+              {group.items.map((item) => {
+                const active = pending ? pending === item.href : isActive(pathname, item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setPending(item.href)}
+                      aria-current={isActive(pathname, item.href) ? 'page' : undefined}
+                      className={`flex min-h-[40px] items-center gap-3 whitespace-nowrap rounded-control px-3.5 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-of-accent ${
+                        active
+                          ? 'of-rail-active font-semibold text-of-accent-ink'
+                          : 'font-medium text-ink-2 hover:bg-surface-2/70 hover:text-ink'
+                      }`}
+                    >
+                      <Icon name={item.icon} size={20} filled={active} className="shrink-0" />
+                      <span className="of-rail-label flex items-center gap-2">
+                        {item.label}
+                        {item.soon && <SoonTag />}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
     </aside>
+  );
+}
+
+/**
+ * A section heading in the desktop menu. Closed, it's a short line between icon groups; open,
+ * the name fades in (styles: .of-rail-heading).
+ */
+function RailHeading({ id, children }) {
+  return (
+    <p id={id} className="of-rail-heading">
+      <span aria-hidden="true" className="of-rail-rule" />
+      <span className="of-rail-label">{children}</span>
+    </p>
   );
 }
 
@@ -184,31 +206,40 @@ function MoreSheet({ items, pathname, onClose }) {
             <Icon name="close" size={22} />
           </button>
         </div>
-        <ul className="grid grid-cols-2 gap-2">
-          {items.map((item) => {
-            const active = isActive(pathname, item.href);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={onClose}
-                  aria-current={active ? 'page' : undefined}
-                  className={`flex min-h-[56px] items-center gap-3 rounded-tile px-3 font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent ${
-                    active
-                      ? 'bg-of-accent-soft text-of-accent-ink'
-                      : 'bg-surface-2 hover:bg-surface-3'
-                  }`}
-                >
-                  <Icon name={item.icon} size={22} filled={active} />
-                  <span className="flex min-w-0 flex-col items-start leading-tight">
-                    {item.label}
-                    {item.soon && <SoonTag />}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {groupNav(items).map((group) => (
+          <section key={group.key} aria-labelledby={group.label ? `more-${group.key}` : undefined}>
+            {group.label && (
+              <h3 id={`more-${group.key}`} className="of-eyebrow px-2 pb-1.5 pt-2">
+                {group.label}
+              </h3>
+            )}
+            <ul className="grid grid-cols-2 gap-2">
+              {group.items.map((item) => {
+                const active = isActive(pathname, item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex min-h-[56px] items-center gap-3 rounded-tile px-3 font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent ${
+                        active
+                          ? 'bg-of-accent-soft text-of-accent-ink'
+                          : 'bg-surface-2 hover:bg-surface-3'
+                      }`}
+                    >
+                      <Icon name={item.icon} size={22} filled={active} />
+                      <span className="flex min-w-0 flex-col items-start leading-tight">
+                        {item.label}
+                        {item.soon && <SoonTag />}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))}
         <p className="flex items-center justify-center gap-1.5 pt-3 text-2xs text-muted">
           <OnefoldMark size={16} className="text-of-accent" />
           onefold
