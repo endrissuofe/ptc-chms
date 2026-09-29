@@ -23,7 +23,7 @@ export default async function UsersPage() {
 
   return (
     <div className="flex flex-col gap-6 font-ui lg:gap-7">
-      <header className="flex flex-col gap-2">
+      <header className="of-hero flex flex-col gap-2">
         <p className="of-eyebrow">Logins</p>
         <h1 className="of-h1">
           {pending.length === 0

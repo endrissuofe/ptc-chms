@@ -672,3 +672,138 @@
     @apply bg-surface text-of-accent-ink;
   }
 }
+
+/*
+ * The page heading sits on a band of the sign-in's night sky: dark pine, dawn light and faint
+ * rays, reaching the edges of the content area. Inside the band the dark-mode colours apply,
+ * so text, buttons and tags stay readable in light mode too. Only headings marked of-hero get it.
+ * The band never reaches below its heading, so nothing else ever sits on it.
+ */
+@layer components {
+  .of-hero {
+    --of-accent: 96 200 162;
+    --of-accent-soft: 22 50 42;
+    --of-accent-ink: 158 226 198;
+    --of-on-accent: 9 18 16;
+    --of-sun: 240 186 110;
+    --of-sun-soft: 56 42 20;
+    --primary: 96 200 162;
+    --primary-strong: 130 216 184;
+    --primary-soft: 22 50 42;
+    --primary-ink: 158 226 198;
+    --on-primary: 9 18 16;
+    --primary-fill: 30 120 92;
+    --primary-fill-hover: 36 132 102;
+    --primary-fill-active: 26 108 84;
+    --on-primary-fill: 255 255 255;
+    --coral: 246 170 110;
+    --coral-strong: 250 186 132;
+    --coral-soft: 56 40 26;
+    --coral-ink: 250 196 150;
+    --on-coral: 42 20 8;
+
+    --bg: 11 17 15;
+    --surface: 17 25 22;
+    --surface-2: 24 34 30;
+    --surface-3: 32 44 39;
+    --ink: 232 240 236;
+    --ink-2: 200 214 208;
+    --muted: 142 160 153;
+    --line: 34 46 41;
+    --line-2: 46 60 54;
+    --field-line: 96 116 108;
+
+    --success: 95 213 152;
+    --success-soft: 20 48 34;
+    --warning: 245 185 87;
+    --warning-soft: 52 40 18;
+    --danger: 255 133 145;
+    --danger-soft: 60 26 30;
+    --teal: 79 209 197;
+    --teal-soft: 18 46 46;
+    --violet: 190 164 255;
+    --violet-soft: 40 34 66;
+
+    --hero-from: 10 34 28;
+    --hero-via: 16 70 56;
+    --hero-to: 24 98 78;
+    --hero-glow: 246 176 112;
+
+    position: relative;
+    isolation: isolate;
+    padding-bottom: 1.75rem;
+    color: rgb(var(--ink));
+  }
+  /* The night itself, edge to edge. */
+  .of-hero::before,
+  .of-hero::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: -2.5rem;
+    bottom: 0;
+    left: -1rem;
+    right: -1rem;
+    pointer-events: none;
+  }
+  .of-hero::before {
+    background: linear-gradient(100deg, rgb(var(--of-night)) 30%, rgb(var(--of-night-2)));
+  }
+  /* Full width where the browser can clip it (it can't scroll sideways then). */
+  @supports (overflow: clip) {
+    .of-hero::before {
+      left: -100vw;
+      right: -100vw;
+    }
+  }
+  /* The light, across the heading: dawn low on the left, pine high on the right, faint rays. */
+  .of-hero::after {
+    background:
+      radial-gradient(34% 170% at 22% 125%, rgb(var(--of-dawn) / 0.55), transparent 72%),
+      radial-gradient(32% 160% at 80% -25%, rgb(var(--of-pine-bright) / 0.45), transparent 72%),
+      repeating-conic-gradient(
+        from 200deg at 12% 140%,
+        rgb(255 236 210 / 0.05) 0deg 3deg,
+        transparent 3deg 11deg
+      );
+    background-size:
+      125% 100%,
+      125% 100%,
+      100% 100%;
+    /* Soft sides, so the light never ends in a hard line on narrow pages. */
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+    animation: of-hero-light 40s ease-in-out infinite alternate;
+  }
+
+  /* A fine grain over the page, so plain areas don't look flat. */
+  .of-grain {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@keyframes of-hero-light {
+  from {
+    background-position:
+      0% 0%,
+      100% 0%,
+      0 0;
+  }
+  to {
+    background-position:
+      30% 0%,
+      70% 0%,
+      0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-hero::after {
+    animation: none;
+  }
+}

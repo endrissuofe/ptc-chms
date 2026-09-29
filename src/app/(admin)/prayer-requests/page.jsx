@@ -44,7 +44,7 @@ export default async function PrayerRequestsPage({ searchParams }) {
 
   return (
     <div className="flex flex-col gap-6 font-ui lg:gap-7">
-      <header className="flex flex-col gap-2">
+      <header className="of-hero flex flex-col gap-2">
         <p className="of-eyebrow">Prayer requests</p>
         <h1 className="of-h1">{headline(status, counts[status] ?? items.length)}</h1>
         <p className="flex items-center gap-1.5 text-meta text-muted">

@@ -19,7 +19,7 @@ export default async function AlertsPage() {
 
   return (
     <div className="flex max-w-5xl flex-col gap-6 font-ui lg:gap-8">
-      <header className="flex flex-col gap-1">
+      <header className="of-hero flex flex-col gap-1">
         <p className="of-eyebrow">Admin</p>
         <h1 className="of-h1">Email alerts</h1>
         <p className="flex flex-wrap gap-x-2 text-meta text-muted">

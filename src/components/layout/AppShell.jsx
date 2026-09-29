@@ -39,6 +39,7 @@ export default async function AppShell({ children }) {
 
   return (
     <div className="min-h-screen">
+      <div aria-hidden="true" className="of-grain" />
       <a href="#main" className="skip-link">
         Skip to content
       </a>
@@ -74,7 +75,7 @@ export default async function AppShell({ children }) {
       <main
         id="main"
         tabIndex={-1}
-        className={`px-4 pt-5 outline-none sm:px-6 lg:ml-[248px] lg:px-9 lg:pb-12 lg:pt-8 ${
+        className={`px-4 pt-5 outline-none [overflow-x:clip] sm:px-6 lg:ml-[248px] lg:px-9 lg:pb-12 lg:pt-8 ${
           hasTabBar ? 'pb-28' : 'pb-10'
         }`}
       >

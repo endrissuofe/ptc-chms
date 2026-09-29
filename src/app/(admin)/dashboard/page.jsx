@@ -48,7 +48,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 font-ui lg:gap-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="of-hero flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <p className="of-eyebrow">Dashboard</p>
           <h1 className="of-h1">
