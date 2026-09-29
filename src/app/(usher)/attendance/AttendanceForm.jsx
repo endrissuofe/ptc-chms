@@ -179,7 +179,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
 
   return (
     <div className="flex flex-col gap-6 font-ui lg:gap-7">
-      <header className="of-hero flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+      <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
         <div className="flex min-w-0 flex-col gap-2">
           <p className="of-eyebrow">Attendance · {dayLabel.format(new Date(serviceDate))}</p>
           <h1 className="of-h1 break-words">{service.name}</h1>

@@ -20,16 +20,22 @@ function usePendingHref() {
 }
 
 /**
- * Desktop: the sidebar. `children` is its top (the Onefold logo and the church card); the menu
- * lists every screen the role can open, the current one in a soft pine pill.
+ * Desktop: the menu. A slim strip of icons on frosted glass that opens over the page while the
+ * mouse is on it (or the keyboard is in it); touch screens keep it open (styles: .of-rail).
+ * `children` is its top (the Onefold logo and the church card); the menu lists every screen
+ * the role can open, the current one in a glowing pine pill.
  */
 export function Sidebar({ items, children }) {
   const pathname = usePathname();
   const [pending, setPending] = usePendingHref();
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-line bg-surface lg:flex">
-      <div className="flex flex-col gap-4 px-4 pb-3 pt-5">{children}</div>
-      <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+    <aside className="of-rail fixed inset-y-0 left-0 z-30 hidden flex-col lg:flex">
+      <div aria-hidden="true" className="of-rail-glow" />
+      <div className="relative flex flex-col gap-4 px-3.5 pb-3 pt-5">{children}</div>
+      <nav
+        aria-label="Main"
+        className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3.5 pb-4"
+      >
         <ul className="flex flex-col gap-0.5">
           {items.map((item) => {
             const active = pending ? pending === item.href : isActive(pathname, item.href);
@@ -39,14 +45,14 @@ export function Sidebar({ items, children }) {
                   href={item.href}
                   onClick={() => setPending(item.href)}
                   aria-current={isActive(pathname, item.href) ? 'page' : undefined}
-                  className={`flex min-h-[42px] items-center gap-3 rounded-control px-3 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent ${
+                  className={`flex min-h-[44px] items-center gap-3 whitespace-nowrap rounded-control px-3.5 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-of-accent ${
                     active
-                      ? 'bg-of-accent-soft font-semibold text-of-accent-ink'
-                      : 'font-medium text-ink-2 hover:bg-surface-2 hover:text-ink'
+                      ? 'of-rail-active font-semibold text-of-accent-ink'
+                      : 'font-medium text-ink-2 hover:bg-surface-2/70 hover:text-ink'
                   }`}
                 >
-                  <Icon name={item.icon} size={20} filled={active} />
-                  {item.label}
+                  <Icon name={item.icon} size={20} filled={active} className="shrink-0" />
+                  <span className="of-rail-label">{item.label}</span>
                 </Link>
               </li>
             );

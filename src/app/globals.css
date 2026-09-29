@@ -75,6 +75,11 @@
     --hero-to: 32 122 96;
     --hero-glow: 246 176 112;
 
+    --sky-dawn: 0.34;
+    --sky-pine: 0.26;
+    --sky-rose: 0.14;
+    --sky-ray: 20 98 78 / 0.035;
+
     color-scheme: light;
   }
 
@@ -126,6 +131,11 @@
     --hero-via: 16 70 56;
     --hero-to: 24 98 78;
     --hero-glow: 246 176 112;
+
+    --sky-dawn: 0.3;
+    --sky-pine: 0.26;
+    --sky-rose: 0.14;
+    --sky-ray: 255 236 210 / 0.045;
 
     color-scheme: dark;
   }
@@ -179,6 +189,11 @@
       --hero-via: 16 70 56;
       --hero-to: 24 98 78;
       --hero-glow: 246 176 112;
+
+      --sky-dawn: 0.3;
+      --sky-pine: 0.26;
+      --sky-rose: 0.14;
+      --sky-ray: 255 236 210 / 0.045;
 
       color-scheme: dark;
     }
@@ -235,7 +250,7 @@
 @layer components {
   /* ---- Layout and text ---- */
   .card {
-    @apply rounded-[1.5rem] border border-line bg-surface p-5 sm:p-6;
+    @apply rounded-[1.5rem] border border-line bg-surface/90 p-5 sm:p-6;
   }
   .card-compact {
     @apply p-4 sm:p-5;
@@ -642,7 +657,7 @@
     @apply font-brand text-xl font-semibold leading-tight tracking-[-0.01em];
   }
   .of-panel {
-    @apply rounded-[1.5rem] border border-line bg-surface;
+    @apply rounded-[1.5rem] border border-line bg-surface/90;
   }
   .of-figure {
     @apply font-brand font-bold tabular-nums leading-none tracking-[-0.02em];
@@ -674,106 +689,131 @@
 }
 
 /*
- * The page heading sits on a band of the sign-in's night sky: dark pine, dawn light and faint
- * rays, reaching the edges of the content area. Inside the band the dark-mode colours apply,
- * so text, buttons and tags stay readable in light mode too. Only headings marked of-hero get it.
- * The band never reaches below its heading, so nothing else ever sits on it.
+ * The sky behind every signed-in screen: the sign-in's slow light across the whole page.
+ * Dark: night with dawn and pine light and faint rays. Light: the same light, softer, on stone.
+ * Plain gradients moved with transform only (no blur filter), so phones stay smooth.
+ * With reduced motion it all stands still.
  */
 @layer components {
-  .of-hero {
-    --of-accent: 96 200 162;
-    --of-accent-soft: 22 50 42;
-    --of-accent-ink: 158 226 198;
-    --of-on-accent: 9 18 16;
-    --of-sun: 240 186 110;
-    --of-sun-soft: 56 42 20;
-    --primary: 96 200 162;
-    --primary-strong: 130 216 184;
-    --primary-soft: 22 50 42;
-    --primary-ink: 158 226 198;
-    --on-primary: 9 18 16;
-    --primary-fill: 30 120 92;
-    --primary-fill-hover: 36 132 102;
-    --primary-fill-active: 26 108 84;
-    --on-primary-fill: 255 255 255;
-    --coral: 246 170 110;
-    --coral-strong: 250 186 132;
-    --coral-soft: 56 40 26;
-    --coral-ink: 250 196 150;
-    --on-coral: 42 20 8;
-
-    --bg: 11 17 15;
-    --surface: 17 25 22;
-    --surface-2: 24 34 30;
-    --surface-3: 32 44 39;
-    --ink: 232 240 236;
-    --ink-2: 200 214 208;
-    --muted: 142 160 153;
-    --line: 34 46 41;
-    --line-2: 46 60 54;
-    --field-line: 96 116 108;
-
-    --success: 95 213 152;
-    --success-soft: 20 48 34;
-    --warning: 245 185 87;
-    --warning-soft: 52 40 18;
-    --danger: 255 133 145;
-    --danger-soft: 60 26 30;
-    --teal: 79 209 197;
-    --teal-soft: 18 46 46;
-    --violet: 190 164 255;
-    --violet-soft: 40 34 66;
-
-    --hero-from: 10 34 28;
-    --hero-via: 16 70 56;
-    --hero-to: 24 98 78;
-    --hero-glow: 246 176 112;
-
-    position: relative;
-    isolation: isolate;
-    padding-bottom: 1.75rem;
-    color: rgb(var(--ink));
-  }
-  /* The night itself, edge to edge. */
-  .of-hero::before,
-  .of-hero::after {
-    content: '';
-    position: absolute;
+  .of-sky {
+    position: fixed;
+    inset: 0;
     z-index: -1;
-    top: -2.5rem;
-    bottom: 0;
-    left: -1rem;
-    right: -1rem;
+    overflow: hidden;
     pointer-events: none;
   }
-  .of-hero::before {
-    background: linear-gradient(100deg, rgb(var(--of-night)) 30%, rgb(var(--of-night-2)));
+  .of-sky-light {
+    position: absolute;
+    border-radius: 9999px;
+    will-change: transform;
   }
-  /* Full width where the browser can clip it (it can't scroll sideways then). */
-  @supports (overflow: clip) {
-    .of-hero::before {
-      left: -100vw;
-      right: -100vw;
+  .of-sky-1 {
+    width: 70vmax;
+    height: 70vmax;
+    left: -22vmax;
+    bottom: -34vmax;
+    background: radial-gradient(closest-side, rgb(var(--of-dawn) / var(--sky-dawn)), transparent);
+    animation: of-drift-1 26s ease-in-out infinite alternate;
+  }
+  .of-sky-2 {
+    width: 64vmax;
+    height: 64vmax;
+    right: -20vmax;
+    top: -28vmax;
+    background: radial-gradient(
+      closest-side,
+      rgb(var(--of-pine-bright) / var(--sky-pine)),
+      transparent
+    );
+    animation: of-drift-2 32s ease-in-out infinite alternate;
+  }
+  .of-sky-3 {
+    width: 44vmax;
+    height: 44vmax;
+    left: 40%;
+    top: 30%;
+    background: radial-gradient(closest-side, rgb(var(--of-dawn-2) / var(--sky-rose)), transparent);
+    animation: of-drift-3 38s ease-in-out infinite alternate;
+  }
+  .of-sky-rays {
+    position: absolute;
+    inset: -40%;
+    background: repeating-conic-gradient(
+      from 200deg at 18% 108%,
+      rgb(var(--sky-ray)) 0deg 3deg,
+      transparent 3deg 11deg
+    );
+    -webkit-mask-image: radial-gradient(70% 70% at 20% 100%, #000 10%, transparent 70%);
+    mask-image: radial-gradient(70% 70% at 20% 100%, #000 10%, transparent 70%);
+    animation: of-turn 120s linear infinite;
+  }
+
+  /*
+   * The desktop menu: a slim strip of icons on frosted glass, no dividing line. It opens over
+   * the page while the mouse is on it or the keyboard is in it. Touch screens (no hover) keep
+   * it open and the page makes room (.of-rail-offset).
+   */
+  .of-rail {
+    width: 76px;
+    overflow: hidden;
+    background: rgb(var(--surface) / 0.55);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    backdrop-filter: blur(22px) saturate(1.4);
+    transition:
+      width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.28s ease,
+      background-color 0.28s ease;
+  }
+  .of-rail:hover,
+  .of-rail:has(:focus-visible) {
+    width: 260px;
+    background: rgb(var(--surface) / 0.78);
+    box-shadow: 24px 0 60px -24px rgb(0 0 0 / 0.35);
+  }
+  /* Soft light inside the glass: pine at the top, dawn at the bottom. */
+  .of-rail-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 40% at 0% 0%, rgb(var(--of-pine-bright) / 0.16), transparent 70%),
+      radial-gradient(140% 45% at 0% 100%, rgb(var(--of-dawn) / 0.16), transparent 70%),
+      linear-gradient(90deg, rgb(255 255 255 / 0.04), transparent);
+  }
+  .of-rail-label,
+  .of-rail-logo > span {
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .of-rail:hover .of-rail-label,
+  .of-rail:hover .of-rail-logo > span,
+  .of-rail:has(:focus-visible) .of-rail-label,
+  .of-rail:has(:focus-visible) .of-rail-logo > span {
+    opacity: 1;
+    transition-delay: 0.06s;
+  }
+  .of-rail-active {
+    background: rgb(var(--of-accent-soft));
+    box-shadow:
+      inset 3px 0 0 rgb(var(--of-accent)),
+      0 0 22px -8px rgb(var(--of-accent) / 0.7);
+  }
+  @media (min-width: 1024px) {
+    .of-rail-offset {
+      margin-left: 76px;
     }
   }
-  /* The light, across the heading: dawn low on the left, pine high on the right, faint rays. */
-  .of-hero::after {
-    background:
-      radial-gradient(34% 170% at 22% 125%, rgb(var(--of-dawn) / 0.55), transparent 72%),
-      radial-gradient(32% 160% at 80% -25%, rgb(var(--of-pine-bright) / 0.45), transparent 72%),
-      repeating-conic-gradient(
-        from 200deg at 12% 140%,
-        rgb(255 236 210 / 0.05) 0deg 3deg,
-        transparent 3deg 11deg
-      );
-    background-size:
-      125% 100%,
-      125% 100%,
-      100% 100%;
-    /* Soft sides, so the light never ends in a hard line on narrow pages. */
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
-    animation: of-hero-light 40s ease-in-out infinite alternate;
+  @media (min-width: 1024px) and (hover: none) {
+    .of-rail {
+      width: 260px;
+    }
+    .of-rail .of-rail-label,
+    .of-rail .of-rail-logo > span {
+      opacity: 1;
+    }
+    .of-rail-offset {
+      margin-left: 260px;
+    }
   }
 
   /* A fine grain over the page, so plain areas don't look flat. */
@@ -787,23 +827,13 @@
   }
 }
 
-@keyframes of-hero-light {
-  from {
-    background-position:
-      0% 0%,
-      100% 0%,
-      0 0;
-  }
-  to {
-    background-position:
-      30% 0%,
-      70% 0%,
-      0 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .of-hero::after {
+  .of-sky-light,
+  .of-sky-rays {
     animation: none;
+  }
+  .of-rail,
+  .of-rail-label {
+    transition: none;
   }
 }

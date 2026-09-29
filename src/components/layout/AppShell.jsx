@@ -39,16 +39,22 @@ export default async function AppShell({ children }) {
 
   return (
     <div className="min-h-screen">
+      <div aria-hidden="true" className="of-sky">
+        <div className="of-sky-light of-sky-1" />
+        <div className="of-sky-light of-sky-2" />
+        <div className="of-sky-light of-sky-3" />
+        <div className="of-sky-rays" />
+      </div>
       <div aria-hidden="true" className="of-grain" />
       <a href="#main" className="skip-link">
         Skip to content
       </a>
 
       <Sidebar items={nav.rail.map(pick)}>
-        <OnefoldLogo size={21} className="px-1 text-of-accent" />
-        <div className="flex items-center gap-3 rounded-tile border border-line bg-surface-2 p-2.5">
-          <ChurchAvatar size={38} />
-          <div className="min-w-0 flex-1 leading-tight">
+        <OnefoldLogo size={21} className="of-rail-logo px-3 text-of-accent" />
+        <div className="flex items-center gap-3 rounded-tile bg-surface/60 p-1.5 ring-1 ring-inset ring-line/60">
+          <ChurchAvatar size={36} />
+          <div className="of-rail-label min-w-0 flex-1 leading-tight">
             <p className="truncate font-brand text-base font-bold">{CHURCH.name}</p>
             <p className="truncate text-xs text-muted">
               {[roleLabel, name].filter(Boolean).join(' · ')}
@@ -57,7 +63,7 @@ export default async function AppShell({ children }) {
         </div>
       </Sidebar>
 
-      <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur-md lg:ml-[248px]">
+      <header className="sticky top-0 z-20 bg-paper/70 backdrop-blur-md of-rail-offset">
         <div className="flex h-[64px] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-9">
           <div className="mr-auto min-w-0 lg:hidden">
             <Logo size={38} withName subtitle={CHURCH.fullName} />
@@ -75,7 +81,7 @@ export default async function AppShell({ children }) {
       <main
         id="main"
         tabIndex={-1}
-        className={`px-4 pt-5 outline-none [overflow-x:clip] sm:px-6 lg:ml-[248px] lg:px-9 lg:pb-12 lg:pt-8 ${
+        className={`px-4 pt-5 outline-none [overflow-x:clip] sm:px-6 of-rail-offset lg:px-9 lg:pb-12 lg:pt-8 ${
           hasTabBar ? 'pb-28' : 'pb-10'
         }`}
       >
