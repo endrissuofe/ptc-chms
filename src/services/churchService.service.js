@@ -6,6 +6,7 @@ import {
   DEFAULT_SERVICES,
   USHER_BACKDATE_DAYS,
   isHeldOn,
+  isStreamed,
   recentServiceDays,
   serviceKeyFromName,
   servicesOn,
@@ -13,7 +14,7 @@ import {
 } from '@/lib/church';
 import { ChurchService } from '@/models';
 
-const PUBLIC_FIELDS = 'key name kind days date startTime active -_id';
+const PUBLIC_FIELDS = 'key name kind days date startTime active livestream -_id';
 
 /** Makes sure the church has its default services (Sunday and midweek) on a fresh install. */
 export async function ensureDefaultService() {
@@ -89,6 +90,7 @@ export async function createService(input, user) {
     name: input.name,
     kind: input.kind,
     startTime: input.startTime,
+    livestream: isStreamed(input),
     ...(input.kind === 'regular' ? { days: input.days } : { date: checkSpecialDate(input.date) }),
     createdBy: user?.id,
   });

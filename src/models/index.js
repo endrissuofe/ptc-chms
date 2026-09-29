@@ -13,3 +13,6 @@ export { default as AlertSettings } from './AlertSettings';
 export { default as EmailLog } from './EmailLog';
 export { default as JoinLink } from './JoinLink';
 export { default as CheckIn } from './CheckIn';
+export { default as ServiceDay } from './ServiceDay';
+export { default as MediaItem } from './MediaItem';
+export { default as MediaSettings } from './MediaSettings';

@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import Icon from '@/components/ui/Icon';
+import Icon from './Icon';
 
-/** Copies a ready-made post for the church's WhatsApp, Instagram or Facebook. */
-export default function CopyButton({ text, className = 'of-btn-quiet' }) {
+/** Copies ready-made text, e.g. a post for the church's WhatsApp, Instagram or Facebook. */
+export default function CopyButton({
+  text,
+  label = 'Copy for socials',
+  className = 'of-btn-quiet',
+}) {
   const [state, setState] = useState('idle'); // idle | copied | failed
 
   async function copy() {
@@ -21,7 +25,7 @@ export default function CopyButton({ text, className = 'of-btn-quiet' }) {
     <button type="button" onClick={copy} className={className} title={text}>
       <Icon name={state === 'copied' ? 'check' : 'content_copy'} size={18} />
       <span aria-live="polite">
-        {state === 'copied' ? 'Copied' : state === 'failed' ? 'Couldn’t copy' : 'Copy for socials'}
+        {state === 'copied' ? 'Copied' : state === 'failed' ? 'Couldn’t copy' : label}
       </span>
     </button>
   );

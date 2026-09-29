@@ -200,6 +200,29 @@ const MIGRATIONS = [
       }
     },
   },
+  {
+    id: '013-media-screen',
+    async up(db) {
+      // Streamed on YouTube: special services and Sunday services (same as isStreamed in
+      // src/lib/church.js); admins can change it on the Services screen.
+      const services = db.collection('churchservices');
+      await services.updateMany(
+        { livestream: { $exists: false }, $or: [{ kind: 'special' }, { days: 0 }] },
+        { $set: { livestream: true } },
+      );
+      await services.updateMany(
+        { livestream: { $exists: false } },
+        { $set: { livestream: false } },
+      );
+      await db
+        .collection('servicedays')
+        .createIndex({ service: 1, serviceDate: 1 }, { unique: true });
+      await db.collection('servicedays').createIndex({ serviceDate: -1 });
+      await db.collection('mediaitems').createIndex({ ref: 1 }, { unique: true });
+      await db.collection('mediaitems').createIndex({ date: 1 });
+      await db.collection('mediasettings').createIndex({ key: 1 }, { unique: true });
+    },
+  },
 ];
 
 async function main() {

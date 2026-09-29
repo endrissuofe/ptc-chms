@@ -16,7 +16,7 @@ export const createServiceSchema = z.discriminatedUnion('kind', [
 
 /** Days apply to regular services and date to special ones; the service layer checks which. */
 export const updateServiceSchema = z
-  .object({ name, startTime, active: z.boolean(), days, date })
+  .object({ name, startTime, active: z.boolean(), livestream: z.boolean(), days, date })
   .partial()
   .refine((v) => Object.keys(v).length > 0, 'Nothing to update');
 

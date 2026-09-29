@@ -6,7 +6,7 @@ import { formatPhone } from '@/lib/phone';
 import { CELEBRATIONS, socialsText } from '@/lib/celebrations';
 import { telLink, whatsAppLink } from '@/lib/followup';
 import { listCelebrations } from '@/services/celebration.service';
-import CopyButton from './CopyButton';
+import CopyButton from '@/components/ui/CopyButton';
 import MakeGraphic from './MakeGraphic';
 import { FEATURES } from '@/lib/features';
 

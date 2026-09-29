@@ -47,8 +47,8 @@ describe('menu', () => {
       navFor(role)
         .rail.filter((i) => i.soon)
         .map((i) => i.label);
-    expect(labels(ROLES.ADMIN)).toEqual(['Departments', 'Giving', 'Media']);
-    expect(labels(ROLES.MEDIA)).toEqual(['Media']);
+    expect(labels(ROLES.ADMIN)).toEqual(['Departments', 'Giving']);
+    expect(labels(ROLES.MEDIA)).toEqual([]);
     expect(labels(ROLES.USHER)).toEqual([]);
   });
 });

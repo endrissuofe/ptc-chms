@@ -13,6 +13,7 @@ const churchServiceSchema = new mongoose.Schema(
     date: { type: Date },
     startTime: { type: String, required: true, match: /^([01]\d|2[0-3]):[0-5]\d$/ }, // HH:mm, Lagos
     active: { type: Boolean, default: true },
+    livestream: { type: Boolean }, // streamed live on YouTube; unset: see isStreamed in lib/church
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true },

@@ -4,7 +4,7 @@ export const ROLES = {
   FOLLOWUP: 'followup',
   PASTOR: 'pastor',
   PRAYER: 'prayer', // prayer department: sees prayer requests only
-  MEDIA: 'media', // media team: birthdays and anniversaries, to post on the church's socials
+  MEDIA: 'media', // media team: birthdays, anniversaries and the church's posts (Media screen)
   ADMIN: 'admin',
 };
 
@@ -26,11 +26,19 @@ export const ROUTE_ACCESS = [
   { prefix: '/users', roles: [ROLES.ADMIN] },
   { prefix: '/alerts', roles: [ROLES.ADMIN] },
   { prefix: '/birthdays', roles: [ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN] },
+  { prefix: '/media', roles: [ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN] },
   // Coming soon: the screens exist and only say so for now.
   { prefix: '/departments', roles: [ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/giving', roles: [ROLES.PASTOR, ROLES.ADMIN] },
-  { prefix: '/media', roles: [ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN] },
 ];
+
+/**
+ * Media screen. The media team and admins run the list (statuses, quick posts, brand kit);
+ * pastors see it all and can also fill in what a service is about (theme, preacher, Bible text,
+ * YouTube link).
+ */
+export const MEDIA_EDITORS = [ROLES.MEDIA, ROLES.ADMIN];
+export const SERVICE_DETAIL_EDITORS = [ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN];
 
 /** Home screen after sign-in, by role. */
 export const HOME_BY_ROLE = {
@@ -38,7 +46,7 @@ export const HOME_BY_ROLE = {
   [ROLES.FOLLOWUP]: '/my-newcomers',
   [ROLES.PASTOR]: '/dashboard',
   [ROLES.PRAYER]: '/prayer-requests',
-  [ROLES.MEDIA]: '/birthdays',
+  [ROLES.MEDIA]: '/media',
   [ROLES.ADMIN]: '/dashboard',
 };
 

@@ -31,6 +31,7 @@ export const DEFAULT_SERVICES = [
     days: [0],
     startTime: '08:00',
     active: true,
+    livestream: true,
   },
   {
     key: 'midweek',
@@ -39,8 +40,18 @@ export const DEFAULT_SERVICES = [
     days: [3],
     startTime: '18:30',
     active: true,
+    livestream: false,
   },
 ];
+
+/**
+ * Is this service streamed live on YouTube? Admins switch it on the Services screen; until then
+ * special services and Sunday services are, others (e.g. midweek) are not.
+ */
+export function isStreamed(service) {
+  if (typeof service.livestream === 'boolean') return service.livestream;
+  return service.kind === 'special' || (service.days || []).includes(0);
+}
 
 /** How far back ushers may record attendance and cards. */
 export const USHER_BACKDATE_DAYS = 7;

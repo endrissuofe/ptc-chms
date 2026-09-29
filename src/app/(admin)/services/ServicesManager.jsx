@@ -12,6 +12,7 @@ import {
   WEEKDAYS,
   describeSchedule,
   formatServiceTime,
+  isStreamed,
   sortServices,
 } from '@/lib/church';
 
@@ -222,6 +223,7 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
     startTime: service.startTime,
     days: service.days || [],
     date: service.date || '',
+    livestream: isStreamed(service),
   };
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(start);
@@ -238,6 +240,7 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
   if (draft.startTime !== service.startTime) changes.startTime = draft.startTime;
   if (isRegular && draft.days.join() !== (service.days || []).join()) changes.days = draft.days;
   if (!isRegular && draft.date !== service.date) changes.date = draft.date;
+  if (draft.livestream !== start.livestream) changes.livestream = draft.livestream;
   const dirty = Object.keys(changes).length > 0;
 
   function close() {
@@ -305,6 +308,12 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
           <p className="break-words font-brand text-lg font-semibold">{service.name}</p>
           <p className="text-meta text-muted">{when}</p>
         </div>
+        {service.active && start.livestream && (
+          <span className="chip chip-danger">
+            <Icon name="live_tv" size={14} />
+            Live on YouTube
+          </span>
+        )}
         <span className={`chip ${service.active ? 'chip-success' : 'chip-warning'}`}>
           <Icon name={service.active ? 'check_circle' : 'pending'} size={14} />
           {service.active ? 'Active' : isRegular ? 'Switched off' : 'Cancelled'}
@@ -344,6 +353,24 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
             idPrefix={`edit-${service.key}`}
             minDate={earliestDate(today)}
           />
+          <label className="flex min-h-[44px] items-center gap-3 self-start">
+            <input
+              type="checkbox"
+              checked={draft.livestream}
+              onChange={(e) => {
+                const livestream = e.target.checked;
+                setDraft((d) => ({ ...d, livestream }));
+                setState({ kind: 'idle' });
+              }}
+              className="checkbox"
+            />
+            <span>
+              Streamed live on YouTube
+              <span className="field-hint block">
+                The Media list then gets a YouTube title and description for it.
+              </span>
+            </span>
+          </label>
           {banner && <FormAlert error={banner} />}
           <div className="flex flex-wrap items-center gap-2">
             <button

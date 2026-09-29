@@ -5,7 +5,7 @@ import { updateServiceSchema } from '@/lib/validators/churchService';
 import { updateService } from '@/services/churchService.service';
 
 /**
- * Change a service: { name?, startTime?, active?, days? (regular), date? (special) }.
+ * Change a service: { name?, startTime?, active?, livestream?, days? (regular), date? (special) }.
  * Admin: any service. Pastor: special services only (checked in the service layer).
  */
 export const PATCH = handler(async (req, { params }) => {

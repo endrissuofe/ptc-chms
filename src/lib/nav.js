@@ -95,7 +95,6 @@ export const NAV = [
     icon: 'photo_library',
     group: 'church',
     roles: [MEDIA, PASTOR, ADMIN],
-    soon: true,
   },
   { href: '/sms', label: 'SMS', icon: 'sms', group: 'settings', roles: [ADMIN] },
   { href: '/alerts', label: 'Alerts', icon: 'mail', group: 'settings', roles: [ADMIN] },
@@ -130,6 +129,7 @@ const PHONE_TABS = {
   [USHER]: ['/today', '/attendance', '/newcomers/new'],
   [PASTOR]: ['/dashboard', '/my-newcomers', '/first-timers', '/prayer-requests'],
   [ADMIN]: ['/dashboard', '/newcomers/new', '/my-newcomers', '/first-timers'],
+  [MEDIA]: ['/media', '/birthdays'],
 };
 
 export const ROLE_LABELS = {
