@@ -43,10 +43,21 @@ const config = {
         danger: { DEFAULT: v('danger'), soft: v('danger-soft') },
         teal: { DEFAULT: v('teal'), soft: v('teal-soft') },
         violet: { DEFAULT: v('violet'), soft: v('violet-soft') },
+        // Onefold, the product brand (sign-in first; the rest of the app moves over later).
+        of: {
+          night: v('of-night'),
+          'night-2': v('of-night-2'),
+          pine: v('of-pine'),
+          'pine-bright': v('of-pine-bright'),
+          dawn: v('of-dawn'),
+          mist: v('of-mist'),
+        },
       },
       fontFamily: {
         display: ['Nunito', 'Trebuchet MS', 'system-ui', 'sans-serif'],
         sans: ['Figtree', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        brand: ['Familjen Grotesk', 'Instrument Sans', 'system-ui', 'sans-serif'],
+        ui: ['Instrument Sans', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       /*
        * The type scale (rem, so text grows when someone enlarges it). Use only these:

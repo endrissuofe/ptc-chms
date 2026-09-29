@@ -46,17 +46,20 @@ export default function LoginForm() {
   return (
     <form onSubmit={onSubmit} className="flex w-full flex-col gap-5">
       <div>
-        <p className="eyebrow">Welcome back</p>
-        <h1 className="page-title">Sign in</h1>
-        <p className="page-sub">Use your email, or the username the church admin gave you.</p>
+        <p className="text-2xs font-semibold uppercase tracking-[0.1em] text-of-mist/55">
+          Welcome back
+        </p>
+        <h2 className="font-brand text-[1.75rem] font-semibold leading-tight tracking-[-0.01em]">
+          Sign in
+        </h2>
       </div>
-      <label>
-        <span className="field-label">Email or username</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-meta font-semibold text-of-mist/80">Email or username</span>
         <span className="relative block">
           <Icon
             name="person"
             size={20}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-of-mist/55"
           />
           <input
             name="username"
@@ -65,16 +68,18 @@ export default function LoginForm() {
             spellCheck={false}
             enterKeyHint="next"
             required
+            placeholder="you@church.org"
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? 'login-error' : undefined}
-            className="input pl-11"
+            className="of-field pl-11"
           />
         </span>
       </label>
-      <label>
-        <span className="field-label">Password</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-meta font-semibold text-of-mist/80">Password</span>
         <PasswordInput
           withIcon
+          tone="night"
           name="password"
           autoComplete="current-password"
           enterKeyHint="go"
@@ -84,16 +89,20 @@ export default function LoginForm() {
         />
       </label>
       {error && (
-        <p id="login-error" role="alert" className="alert alert-danger">
-          <Icon name="error_outline" size={19} />
+        <p
+          id="login-error"
+          role="alert"
+          className="flex items-start gap-2 rounded-control border border-white/15 bg-white/10 px-3.5 py-3 text-sm"
+        >
+          <Icon name="error_outline" size={19} className="mt-px shrink-0 text-of-dawn" />
           {error}
         </p>
       )}
-      <button type="submit" aria-disabled={busy} className="btn btn-primary btn-lg">
+      <button type="submit" aria-disabled={busy} className="of-button mt-1">
         <Busy busy={busy} busyLabel="Signing in…" label="Sign in" />
         {!busy && <Icon name="arrow_forward" size={20} />}
       </button>
-      <p className="text-center text-meta text-muted">
+      <p className="text-center text-meta text-of-mist/60">
         No login yet? Ask your team leader for your team’s sign-up link.
       </p>
     </form>

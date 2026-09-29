@@ -8,6 +8,19 @@
  * (data-theme on <html>, set by ThemeToggle). docs/DESIGN.md explains each token.
  */
 @layer base {
+  /*
+   * Onefold brand (the product). A single deliberate look on the sign-in: the same in light
+   * and dark, so these tokens have no dark-mode overrides.
+   */
+  :root {
+    --of-night: 9 18 16;
+    --of-night-2: 18 34 30;
+    --of-pine: 20 88 70;
+    --of-pine-bright: 94 196 158;
+    --of-dawn: 246 176 112;
+    --of-dawn-2: 239 120 96;
+    --of-mist: 236 244 240;
+  }
   :root {
     --primary: 79 70 229;
     --primary-strong: 67 56 202;
@@ -429,5 +442,159 @@
   }
   .tile-glass {
     @apply flex min-w-0 flex-col gap-0.5 rounded-tile border border-white/20 bg-white/[.14] px-4 py-3.5 backdrop-blur-sm;
+  }
+}
+
+/*
+ * Onefold sign-in: night with slow dawn light, like light through a church window.
+ * Everything drifts over a minute or more; with reduced motion it all stands still.
+ */
+@layer components {
+  .of-night {
+    color: rgb(var(--of-mist));
+    background: radial-gradient(
+      120% 90% at 20% 110%,
+      rgb(var(--of-night-2)) 0%,
+      rgb(var(--of-night)) 60%
+    );
+  }
+  .of-glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .of-glow-1 {
+    width: 52vmax;
+    height: 52vmax;
+    left: -12vmax;
+    top: 18%;
+    background: radial-gradient(circle, rgb(var(--of-dawn) / 0.55), transparent 65%);
+    animation: of-drift-1 46s ease-in-out infinite alternate;
+  }
+  .of-glow-2 {
+    width: 44vmax;
+    height: 44vmax;
+    right: -10vmax;
+    top: -14vmax;
+    background: radial-gradient(circle, rgb(var(--of-pine-bright) / 0.4), transparent 65%);
+    animation: of-drift-2 58s ease-in-out infinite alternate;
+  }
+  .of-glow-3 {
+    width: 30vmax;
+    height: 30vmax;
+    left: 38%;
+    bottom: -16vmax;
+    background: radial-gradient(circle, rgb(var(--of-dawn-2) / 0.32), transparent 65%);
+    animation: of-drift-3 72s ease-in-out infinite alternate;
+  }
+  .of-rays {
+    position: absolute;
+    inset: -40%;
+    pointer-events: none;
+    background: repeating-conic-gradient(
+      from 200deg at 18% 108%,
+      rgb(255 236 210 / 0.05) 0deg 3deg,
+      transparent 3deg 11deg
+    );
+    -webkit-mask-image: radial-gradient(70% 70% at 20% 100%, #000 10%, transparent 70%);
+    mask-image: radial-gradient(70% 70% at 20% 100%, #000 10%, transparent 70%);
+    animation: of-turn 180s linear infinite;
+  }
+  /* The mark draws itself once: the fold, then the person brought in. */
+  .of-draw {
+    stroke-dasharray: 230;
+    stroke-dashoffset: 230;
+    animation: of-draw 1.6s cubic-bezier(0.6, 0.1, 0.2, 1) 0.2s forwards;
+  }
+  .of-drop {
+    opacity: 0;
+    transform: translateY(-14px);
+    animation: of-drop 0.6s cubic-bezier(0.3, 1.4, 0.5, 1) 1.5s forwards;
+  }
+  .of-glass {
+    background: rgb(255 255 255 / 0.06);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+  .of-field {
+    @apply h-12 w-full rounded-control px-4 font-ui text-base;
+    color: rgb(var(--of-mist));
+    background: rgb(255 255 255 / 0.06);
+    border: 1px solid rgb(255 255 255 / 0.18);
+  }
+  .of-field::placeholder {
+    color: rgb(var(--of-mist) / 0.45);
+  }
+  .of-field:focus {
+    outline: none;
+    border-color: rgb(var(--of-pine-bright));
+    box-shadow: 0 0 0 3px rgb(var(--of-pine-bright) / 0.3);
+  }
+  .of-field[aria-invalid='true'] {
+    border-color: rgb(var(--of-dawn-2));
+  }
+  .of-button {
+    @apply inline-flex h-12 w-full items-center justify-center gap-2 rounded-control font-ui text-base font-bold transition focus-visible:outline-none focus-visible:ring-[3px];
+    color: rgb(var(--of-night));
+    background: rgb(var(--of-dawn));
+    --tw-ring-color: rgb(var(--of-pine-bright));
+  }
+  .of-button:hover {
+    filter: brightness(1.05);
+  }
+  .of-button[aria-disabled='true'] {
+    opacity: 0.75;
+    cursor: progress;
+  }
+}
+
+@keyframes of-drift-1 {
+  to {
+    transform: translate(14vmax, -8vmax) scale(1.12);
+  }
+}
+@keyframes of-drift-2 {
+  to {
+    transform: translate(-12vmax, 10vmax) scale(0.9);
+  }
+}
+@keyframes of-drift-3 {
+  to {
+    transform: translate(-16vmax, -6vmax) scale(1.2);
+  }
+}
+@keyframes of-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes of-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes of-drop {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .of-glow,
+  .of-rays {
+    animation: none;
+  }
+  .of-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .of-drop {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

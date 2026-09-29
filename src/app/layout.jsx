@@ -44,7 +44,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&family=Familjen+Grotesk:wght@600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
