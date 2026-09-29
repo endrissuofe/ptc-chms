@@ -1,24 +1,30 @@
-import Logo from '@/components/ui/Logo';
 import Icon from '@/components/ui/Icon';
+import Logo from '@/components/ui/Logo';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import OnefoldLogo from '@/components/brand/Onefold';
+import ChurchAvatar from '@/components/brand/ChurchAvatar';
 import { OnlineBadge } from '@/components/ui/ConnectionStatus';
 import { getCurrentUser } from '@/lib/auth';
+import { CHURCH } from '@/lib/church-profile';
 import { ROLE_LABELS, navFor } from '@/lib/nav';
-import { Rail, TabBar } from './NavBars';
+import { Sidebar, TabBar } from './NavBars';
 import UserMenu from './UserMenu';
 import AccountNotice from './AccountNotice';
 
 const today = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Africa/Lagos',
-  weekday: 'short',
+  weekday: 'long',
   day: 'numeric',
-  month: 'short',
+  month: 'long',
 });
 
 const pick = ({ href, label, icon }) => ({ href, label, icon });
 
 /**
- * The frame around every signed-in screen: top bar, desktop rail, phone tab bar (+ More).
+ * The frame around every signed-in screen, in the Onefold brand:
+ * - desktop: a sidebar with the Onefold logo, the church card (its logo as a profile
+ *   picture) and the menu; a slim top bar with the date and the person's menu
+ * - phone: the church in the top bar, and the tab bar (+ More) at the bottom
  * The menu comes from the signed-in person's role (lib/nav.js).
  */
 export default async function AppShell({ children }) {
@@ -27,6 +33,7 @@ export default async function AppShell({ children }) {
   const blocked = user && user.status !== 'ok';
   const role = blocked ? null : user?.role;
   const name = user?.name || 'Signed in';
+  const roleLabel = ROLE_LABELS[role] || '';
   const nav = navFor(role);
   const hasTabBar = nav.tabs.length + (nav.more.length ? 1 : 0) > 1;
 
@@ -35,31 +42,43 @@ export default async function AppShell({ children }) {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <header className="sticky top-0 z-40 h-[68px] border-b border-line bg-paper/85 backdrop-blur-md">
-        <div className="flex h-full items-center gap-2 px-4 sm:gap-3 lg:pl-7 lg:pr-6">
-          <div className="mr-auto min-w-0">
-            <Logo size={38} withName subtitle="Peculiar Treasure Chapel · RCCG Youth Province 2" />
+
+      <Sidebar items={nav.rail.map(pick)}>
+        <OnefoldLogo size={21} className="px-1 text-of-accent" />
+        <div className="flex items-center gap-3 rounded-tile border border-line bg-surface-2 p-2.5">
+          <ChurchAvatar size={38} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate font-brand text-base font-bold">{CHURCH.name}</p>
+            <p className="truncate text-xs text-muted">
+              {[roleLabel, name].filter(Boolean).join(' · ')}
+            </p>
           </div>
-          <span className="hidden items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-meta font-bold text-ink-2 xl:inline-flex">
-            <Icon name="calendar_today" size={16} className="text-coral-ink" />
+        </div>
+      </Sidebar>
+
+      <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur-md lg:ml-[248px]">
+        <div className="flex h-[64px] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-9">
+          <div className="mr-auto min-w-0 lg:hidden">
+            <Logo size={38} withName subtitle={CHURCH.fullName} />
+          </div>
+          <p className="mr-auto hidden items-center gap-2 font-ui text-sm font-medium text-ink-2 lg:flex">
+            <Icon name="calendar_today" size={17} className="text-of-accent" />
             {today.format(new Date())}
-          </span>
+          </p>
           <OnlineBadge />
           <ThemeToggle className="max-sm:hidden" />
-          <UserMenu name={name} roleLabel={ROLE_LABELS[role] || ''} />
+          <UserMenu name={name} roleLabel={roleLabel} />
         </div>
       </header>
-
-      <Rail items={nav.rail.map(pick)} />
 
       <main
         id="main"
         tabIndex={-1}
-        className={`px-4 pt-5 outline-none sm:px-6 lg:ml-[96px] lg:px-9 lg:pb-12 lg:pt-8 ${
+        className={`px-4 pt-5 outline-none sm:px-6 lg:ml-[248px] lg:px-9 lg:pb-12 lg:pt-8 ${
           hasTabBar ? 'pb-28' : 'pb-10'
         }`}
       >
-        <div className="mx-auto max-w-[1320px]">
+        <div className="mx-auto max-w-[1240px]">
           {blocked ? <AccountNotice status={user.status} /> : children}
         </div>
       </main>

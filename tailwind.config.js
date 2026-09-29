@@ -51,6 +51,9 @@ const config = {
           'pine-bright': v('of-pine-bright'),
           dawn: v('of-dawn'),
           mist: v('of-mist'),
+          accent: v('of-accent'),
+          'accent-soft': v('of-accent-soft'),
+          'accent-ink': v('of-accent-ink'),
         },
       },
       fontFamily: {

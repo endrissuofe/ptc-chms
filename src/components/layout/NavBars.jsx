@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Icon from '@/components/ui/Icon';
+import { OnefoldMark } from '@/components/brand/Onefold';
 
 const isActive = (pathname, href) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -18,42 +19,41 @@ function usePendingHref() {
   return [pending, setPending];
 }
 
-/** Desktop: icon rail down the left, labels under the icons, the active one in a soft pill. */
-export function Rail({ items }) {
+/**
+ * Desktop: the sidebar. `children` is its top (the Onefold logo and the church card); the menu
+ * lists every screen the role can open, the current one in a soft pine pill.
+ */
+export function Sidebar({ items, children }) {
   const pathname = usePathname();
   const [pending, setPending] = usePendingHref();
   return (
-    <nav
-      aria-label="Main"
-      className="fixed bottom-0 left-0 top-[68px] z-20 hidden w-[96px] border-r border-line bg-surface lg:block"
-    >
-      <ul className="flex max-h-full flex-col gap-0.5 overflow-y-auto px-2 py-3">
-        {items.map((item) => {
-          const active = pending ? pending === item.href : isActive(pathname, item.href);
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={() => setPending(item.href)}
-                aria-current={isActive(pathname, item.href) ? 'page' : undefined}
-                className={`group flex flex-col items-center gap-1 rounded-tile px-1 py-1.5 text-center font-display text-2xs font-extrabold leading-tight focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary ${
-                  active ? 'text-ink' : 'text-muted hover:text-ink'
-                }`}
-              >
-                <span
-                  className={`grid h-[34px] w-[54px] place-items-center rounded-full transition-colors ${
-                    active ? 'bg-primary-soft text-primary-ink' : 'group-hover:bg-surface-2'
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-line bg-surface lg:flex">
+      <div className="flex flex-col gap-4 px-4 pb-3 pt-5">{children}</div>
+      <nav aria-label="Main" className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+        <ul className="flex flex-col gap-0.5">
+          {items.map((item) => {
+            const active = pending ? pending === item.href : isActive(pathname, item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={() => setPending(item.href)}
+                  aria-current={isActive(pathname, item.href) ? 'page' : undefined}
+                  className={`flex min-h-[42px] items-center gap-3 rounded-control px-3 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent ${
+                    active
+                      ? 'bg-of-accent-soft font-semibold text-of-accent-ink'
+                      : 'font-medium text-ink-2 hover:bg-surface-2 hover:text-ink'
                   }`}
                 >
-                  <Icon name={item.icon} size={23} filled={active} />
-                </span>
-                {item.label}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+                  <Icon name={item.icon} size={20} filled={active} />
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </aside>
   );
 }
 
@@ -63,13 +63,13 @@ function TabLink({ href, icon, label, active, onClick }) {
       href={href}
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
-      className={`flex h-full flex-col items-center justify-center gap-0.5 font-display text-2xs font-extrabold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+      className={`flex h-full flex-col items-center justify-center gap-0.5 font-ui text-2xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-of-accent ${
         active ? 'text-ink' : 'text-muted'
       }`}
     >
       <span
         className={`grid h-7 w-12 place-items-center rounded-full transition-colors ${
-          active ? 'bg-primary-soft text-primary-ink' : ''
+          active ? 'bg-of-accent-soft text-of-accent-ink' : ''
         }`}
       >
         <Icon name={icon} size={22} filled={active} />
@@ -116,13 +116,13 @@ export function TabBar({ items, more = [] }) {
                 onClick={() => setOpen(true)}
                 aria-haspopup="dialog"
                 aria-expanded={open}
-                className={`flex h-full w-full flex-col items-center justify-center gap-0.5 font-display text-2xs font-extrabold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
+                className={`flex h-full w-full flex-col items-center justify-center gap-0.5 font-ui text-2xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-of-accent ${
                   moreActive && !pending ? 'text-ink' : 'text-muted'
                 }`}
               >
                 <span
                   className={`grid h-7 w-12 place-items-center rounded-full transition-colors ${
-                    moreActive && !pending ? 'bg-primary-soft text-primary-ink' : ''
+                    moreActive && !pending ? 'bg-of-accent-soft text-of-accent-ink' : ''
                   }`}
                 >
                   <Icon name="menu" size={22} />
@@ -175,8 +175,10 @@ function MoreSheet({ items, pathname, onClose }) {
                   href={item.href}
                   onClick={onClose}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex min-h-[56px] items-center gap-3 rounded-tile px-3 font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary ${
-                    active ? 'bg-primary-soft text-primary-ink' : 'bg-surface-2 hover:bg-surface-3'
+                  className={`flex min-h-[56px] items-center gap-3 rounded-tile px-3 font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent ${
+                    active
+                      ? 'bg-of-accent-soft text-of-accent-ink'
+                      : 'bg-surface-2 hover:bg-surface-3'
                   }`}
                 >
                   <Icon name={item.icon} size={22} filled={active} />
@@ -186,6 +188,10 @@ function MoreSheet({ items, pathname, onClose }) {
             );
           })}
         </ul>
+        <p className="flex items-center justify-center gap-1.5 pt-3 text-2xs text-muted">
+          <OnefoldMark size={16} className="text-of-accent" />
+          onefold
+        </p>
       </div>
     </dialog>
   );

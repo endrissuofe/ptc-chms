@@ -9,8 +9,8 @@
  */
 @layer base {
   /*
-   * Onefold brand (the product). A single deliberate look on the sign-in: the same in light
-   * and dark, so these tokens have no dark-mode overrides.
+   * Onefold brand (the product). The sign-in's night look is the same in light and dark;
+   * only the --of-accent tokens (the app frame) change with the theme.
    */
   :root {
     --of-night: 9 18 16;
@@ -20,6 +20,10 @@
     --of-dawn: 246 176 112;
     --of-dawn-2: 239 120 96;
     --of-mist: 236 244 240;
+    /* The app frame (sidebar, active menu item) in Onefold pine; light values, dark below. */
+    --of-accent: 20 98 78;
+    --of-accent-soft: 223 240 233;
+    --of-accent-ink: 14 74 58;
   }
   :root {
     --primary: 79 70 229;
@@ -69,6 +73,9 @@
   }
 
   :root[data-theme='dark'] {
+    --of-accent: 96 200 162;
+    --of-accent-soft: 22 50 42;
+    --of-accent-ink: 158 226 198;
     --primary: 143 136 255;
     --primary-strong: 168 162 255;
     --primary-soft: 44 41 86;
@@ -116,6 +123,9 @@
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
+      --of-accent: 96 200 162;
+      --of-accent-soft: 22 50 42;
+      --of-accent-ink: 158 226 198;
       --primary: 143 136 255;
       --primary-strong: 168 162 255;
       --primary-soft: 44 41 86;

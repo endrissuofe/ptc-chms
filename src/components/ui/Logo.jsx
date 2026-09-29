@@ -1,30 +1,20 @@
-import Image from 'next/image';
+import ChurchAvatar from '@/components/brand/ChurchAvatar';
+import { CHURCH } from '@/lib/church-profile';
 
 /**
- * The church logo. Always use this component so the logo looks the same on every screen.
- * It sits on a white tile so its colours read the same in the dark theme.
+ * The church's identity: its logo as a round profile picture, and optionally its name.
+ * (The product's own logo is OnefoldLogo in components/brand.)
  * `badge` renders next to the church name (e.g. the Online pill).
  */
 export default function Logo({ size = 40, withName = false, subtitle, badge }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <span
-        className="inline-grid shrink-0 place-items-center rounded-control border border-line bg-white shadow-soft"
-        style={{ width: size, height: size }}
-      >
-        <Image
-          src="/ptc-logo.png"
-          alt="Ptchapel logo"
-          width={Math.round(size * 0.8)}
-          height={Math.round(size * 0.8)}
-          priority
-        />
-      </span>
+      <ChurchAvatar size={size} />
       {withName && (
         <div className="flex min-w-0 flex-col leading-none">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="truncate font-display text-lg font-black tracking-[-0.01em]">
-              Ptchapel
+            <span className="truncate font-brand text-lg font-bold tracking-[-0.01em]">
+              {CHURCH.name}
             </span>
             {badge}
           </div>
