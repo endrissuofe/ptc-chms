@@ -9,8 +9,8 @@ function layout(paragraphs, button) {
   const body = paragraphs
     .map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.5;">${esc(p)}</p>`)
     .join('');
-  const cta = `<a href="${esc(button.href)}" style="display:inline-block;background:#4f46e5;color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:999px;">${esc(button.label)}</a>`;
-  return `<div style="font-family:Arial,sans-serif;color:#1e1b3a;max-width:520px;">${body}${cta}</div>`;
+  const cta = `<a href="${esc(button.href)}" style="display:inline-block;background:#14624e;color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:999px;">${esc(button.label)}</a>`;
+  return `<div style="font-family:Arial,sans-serif;color:#101a17;max-width:520px;">${body}${cta}</div>`;
 }
 
 export function renderSignupNotice({ name, teamLabel, email, phone }, baseUrl) {

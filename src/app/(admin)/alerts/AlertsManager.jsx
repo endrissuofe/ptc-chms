@@ -268,7 +268,7 @@ function Preview({ report, email }) {
             title="Email preview"
             srcDoc={email.html}
             sandbox=""
-            className="h-[480px] w-full bg-[#faf7f2]"
+            className="h-[480px] w-full bg-[#f3f5f3]"
           />
         </div>
       ) : (

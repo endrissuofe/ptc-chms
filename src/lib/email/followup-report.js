@@ -50,16 +50,16 @@ export function followUpSubject(report) {
 function personLine(p, baseUrl, extra) {
   return {
     html: `<tr>
-      <td style="padding:10px 12px;border-top:1px solid #ece7f0;">
-        <a href="${esc(baseUrl)}/newcomers/${esc(p.id)}" style="color:#1e1b3a;font-weight:700;text-decoration:none;">${esc(p.name)}</a>
-        <div style="color:#625e7d;font-size:13px;">${esc(formatPhone(p.phone))}${p.stage ? ` · ${esc(STAGE_LABELS[p.stage] || p.stage)}` : ''}${p.service ? ` · ${esc(p.service)}` : ''}</div>${
+      <td style="padding:10px 12px;border-top:1px solid #e0e6e2;">
+        <a href="${esc(baseUrl)}/newcomers/${esc(p.id)}" style="color:#101a17;font-weight:700;text-decoration:none;">${esc(p.name)}</a>
+        <div style="color:#586862;font-size:13px;">${esc(formatPhone(p.phone))}${p.stage ? ` · ${esc(STAGE_LABELS[p.stage] || p.stage)}` : ''}${p.service ? ` · ${esc(p.service)}` : ''}</div>${
           p.address
             ? `
-        <div style="color:#625e7d;font-size:13px;">${esc(p.address)}</div>`
+        <div style="color:#586862;font-size:13px;">${esc(p.address)}</div>`
             : ''
         }
       </td>
-      <td style="padding:10px 12px;border-top:1px solid #ece7f0;color:#3d3960;font-size:13px;text-align:right;">${esc(extra)}</td>
+      <td style="padding:10px 12px;border-top:1px solid #e0e6e2;color:#32403b;font-size:13px;text-align:right;">${esc(extra)}</td>
     </tr>`,
     text: `- ${p.name} (${formatPhone(p.phone)}${p.address ? `, ${p.address}` : ''})${extra ? ` — ${extra}` : ''}`,
   };
@@ -68,8 +68,8 @@ function personLine(p, baseUrl, extra) {
 function section(title, rows) {
   if (!rows.length) return { html: '', text: '' };
   return {
-    html: `<h2 style="font:800 17px Arial,sans-serif;color:#1e1b3a;margin:24px 0 8px;">${esc(title)}</h2>
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #ece7f0;border-radius:12px;border-collapse:separate;font:15px Arial,sans-serif;">${rows.map((r) => r.html).join('')}</table>`,
+    html: `<h2 style="font:800 17px Arial,sans-serif;color:#101a17;margin:24px 0 8px;">${esc(title)}</h2>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e0e6e2;border-radius:12px;border-collapse:separate;font:15px Arial,sans-serif;">${rows.map((r) => r.html).join('')}</table>`,
     text: `${title}\n${rows.map((r) => r.text).join('\n')}\n`,
   };
 }
@@ -114,14 +114,14 @@ export function renderFollowUpReport(report, baseUrl) {
   const subject = followUpSubject(report);
   const button = `${baseUrl}/my-newcomers`;
 
-  const html = `<!doctype html><html><body style="margin:0;background:#faf7f2;">
-  <div style="max-width:600px;margin:0 auto;padding:24px 16px;font:15px/1.5 Arial,sans-serif;color:#1e1b3a;">
-    <p style="margin:0 0 4px;color:#b1361b;font:800 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;">Ptchapel · Follow-up</p>
+  const html = `<!doctype html><html><body style="margin:0;background:#f3f5f3;">
+  <div style="max-width:600px;margin:0 auto;padding:24px 16px;font:15px/1.5 Arial,sans-serif;color:#101a17;">
+    <p style="margin:0 0 4px;color:#14624e;font:800 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;">Ptchapel · Follow-up</p>
     <h1 style="font:900 24px Arial,sans-serif;margin:0 0 8px;">Good morning, follow-up team</h1>
-    <p style="margin:0;color:#3d3960;">Here is who needs a call. Report for ${esc(day)}.</p>
+    <p style="margin:0;color:#32403b;">Here is who needs a call. Report for ${esc(day)}.</p>
     ${came.html}${back.html}${overdue.html}${answers.html}
-    <p style="margin:28px 0;"><a href="${esc(button)}" style="background:#4f46e5;color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;display:inline-block;">Open the follow-up list</a></p>
-    <p style="color:#625e7d;font-size:13px;margin:0;">Log each call in the app so the pastors can see it. This email goes to the follow-up team, with the pastors copied in. It comes every morning while anyone is waiting.</p>
+    <p style="margin:28px 0;"><a href="${esc(button)}" style="background:#14624e;color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:999px;display:inline-block;">Open the follow-up list</a></p>
+    <p style="color:#586862;font-size:13px;margin:0;">Log each call in the app so the pastors can see it. This email goes to the follow-up team, with the pastors copied in. It comes every morning while anyone is waiting.</p>
   </div></body></html>`;
 
   const text = `Good morning, follow-up team. Report for ${day}.\n\n${came.text}\n${back.text}\n${overdue.text}\n${answers.text}\nOpen the follow-up list: ${button}\n`;

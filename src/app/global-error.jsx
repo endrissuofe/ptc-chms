@@ -14,14 +14,14 @@ export default function GlobalError({ reset }) {
           display: 'grid',
           placeItems: 'center',
           fontFamily: 'system-ui, sans-serif',
-          background: '#faf7f2',
-          color: '#1e1b3a',
+          background: '#f3f5f3',
+          color: '#101a17',
           padding: 24,
         }}
       >
         <main style={{ maxWidth: 420, textAlign: 'center' }}>
           <h1 style={{ fontSize: 24 }}>Ptchapel didn’t load</h1>
-          <p style={{ color: '#625e7d' }}>
+          <p style={{ color: '#586862' }}>
             Something went wrong. Check your connection and try again.
           </p>
           <button
@@ -32,7 +32,7 @@ export default function GlobalError({ reset }) {
               padding: '0 24px',
               borderRadius: 999,
               border: 0,
-              background: '#4f46e5',
+              background: '#14624e',
               color: '#fff',
               fontSize: 16,
               fontWeight: 700,

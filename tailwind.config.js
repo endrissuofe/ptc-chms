@@ -1,7 +1,7 @@
 /**
  * Design tokens. Values live as CSS variables in src/app/globals.css (light and dark themes);
- * the look follows the "Homeroom" template: indigo + coral on warm paper, Nunito headings,
- * Figtree body, very rounded cards. docs/DESIGN.md describes how to use them.
+ * the look is Onefold: pine + dawn on cool stone, Familjen Grotesk headings, Instrument Sans
+ * text (the token names are older, e.g. "primary" is pine and "coral" is dawn). docs/DESIGN.md describes how to use them.
  * Change the brand by editing the variables, not these names.
  */
 const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
@@ -60,8 +60,8 @@ const config = {
         },
       },
       fontFamily: {
-        display: ['Nunito', 'Trebuchet MS', 'system-ui', 'sans-serif'],
-        sans: ['Figtree', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Familjen Grotesk', 'Instrument Sans', 'system-ui', 'sans-serif'],
+        sans: ['Instrument Sans', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
         brand: ['Familjen Grotesk', 'Instrument Sans', 'system-ui', 'sans-serif'],
         ui: ['Instrument Sans', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
@@ -85,10 +85,10 @@ const config = {
         control: '12px',
       },
       boxShadow: {
-        soft: '0 1px 2px rgba(30,27,58,.04), 0 4px 14px rgba(30,27,58,.05)',
-        lift: '0 2px 6px rgba(30,27,58,.05), 0 14px 34px rgba(30,27,58,.08)',
-        pop: '0 24px 60px rgba(30,27,58,.18)',
-        bar: '0 -8px 24px rgba(30,27,58,.06)',
+        soft: '0 1px 2px rgba(10,26,22,.04), 0 4px 14px rgba(10,26,22,.05)',
+        lift: '0 2px 6px rgba(10,26,22,.05), 0 14px 34px rgba(10,26,22,.08)',
+        pop: '0 24px 60px rgba(10,26,22,.18)',
+        bar: '0 -8px 24px rgba(10,26,22,.06)',
         hero: '0 18px 40px -18px rgb(var(--hero-from) / .65)',
         'primary-glow': '0 6px 16px -6px rgb(var(--primary-fill) / .55)',
         'coral-glow': '0 6px 16px -6px rgb(var(--coral-strong) / .6)',

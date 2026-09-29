@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 /*
- * Theme colours as "R G B" so Tailwind can add opacity (bg-primary/20).
+ * Theme colours as "R G B" so Tailwind can add opacity (bg-primary/20). The palette is Onefold:
+ * pine (primary), dawn (coral), stone neutrals; the token names are the old ones so every screen
+ * picked it up at once.
  * Light theme by default; dark follows the device unless the person picked one
  * (data-theme on <html>, set by ThemeToggle). docs/DESIGN.md explains each token.
  */
@@ -30,48 +32,48 @@
     --of-sun-soft: 252 240 220;
   }
   :root {
-    --primary: 79 70 229;
-    --primary-strong: 67 56 202;
-    --primary-soft: 238 237 255;
-    --primary-ink: 55 48 163;
+    --primary: 20 98 78;
+    --primary-strong: 16 82 65;
+    --primary-soft: 223 240 233;
+    --primary-ink: 14 74 58;
     --on-primary: 255 255 255;
-    --primary-fill: 79 70 229;
-    --primary-fill-hover: 67 56 202;
-    --primary-fill-active: 55 48 163;
+    --primary-fill: 20 98 78;
+    --primary-fill-hover: 16 82 65;
+    --primary-fill-active: 12 66 52;
     --on-primary-fill: 255 255 255;
-    --coral: 255 122 92;
-    --coral-strong: 242 96 63;
-    --coral-soft: 255 240 235;
-    --coral-ink: 177 54 27;
-    --on-coral: 42 15 8;
+    --coral: 236 142 84;
+    --coral-strong: 220 116 60;
+    --coral-soft: 252 237 224;
+    --coral-ink: 148 68 22;
+    --on-coral: 42 20 8;
 
-    --bg: 250 247 242;
+    --bg: 243 245 243;
     --surface: 255 255 255;
-    --surface-2: 245 242 250;
-    --surface-3: 236 232 245;
-    --ink: 30 27 58;
-    --ink-2: 61 57 96;
-    --muted: 98 94 125;
-    --line: 236 231 240;
-    --line-2: 220 213 230;
-    --field-line: 146 139 170;
+    --surface-2: 240 244 241;
+    --surface-3: 229 235 231;
+    --ink: 16 26 23;
+    --ink-2: 50 64 59;
+    --muted: 88 104 98;
+    --line: 224 230 226;
+    --line-2: 206 215 210;
+    --field-line: 132 148 141;
 
     --success: 23 114 69;
-    --success-soft: 228 245 235;
-    --warning: 154 90 0;
-    --warning-soft: 253 240 216;
-    --danger: 180 35 58;
-    --danger-soft: 253 231 234;
-    --teal: 15 118 110;
-    --teal-soft: 223 244 241;
-    --violet: 109 40 217;
-    --violet-soft: 243 237 255;
+    --success-soft: 226 243 233;
+    --warning: 150 88 0;
+    --warning-soft: 251 239 214;
+    --danger: 176 38 48;
+    --danger-soft: 251 231 230;
+    --teal: 14 112 108;
+    --teal-soft: 222 242 240;
+    --violet: 98 64 176;
+    --violet-soft: 239 234 250;
 
-    /* The gradient hero (sign-in and Today). White text sits on it. */
-    --hero-from: 67 56 202;
-    --hero-via: 90 79 230;
-    --hero-to: 108 92 232;
-    --hero-glow: 255 138 112;
+    /* The gradient hero (Today). White text sits on it. */
+    --hero-from: 14 64 52;
+    --hero-via: 20 98 78;
+    --hero-to: 32 122 96;
+    --hero-glow: 246 176 112;
 
     color-scheme: light;
   }
@@ -83,47 +85,47 @@
     --of-on-accent: 9 18 16;
     --of-sun: 240 186 110;
     --of-sun-soft: 56 42 20;
-    --primary: 143 136 255;
-    --primary-strong: 168 162 255;
-    --primary-soft: 44 41 86;
-    --primary-ink: 203 199 255;
-    --on-primary: 20 18 51;
-    --primary-fill: 99 91 255;
-    --primary-fill-hover: 86 78 240;
-    --primary-fill-active: 72 64 220;
+    --primary: 96 200 162;
+    --primary-strong: 130 216 184;
+    --primary-soft: 22 50 42;
+    --primary-ink: 158 226 198;
+    --on-primary: 9 18 16;
+    --primary-fill: 30 120 92;
+    --primary-fill-hover: 36 132 102;
+    --primary-fill-active: 26 108 84;
     --on-primary-fill: 255 255 255;
-    --coral: 255 138 112;
-    --coral-strong: 255 161 139;
-    --coral-soft: 58 36 52;
-    --coral-ink: 255 179 161;
-    --on-coral: 42 15 8;
+    --coral: 246 170 110;
+    --coral-strong: 250 186 132;
+    --coral-soft: 56 40 26;
+    --coral-ink: 250 196 150;
+    --on-coral: 42 20 8;
 
-    --bg: 18 17 42;
-    --surface: 27 26 55;
-    --surface-2: 36 34 71;
-    --surface-3: 46 43 86;
-    --ink: 242 240 251;
-    --ink-2: 214 210 240;
-    --muted: 170 166 203;
-    --line: 45 42 82;
-    --line-2: 60 57 104;
-    --field-line: 105 100 160;
+    --bg: 11 17 15;
+    --surface: 17 25 22;
+    --surface-2: 24 34 30;
+    --surface-3: 32 44 39;
+    --ink: 232 240 236;
+    --ink-2: 200 214 208;
+    --muted: 142 160 153;
+    --line: 34 46 41;
+    --line-2: 46 60 54;
+    --field-line: 96 116 108;
 
     --success: 95 213 152;
-    --success-soft: 33 53 60;
+    --success-soft: 20 48 34;
     --warning: 245 185 87;
-    --warning-soft: 58 48 50;
-    --danger: 255 133 151;
-    --danger-soft: 59 36 62;
+    --warning-soft: 52 40 18;
+    --danger: 255 133 145;
+    --danger-soft: 60 26 30;
     --teal: 79 209 197;
-    --teal-soft: 32 53 69;
-    --violet: 196 168 255;
-    --violet-soft: 45 38 82;
+    --teal-soft: 18 46 46;
+    --violet: 190 164 255;
+    --violet-soft: 40 34 66;
 
-    --hero-from: 40 37 88;
-    --hero-via: 55 48 150;
-    --hero-to: 76 66 210;
-    --hero-glow: 255 138 112;
+    --hero-from: 10 34 28;
+    --hero-via: 16 70 56;
+    --hero-to: 24 98 78;
+    --hero-glow: 246 176 112;
 
     color-scheme: dark;
   }
@@ -136,47 +138,47 @@
       --of-on-accent: 9 18 16;
       --of-sun: 240 186 110;
       --of-sun-soft: 56 42 20;
-      --primary: 143 136 255;
-      --primary-strong: 168 162 255;
-      --primary-soft: 44 41 86;
-      --primary-ink: 203 199 255;
-      --on-primary: 20 18 51;
-      --primary-fill: 99 91 255;
-      --primary-fill-hover: 86 78 240;
-      --primary-fill-active: 72 64 220;
+      --primary: 96 200 162;
+      --primary-strong: 130 216 184;
+      --primary-soft: 22 50 42;
+      --primary-ink: 158 226 198;
+      --on-primary: 9 18 16;
+      --primary-fill: 30 120 92;
+      --primary-fill-hover: 36 132 102;
+      --primary-fill-active: 26 108 84;
       --on-primary-fill: 255 255 255;
-      --coral: 255 138 112;
-      --coral-strong: 255 161 139;
-      --coral-soft: 58 36 52;
-      --coral-ink: 255 179 161;
-      --on-coral: 42 15 8;
+      --coral: 246 170 110;
+      --coral-strong: 250 186 132;
+      --coral-soft: 56 40 26;
+      --coral-ink: 250 196 150;
+      --on-coral: 42 20 8;
 
-      --bg: 18 17 42;
-      --surface: 27 26 55;
-      --surface-2: 36 34 71;
-      --surface-3: 46 43 86;
-      --ink: 242 240 251;
-      --ink-2: 214 210 240;
-      --muted: 170 166 203;
-      --line: 45 42 82;
-      --line-2: 60 57 104;
-      --field-line: 105 100 160;
+      --bg: 11 17 15;
+      --surface: 17 25 22;
+      --surface-2: 24 34 30;
+      --surface-3: 32 44 39;
+      --ink: 232 240 236;
+      --ink-2: 200 214 208;
+      --muted: 142 160 153;
+      --line: 34 46 41;
+      --line-2: 46 60 54;
+      --field-line: 96 116 108;
 
       --success: 95 213 152;
-      --success-soft: 33 53 60;
+      --success-soft: 20 48 34;
       --warning: 245 185 87;
-      --warning-soft: 58 48 50;
-      --danger: 255 133 151;
-      --danger-soft: 59 36 62;
+      --warning-soft: 52 40 18;
+      --danger: 255 133 145;
+      --danger-soft: 60 26 30;
       --teal: 79 209 197;
-      --teal-soft: 32 53 69;
-      --violet: 196 168 255;
-      --violet-soft: 45 38 82;
+      --teal-soft: 18 46 46;
+      --violet: 190 164 255;
+      --violet-soft: 40 34 66;
 
-      --hero-from: 40 37 88;
-      --hero-via: 55 48 150;
-      --hero-to: 76 66 210;
-      --hero-glow: 255 138 112;
+      --hero-from: 10 34 28;
+      --hero-via: 16 70 56;
+      --hero-to: 24 98 78;
+      --hero-glow: 246 176 112;
 
       color-scheme: dark;
     }
@@ -203,7 +205,7 @@
   h2,
   h3,
   h4 {
-    @apply font-display font-extrabold leading-tight tracking-[-0.005em] text-ink;
+    @apply font-display font-bold leading-tight tracking-[-0.015em] text-ink;
   }
   ::selection {
     @apply bg-primary-fill text-on-primary-fill;
