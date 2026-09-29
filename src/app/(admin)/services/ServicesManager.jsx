@@ -89,7 +89,7 @@ export default function ServicesManager({ initial, isAdmin, today }) {
 
       {past.length > 0 && (
         <details className="card group">
-          <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 font-display text-lg font-extrabold">
+          <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 font-display text-lg font-semibold">
             <Icon
               name="expand_more"
               size={22}
@@ -311,7 +311,7 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
     >
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="break-words font-display text-lg font-extrabold">{service.name}</p>
+          <p className="break-words font-display text-lg font-semibold">{service.name}</p>
           <p className="text-meta text-muted">{when}</p>
         </div>
         <span className={`chip ${service.active ? 'chip-success' : 'chip-warning'}`}>
@@ -426,7 +426,7 @@ function AddService({ kind, today, onAdded }) {
 
   return (
     <div className="rounded-tile border-[1.5px] border-dashed border-field/60 bg-surface-2/60 p-4">
-      <h3 className="flex items-center gap-2 font-display text-body font-extrabold">
+      <h3 className="flex items-center gap-2 font-display text-body font-semibold">
         <Icon name="add_circle" size={20} className="text-primary" />
         {isRegular ? 'Add a regular service' : 'Add a special service'}
       </h3>

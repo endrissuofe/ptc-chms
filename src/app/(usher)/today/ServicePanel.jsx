@@ -61,7 +61,7 @@ export default function ServicePanel({
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         <Link
           href={`/attendance?service=${selected}`}
-          className="card group flex flex-col gap-4 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary motion-safe:hover:-translate-y-0.5"
+          className="card group flex flex-col gap-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary motion-safe:hover:-translate-y-0.5"
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <span className="icon-tile tone-primary h-12 w-12">
@@ -95,7 +95,7 @@ export default function ServicePanel({
 
         <Link
           href={`/newcomers/new?service=${selected}`}
-          className="card group flex flex-col gap-4 transition hover:shadow-lift focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary motion-safe:hover:-translate-y-0.5"
+          className="card group flex flex-col gap-4 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary motion-safe:hover:-translate-y-0.5"
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <span className="icon-tile tone-coral h-12 w-12">

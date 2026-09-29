@@ -19,7 +19,7 @@ export default function EmptyState({
         <Icon name={icon} size={24} />
       </span>
       <div className="flex flex-col gap-1">
-        <p className="font-display text-base font-extrabold text-ink">{title}</p>
+        <p className="font-display text-base font-semibold text-ink">{title}</p>
         {children && <p className="max-w-[46ch] text-meta">{children}</p>}
       </div>
       {action?.href ? (

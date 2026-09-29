@@ -261,7 +261,7 @@ function Row({ person: p }) {
       <td className="pl-5 sm:pl-6">
         <Link href={`/newcomers/${p._id}`} className="flex min-h-[44px] items-center gap-3">
           <Avatar name={name} size="sm" />
-          <span className="font-display font-extrabold hover:text-primary">{name}</span>
+          <span className="font-display font-semibold hover:text-primary">{name}</span>
           <Flags person={p} />
         </Link>
       </td>
@@ -286,7 +286,7 @@ function MobileRow({ person: p }) {
         <Avatar name={name} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5">
-            <span className="truncate font-display font-extrabold">{name}</span>
+            <span className="truncate font-display font-semibold">{name}</span>
             <Flags person={p} />
           </p>
           <p className="text-meta text-muted">

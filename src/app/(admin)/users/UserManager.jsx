@@ -367,7 +367,7 @@ function UserRow({ user: u, isMe }) {
         <Avatar name={u.displayName} />
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="break-words font-display text-lg font-black">{u.displayName}</span>
+            <span className="break-words font-display text-lg font-bold">{u.displayName}</span>
             {isMe && <span className="chip chip-primary">You</span>}
             {!u.active && <span className="chip chip-danger">Switched off</span>}
           </p>

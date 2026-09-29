@@ -227,41 +227,46 @@
   }
 }
 
-/* Shared building blocks. Use these instead of one-off styles (see docs/DESIGN.md). */
+/*
+ * Shared building blocks, in the Onefold style: quiet panels with hairline borders, the brand
+ * heading face, pill buttons without glows, pine for the one main action. Use these instead of
+ * one-off styles.
+ */
 @layer components {
   /* ---- Layout and text ---- */
   .card {
-    @apply rounded-card border border-line bg-surface p-5 shadow-soft sm:p-6;
+    @apply rounded-[1.5rem] border border-line bg-surface p-5 sm:p-6;
   }
   .card-compact {
     @apply p-4 sm:p-5;
   }
   .card-title {
-    @apply text-lg font-extrabold;
+    @apply font-display text-xl font-semibold tracking-[-0.01em];
   }
   .card-sub {
     @apply mt-0.5 text-meta text-muted;
   }
   .section-title {
-    @apply text-xl font-black;
+    @apply font-display text-xl font-semibold tracking-[-0.01em];
   }
   .page-head {
     @apply mb-1 flex flex-wrap items-end justify-between gap-x-6 gap-y-3;
   }
   .page-title {
-    @apply font-display text-page-title font-black;
+    @apply text-balance font-display font-bold leading-[1.1] tracking-[-0.02em];
+    font-size: clamp(1.9rem, 1.45rem + 1.5vw, 2.6rem);
   }
   .page-sub {
     @apply mt-1.5 max-w-[60ch] text-muted;
   }
   .eyebrow {
-    @apply mb-1.5 inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-[0.08em] text-coral-ink;
+    @apply mb-1.5 inline-flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-[0.1em] text-muted;
   }
   .label-caps {
-    @apply text-2xs font-extrabold uppercase tracking-[0.07em] text-muted;
+    @apply text-2xs font-semibold uppercase tracking-[0.1em] text-muted;
   }
   .stat-value {
-    @apply font-display text-stat font-black tabular-nums;
+    @apply font-display text-stat font-bold tabular-nums tracking-[-0.02em];
   }
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded-full focus:bg-surface focus:px-5 focus:py-3 focus:font-bold focus:shadow-pop;
@@ -269,28 +274,28 @@
 
   /* ---- Buttons: every kind has hover, pressed, focus and disabled looks ---- */
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 text-center text-body font-bold leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-paper enabled:active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 text-center text-sm font-semibold leading-tight transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-paper enabled:active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none aria-disabled:cursor-not-allowed aria-disabled:opacity-50;
   }
   a.btn {
     @apply active:scale-[.97];
   }
   .btn-lg {
-    @apply min-h-[52px] px-6 text-base;
+    @apply min-h-[50px] px-6 text-base;
   }
   .btn-sm {
     @apply min-h-[44px] px-4 text-sm;
   }
   .btn-primary {
-    @apply bg-primary-fill text-on-primary-fill shadow-primary-glow hover:bg-primary-fill-hover active:bg-primary-fill-active disabled:hover:bg-primary-fill;
+    @apply bg-primary-fill text-on-primary-fill hover:bg-primary-fill-hover active:bg-primary-fill-active disabled:hover:bg-primary-fill;
   }
   .btn-coral {
-    @apply bg-coral text-on-coral shadow-coral-glow hover:bg-coral-strong active:brightness-95 disabled:hover:bg-coral;
+    @apply bg-coral text-on-coral hover:bg-coral-strong active:brightness-95 disabled:hover:bg-coral;
   }
   .btn-soft {
-    @apply bg-primary-soft text-primary-ink hover:bg-primary/20 active:bg-primary/25 disabled:hover:bg-primary-soft;
+    @apply bg-surface-2 text-ink hover:bg-surface-3 active:bg-surface-3 disabled:hover:bg-surface-2;
   }
   .btn-ghost {
-    @apply border border-field/60 bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink active:bg-surface-3 disabled:hover:bg-transparent;
+    @apply border border-line-2 bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink active:bg-surface-3 disabled:hover:bg-transparent;
   }
   .btn-success {
     @apply bg-success text-on-primary hover:brightness-110 active:brightness-95 disabled:hover:brightness-100;
@@ -303,16 +308,16 @@
   }
   /* A pill that is switched on or off (outcome choices, weekdays, filters). */
   .toggle-chip {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-full border border-field/60 bg-surface px-4 text-sm font-bold text-ink-2 transition-[color,background-color,border-color,transform] hover:bg-surface-2 hover:text-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary active:scale-[.97] aria-pressed:border-primary-fill aria-pressed:bg-primary-fill aria-pressed:text-on-primary-fill aria-[current=page]:border-primary-fill aria-[current=page]:bg-primary-fill aria-[current=page]:text-on-primary-fill;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-full border border-line-2 bg-surface px-4 text-sm font-semibold text-ink-2 transition-[color,background-color,border-color,transform] hover:bg-surface-2 hover:text-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary active:scale-[.97] aria-pressed:border-primary-fill aria-pressed:bg-primary-fill aria-pressed:text-on-primary-fill aria-[current=page]:border-primary-fill aria-[current=page]:bg-primary-fill aria-[current=page]:text-on-primary-fill;
   }
   /* Text-sized link that still gets a 44px tap area. */
   .tap-link {
-    @apply -mx-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-2 font-bold text-muted transition-colors hover:text-ink;
+    @apply -mx-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-2 font-semibold text-muted transition-colors hover:text-ink;
   }
 
   /* ---- Chips and tones ---- */
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-bold leading-tight text-ink-2;
+    @apply inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold leading-tight text-ink-2;
   }
   .chip-primary {
     @apply bg-primary-soft text-primary-ink;
@@ -337,7 +342,7 @@
   }
   /* A chip you can press (e.g. insert {FirstName}). */
   .chip-btn {
-    @apply inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-meta font-bold text-ink-2 transition-[color,background-color,transform] hover:bg-primary-soft hover:text-primary-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary active:scale-[.97];
+    @apply inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-meta font-semibold text-ink-2 transition-[color,background-color,transform] hover:bg-primary-soft hover:text-primary-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary active:scale-[.97];
   }
   .tone-primary {
     @apply bg-primary-soft text-primary-ink;
@@ -361,16 +366,16 @@
     @apply bg-danger-soft text-danger;
   }
   .icon-tile {
-    @apply inline-grid h-10 w-10 shrink-0 place-items-center rounded-control;
+    @apply inline-grid h-10 w-10 shrink-0 place-items-center rounded-full;
   }
 
   /* ---- Forms ---- */
   .field-label {
-    @apply mb-1.5 flex flex-wrap items-center justify-between gap-x-2 text-sm font-bold text-ink;
+    @apply mb-1.5 flex flex-wrap items-center justify-between gap-x-2 text-sm font-semibold text-ink;
   }
   /* 16px text so phones don't zoom in when a field is tapped. */
   .input {
-    @apply min-h-[48px] w-full rounded-control border-[1.5px] border-field bg-surface px-3.5 text-base text-ink outline-none transition placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/25 disabled:opacity-70 aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/20;
+    @apply min-h-[48px] w-full rounded-control border-[1.5px] border-field bg-surface px-3.5 text-base text-ink outline-none transition placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-primary/20 disabled:opacity-70 aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/20;
   }
   textarea.input {
     @apply py-2.5;
@@ -405,14 +410,14 @@
 
   /* ---- Tabs ---- */
   .seg-tabs {
-    @apply inline-flex max-w-full gap-0.5 overflow-x-auto rounded-full border border-line bg-surface-2 p-1;
+    @apply inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1;
     scrollbar-width: none;
   }
   .seg-tab {
-    @apply inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full px-4 font-display text-sm font-extrabold text-muted transition-[color,background-color,box-shadow] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary aria-pressed:bg-surface aria-pressed:text-ink aria-pressed:shadow-soft aria-selected:bg-surface aria-selected:text-ink aria-selected:shadow-soft aria-checked:bg-surface aria-checked:text-ink aria-checked:shadow-soft aria-[current=page]:bg-surface aria-[current=page]:text-ink aria-[current=page]:shadow-soft;
+    @apply inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-muted transition-[color,background-color] hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary aria-pressed:bg-primary-soft aria-pressed:text-primary-ink aria-selected:bg-primary-soft aria-selected:text-primary-ink aria-checked:bg-primary-soft aria-checked:text-primary-ink aria-[current=page]:bg-primary-soft aria-[current=page]:text-primary-ink;
   }
   .seg-count {
-    @apply rounded-full bg-surface-3 px-2 py-0.5 font-sans text-xs font-bold text-ink-2;
+    @apply rounded-full bg-surface-2 px-2 py-0.5 text-xs font-semibold tabular-nums text-ink-2;
   }
 
   /* ---- Tables, empty states, alerts ---- */
@@ -420,7 +425,7 @@
     @apply w-full text-left text-sm;
   }
   .table th {
-    @apply bg-surface-2 px-4 py-3 text-2xs font-extrabold uppercase tracking-[0.07em] text-muted;
+    @apply border-b border-line bg-transparent px-4 py-3 text-2xs font-semibold uppercase tracking-[0.1em] text-muted;
   }
   .table td {
     @apply border-t border-line px-4 py-3 align-middle;
@@ -429,7 +434,7 @@
     @apply flex flex-col items-center gap-3 px-4 py-10 text-center text-muted;
   }
   .alert {
-    @apply flex items-start gap-2.5 rounded-tile px-4 py-3 text-sm font-semibold motion-safe:animate-fade-in;
+    @apply flex items-start gap-2.5 rounded-tile px-4 py-3 text-sm font-medium motion-safe:animate-fade-in;
   }
   .alert-danger {
     @apply bg-danger-soft text-danger;
@@ -446,7 +451,7 @@
 
   /* ---- The gradient hero (sign-in, Today) ---- */
   .hero {
-    @apply relative isolate overflow-hidden text-white shadow-hero;
+    @apply relative isolate overflow-hidden text-white;
     background:
       radial-gradient(120% 90% at 100% 0%, rgb(var(--hero-glow) / 0.3) 0%, transparent 55%),
       linear-gradient(
@@ -457,10 +462,10 @@
       );
   }
   .hero-title {
-    @apply font-display text-hero-title font-black tracking-[-0.015em] text-white;
+    @apply font-display text-hero-title font-bold tracking-[-0.02em] text-white;
   }
   .chip-glass {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-meta font-bold text-white backdrop-blur-sm;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-meta font-semibold text-white backdrop-blur-sm;
   }
   .tile-glass {
     @apply flex min-w-0 flex-col gap-0.5 rounded-tile border border-white/20 bg-white/[.14] px-4 py-3.5 backdrop-blur-sm;

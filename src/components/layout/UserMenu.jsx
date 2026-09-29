@@ -76,7 +76,7 @@ export default function UserMenu({ name, roleLabel }) {
           <div className="flex items-center gap-3 px-2.5 pb-2 pt-1.5">
             <Avatar name={name} />
             <div className="min-w-0">
-              <p className="truncate font-display font-extrabold">{name}</p>
+              <p className="truncate font-display font-semibold">{name}</p>
               <p className="text-meta text-muted">{roleLabel}</p>
             </div>
           </div>

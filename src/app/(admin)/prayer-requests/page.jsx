@@ -83,12 +83,12 @@ export default async function PrayerRequestsPage({ searchParams }) {
                     {canOpenProfile && p ? (
                       <Link
                         href={`/newcomers/${p._id}`}
-                        className="inline-flex min-h-[44px] items-center break-words font-display text-lg font-black hover:text-primary"
+                        className="inline-flex min-h-[44px] items-center break-words font-display text-lg font-bold hover:text-primary"
                       >
                         {name}
                       </Link>
                     ) : (
-                      <p className="break-words font-display text-lg font-black">{name}</p>
+                      <p className="break-words font-display text-lg font-bold">{name}</p>
                     )}
                     {p?.phone && (
                       <a href={telLink(p.phone)} className="tap-link text-meta font-semibold">

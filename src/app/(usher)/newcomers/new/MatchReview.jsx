@@ -85,7 +85,7 @@ export default function MatchReview({
                     <Icon name="event" size={14} />
                     First visit
                   </dt>
-                  <dd className="mt-1 font-display text-base font-extrabold">
+                  <dd className="mt-1 font-display text-base font-semibold">
                     {date.format(new Date(m.firstVisitDate))}
                   </dd>
                 </div>
@@ -94,7 +94,7 @@ export default function MatchReview({
                     <Icon name="repeat" size={14} />
                     Visits so far
                   </dt>
-                  <dd className="mt-1 font-display text-base font-extrabold">{m.visitCount}</dd>
+                  <dd className="mt-1 font-display text-base font-semibold">{m.visitCount}</dd>
                 </div>
               </dl>
 

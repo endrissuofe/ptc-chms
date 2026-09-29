@@ -293,7 +293,7 @@ function History({ recent }) {
       {recent.length === 0 ? (
         <EmptyState card icon="mail" title="No emails sent yet" />
       ) : (
-        <div className="relative overflow-x-auto rounded-card border border-line bg-surface shadow-soft">
+        <div className="relative overflow-x-auto rounded-[1.5rem] border border-line bg-surface">
           <table className="table min-w-[560px]">
             <thead>
               <tr>

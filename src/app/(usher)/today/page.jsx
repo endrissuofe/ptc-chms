@@ -140,7 +140,7 @@ function Hero({ greeting: hello, name, stats }) {
               <Icon name={s.icon} size={15} />
               {s.label}
             </span>
-            <span className="break-words font-display text-xl font-black leading-tight tabular-nums">
+            <span className="break-words font-display text-xl font-bold leading-tight tabular-nums">
               {s.value}
             </span>
             <span className="text-meta text-white/90">{s.sub}</span>

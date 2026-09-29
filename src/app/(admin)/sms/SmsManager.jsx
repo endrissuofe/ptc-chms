@@ -332,7 +332,7 @@ function Broadcast({ counts }) {
       {(step === 'sending' || step === 'done') && (
         <div className="flex flex-col gap-3" aria-live="polite">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="font-display text-lg font-extrabold">
+            <p className="font-display text-lg font-semibold">
               {step === 'done' ? 'Sent' : 'Sending…'} {job?.processed ?? 0} of{' '}
               {job?.total ?? preview?.count}
             </p>
@@ -586,7 +586,7 @@ function RunHistory({ runs }) {
           action={{ href: '#broadcast', label: 'Send a message', icon: 'send' }}
         />
       ) : (
-        <div className="relative overflow-x-auto rounded-card border border-line bg-surface shadow-soft">
+        <div className="relative overflow-x-auto rounded-[1.5rem] border border-line bg-surface">
           <table className="table min-w-[680px]">
             <thead>
               <tr>
@@ -672,7 +672,7 @@ function RunRow({ run }) {
       <tr>
         <td className="whitespace-nowrap pl-5">{when.format(new Date(run.lastAt))}</td>
         <td>
-          <span className="font-display font-extrabold">{runTitle(run)}</span>
+          <span className="font-display font-semibold">{runTitle(run)}</span>
           {run.broadcast && (
             <span className="block max-w-[340px] truncate text-meta text-muted">
               {run.broadcast.body}

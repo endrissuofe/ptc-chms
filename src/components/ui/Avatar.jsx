@@ -19,7 +19,7 @@ export default function Avatar({ name, size = 'md', className = '' }) {
   return (
     <span
       aria-hidden="true"
-      className={`inline-grid shrink-0 place-items-center rounded-full font-display font-black tracking-wide ${sizes[size]} ${TONES[sum % TONES.length]} ${className}`}
+      className={`inline-grid shrink-0 place-items-center rounded-full font-display font-bold tracking-wide ${sizes[size]} ${TONES[sum % TONES.length]} ${className}`}
     >
       {initials(name)}
     </span>

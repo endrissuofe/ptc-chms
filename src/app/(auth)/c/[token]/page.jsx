@@ -17,7 +17,7 @@ export default async function CheckInPage({ params }) {
         <div className="mb-6 flex items-center gap-3">
           <Logo size={44} />
           <div>
-            <p className="font-display text-lg font-black">Ptchapel</p>
+            <p className="font-display text-lg font-bold">Ptchapel</p>
             <p className="text-meta text-muted">Peculiar Treasure Chapel · RCCG Youth Province 2</p>
           </div>
         </div>

@@ -45,7 +45,7 @@ export default function CheckInForm({ token, answered }) {
         <span className="icon-tile tone-success">
           <Icon name="favorite" size={22} />
         </span>
-        <p className="font-display text-xl font-black">Thank you!</p>
+        <p className="font-display text-xl font-bold">Thank you!</p>
         <p>
           {state.wantsCall
             ? 'Someone from the church will call you soon.'

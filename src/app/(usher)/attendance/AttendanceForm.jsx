@@ -230,7 +230,7 @@ function CountForm({ serviceDate, serviceDays, services, byService, initialServi
                 <p className="label-caps">Total count</p>
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span
-                    className="font-display text-stat-lg font-black tabular-nums"
+                    className="font-display text-stat-lg font-bold tabular-nums"
                     aria-live="polite"
                   >
                     {total}
@@ -378,7 +378,7 @@ function Counter({ group, value, onChange }) {
           <Icon name={group.icon} size={22} />
         </span>
         <span className="flex flex-col leading-tight">
-          <span className="font-display text-lg font-extrabold">{group.label}</span>
+          <span className="font-display text-lg font-semibold">{group.label}</span>
           <span className="text-meta text-muted">{group.hint}</span>
         </span>
       </label>
@@ -401,7 +401,7 @@ function Counter({ group, value, onChange }) {
           value={value}
           onFocus={(e) => e.target.select()}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '') || 0)}
-          className={`h-14 w-full min-w-0 rounded-tile bg-transparent text-center font-display font-black tabular-nums focus:bg-surface-2 focus:outline-none focus:ring-4 focus:ring-primary/20 ${
+          className={`h-14 w-full min-w-0 rounded-tile bg-transparent text-center font-display font-bold tabular-nums focus:bg-surface-2 focus:outline-none focus:ring-4 focus:ring-primary/20 ${
             value >= 1000 ? 'text-2xl' : 'text-stat'
           }`}
         />

@@ -77,7 +77,7 @@ function MemberRow({ member: m }) {
       <div className="flex flex-wrap items-center gap-3">
         <Avatar name={name} />
         <div className="min-w-0 flex-1">
-          <p className="break-words font-display font-extrabold">{name}</p>
+          <p className="break-words font-display font-semibold">{name}</p>
           <p className="text-meta text-muted">
             {formatPhone(m.phone)}
             {m.address && <span className="break-words"> · {m.address}</span>}

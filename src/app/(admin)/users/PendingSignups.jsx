@@ -74,7 +74,7 @@ function Signup({ person: p, onDone }) {
       <div className="flex flex-wrap items-center gap-3">
         <Avatar name={p.displayName} />
         <div className="min-w-0 flex-1">
-          <p className="break-words font-display text-lg font-black">{p.displayName}</p>
+          <p className="break-words font-display text-lg font-bold">{p.displayName}</p>
           <p className="break-words text-meta text-muted">
             {p.email} · {formatPhone(p.phone)} · signed up {formatMoment(p.createdAt)}
           </p>

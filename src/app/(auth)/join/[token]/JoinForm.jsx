@@ -41,7 +41,7 @@ export default function JoinForm({ token }) {
         <span className="icon-tile tone-success">
           <Icon name="task_alt" size={22} />
         </span>
-        <p className="font-display text-xl font-black">
+        <p className="font-display text-xl font-bold">
           Thank you, {f.displayName.trim().split(/\s+/)[0]}!
         </p>
         <p>

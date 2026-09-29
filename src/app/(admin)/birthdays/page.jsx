@@ -132,7 +132,7 @@ function Celebrant({ person: p, date, today = false }) {
       <div className="flex items-start gap-3">
         <Avatar name={p.name} />
         <div className="min-w-0 flex-1">
-          <p className="break-words font-display text-lg font-extrabold">{p.name}</p>
+          <p className="break-words font-display text-lg font-semibold">{p.name}</p>
           <p className="text-meta text-muted">
             {formatPhone(p.phone)} · {p.who === 'member' ? 'Member' : 'First timer'}
           </p>

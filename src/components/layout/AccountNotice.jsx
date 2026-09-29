@@ -11,7 +11,7 @@ export default function AccountNotice({ status }) {
       <span className="icon-tile tone-warning h-14 w-14">
         <Icon name={off ? 'lock' : 'refresh'} size={28} />
       </span>
-      <h1 className="text-2xl font-black">
+      <h1 className="text-2xl font-bold">
         {off ? 'This login has been switched off' : 'Your access has changed'}
       </h1>
       <p className="text-muted">
