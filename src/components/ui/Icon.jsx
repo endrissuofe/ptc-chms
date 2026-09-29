@@ -148,6 +148,18 @@ export const ICON_NAMES = [
   'chevron_right',
   'reviews',
   'share',
+  'campaign',
+  'delete',
+  'description',
+  'event_available',
+  'live_tv',
+  'menu_book',
+  'open_in_new',
+  'palette',
+  'play_circle',
+  'public',
+  'radio_button_unchecked',
+  'title',
 ];
 
 /** Google Fonts needs the names sorted; FILL is kept as an axis for filled icons. */
