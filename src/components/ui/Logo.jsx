@@ -4,7 +4,7 @@ import { CHURCH } from '@/lib/church-profile';
 /**
  * The church's identity: its logo as a round profile picture, and optionally its name.
  * (The product's own logo is OnefoldLogo in components/brand.)
- * `badge` renders next to the church name (e.g. the Online pill).
+ * `badge` renders next to the church name.
  */
 export default function Logo({ size = 40, withName = false, subtitle, badge }) {
   return (
