@@ -54,14 +54,19 @@ describe('menu', () => {
 });
 
 describe('menu sections', () => {
-  it('groups the menu into People, Ushering, Church and Settings for admins', () => {
-    const groups = groupNav(navFor(ROLES.ADMIN).rail);
+  it('puts Dashboard on its own, then People, Ushering, Church and Settings for admins', () => {
+    const { top, groups } = groupNav(navFor(ROLES.ADMIN).rail);
+    expect(top.map((i) => i.label)).toEqual(['Dashboard']);
     expect(groups.map((g) => g.label)).toEqual(['People', 'Ushering', 'Church', 'Settings']);
-    expect(groups[0].items[0].label).toBe('Dashboard');
+    expect(groups.flatMap((g) => g.items)).toHaveLength(15);
   });
 
-  it('drops the heading when a role has a single section', () => {
-    expect(groupNav(navFor(ROLES.USHER).rail).map((g) => g.label)).toEqual([null]);
+  it('keeps short menus as a plain list', () => {
+    for (const role of [ROLES.USHER, ROLES.FOLLOWUP, ROLES.PRAYER, ROLES.MEDIA]) {
+      const { top, groups } = groupNav(navFor(role).rail);
+      expect(groups).toEqual([]);
+      expect(top).toEqual(navFor(role).rail);
+    }
   });
 
   it('keeps the phone tabs in their usual order', () => {

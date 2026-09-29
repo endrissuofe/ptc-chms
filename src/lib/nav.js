@@ -2,20 +2,26 @@ import { ROLES } from './roles';
 
 const { USHER, FOLLOWUP, PASTOR, ADMIN, PRAYER, MEDIA } = ROLES;
 
-/** Menu sections, in order. A heading shows only when the role has more than one section. */
+/**
+ * Menu sections, in order. In a long menu each is one row that opens to show its screens
+ * (one open at a time); items without a group (Dashboard) stand on their own at the top.
+ */
 export const NAV_GROUPS = [
-  { key: 'people', label: 'People' },
-  { key: 'ushering', label: 'Ushering' },
-  { key: 'church', label: 'Church' },
-  { key: 'settings', label: 'Settings' },
+  { key: 'people', label: 'People', icon: 'group' },
+  { key: 'ushering', label: 'Ushering', icon: 'badge' },
+  { key: 'church', label: 'Church', icon: 'church' },
+  { key: 'settings', label: 'Settings', icon: 'settings' },
 ];
+
+/** Menus shorter than this stay a plain list: folding two or three screens doesn't help. */
+export const GROUP_FROM = 7;
 
 /**
  * The app's menu, in order within each section. The desktop rail shows every item the role
  * can open. `soon`: the screen isn't built yet; the menu tags it "Soon" and the page says so.
  */
 export const NAV = [
-  { href: '/dashboard', label: 'Dashboard', icon: 'home', group: 'people', roles: [PASTOR, ADMIN] },
+  { href: '/dashboard', label: 'Dashboard', icon: 'home', roles: [PASTOR, ADMIN] },
   {
     href: '/my-newcomers',
     label: 'Follow-up',
@@ -103,15 +109,17 @@ export const NAV = [
 ];
 
 /**
- * Items split into their sections, empty sections left out. With a single section the heading
- * is dropped (label null): a short menu doesn't need one.
+ * The menu as it is shown: `top` items on their own (Dashboard), then `groups` (sections with
+ * their items, empty ones left out). A short menu is all `top`, with no sections.
  */
 export function groupNav(items) {
-  const groups = NAV_GROUPS.map((g) => ({
-    ...g,
-    items: items.filter((i) => i.group === g.key),
-  })).filter((g) => g.items.length);
-  return groups.length > 1 ? groups : groups.map((g) => ({ ...g, label: null }));
+  if (items.length < GROUP_FROM) return { top: items, groups: [] };
+  return {
+    top: items.filter((i) => !i.group),
+    groups: NAV_GROUPS.map((g) => ({ ...g, items: items.filter((i) => i.group === g.key) })).filter(
+      (g) => g.items.length,
+    ),
+  };
 }
 
 /**

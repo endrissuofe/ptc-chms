@@ -21,14 +21,40 @@ function usePendingHref() {
 }
 
 /**
+ * Which section is open: one at a time, starting with (and following) the section of the
+ * screen you're on.
+ */
+function useOpenGroup(groups, pathname) {
+  const current = groups.find((g) => g.items.some((i) => isActive(pathname, i.href)))?.key ?? null;
+  const [open, setOpen] = useState(current);
+  useEffect(() => {
+    if (current) setOpen(current);
+  }, [current]);
+  return [open, (key) => setOpen((o) => (o === key ? null : key))];
+}
+
+/**
  * Desktop: the menu. A slim strip of icons on frosted glass that opens over the page while the
  * mouse is on it (or the keyboard is in it); touch screens keep it open (styles: .of-rail).
- * `children` is its top (the Onefold logo and the church card); the menu lists every screen
- * the role can open, the current one in a glowing pine pill.
+ * `children` is its top (the Onefold logo and the church card). Dashboard stands alone; in a
+ * long menu the rest sit in sections that open one at a time. The current screen is a glowing
+ * pine pill.
  */
 export function Sidebar({ items, children }) {
   const pathname = usePathname();
   const [pending, setPending] = usePendingHref();
+  const { top, groups } = groupNav(items);
+  const [open, toggle] = useOpenGroup(groups, pathname);
+  const link = (item) => (
+    <RailLink
+      key={item.href}
+      item={item}
+      active={pending ? pending === item.href : isActive(pathname, item.href)}
+      current={isActive(pathname, item.href)}
+      onClick={() => setPending(item.href)}
+    />
+  );
+
   return (
     <aside className="of-rail fixed inset-y-0 left-0 z-30 hidden flex-col lg:flex">
       <div aria-hidden="true" className="of-rail-glow" />
@@ -37,54 +63,72 @@ export function Sidebar({ items, children }) {
         aria-label="Main"
         className="of-rail-scroll relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3.5 pb-4"
       >
-        {groupNav(items).map((group, g) => (
-          <div key={group.key} className={g > 0 ? 'mt-2' : ''}>
-            {group.label && <RailHeading id={`rail-${group.key}`}>{group.label}</RailHeading>}
-            <ul
-              aria-labelledby={group.label ? `rail-${group.key}` : undefined}
-              className="flex flex-col gap-0.5"
-            >
-              {group.items.map((item) => {
-                const active = pending ? pending === item.href : isActive(pathname, item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setPending(item.href)}
-                      aria-current={isActive(pathname, item.href) ? 'page' : undefined}
-                      className={`flex min-h-[40px] items-center gap-3 whitespace-nowrap rounded-control px-3.5 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-of-accent ${
-                        active
-                          ? 'of-rail-active font-semibold text-of-accent-ink'
-                          : 'font-medium text-ink-2 hover:bg-surface-2/70 hover:text-ink'
-                      }`}
-                    >
-                      <Icon name={item.icon} size={20} filled={active} className="shrink-0" />
-                      <span className="of-rail-label flex items-center gap-2">
-                        {item.label}
-                        {item.soon && <SoonTag />}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+        <ul className="flex flex-col gap-0.5">
+          {top.map(link)}
+          {groups.map((group) => {
+            const isOpen = open === group.key;
+            const holdsCurrent = group.items.some((i) => isActive(pathname, i.href));
+            return (
+              <li
+                key={group.key}
+                className={`rounded-tile transition-colors ${isOpen ? 'bg-surface-2/40' : ''}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggle(group.key)}
+                  aria-expanded={isOpen}
+                  aria-controls={`rail-${group.key}`}
+                  className={`flex min-h-[40px] w-full items-center gap-3 whitespace-nowrap rounded-control px-3.5 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-of-accent ${
+                    holdsCurrent && !isOpen
+                      ? 'font-semibold text-of-accent-ink'
+                      : 'font-medium text-ink-2 hover:bg-surface-2/70 hover:text-ink'
+                  }`}
+                >
+                  <Icon name={group.icon} size={20} className="shrink-0" />
+                  <span className="of-rail-label flex flex-1 items-center justify-between gap-2">
+                    {group.label}
+                    <Icon
+                      name="expand_more"
+                      size={18}
+                      className={`text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    />
+                  </span>
+                </button>
+                {isOpen && (
+                  <ul id={`rail-${group.key}`} className="flex flex-col gap-0.5 pb-1">
+                    {group.items.map(link)}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </nav>
     </aside>
   );
 }
 
-/**
- * A section heading in the desktop menu. Closed, it's a short line between icon groups; open,
- * the name fades in (styles: .of-rail-heading).
- */
-function RailHeading({ id, children }) {
+/** One screen in the desktop menu. */
+function RailLink({ item, active, current, onClick }) {
   return (
-    <p id={id} className="of-rail-heading">
-      <span aria-hidden="true" className="of-rail-rule" />
-      <span className="of-rail-label">{children}</span>
-    </p>
+    <li>
+      <Link
+        href={item.href}
+        onClick={onClick}
+        aria-current={current ? 'page' : undefined}
+        className={`flex min-h-[40px] items-center gap-3 whitespace-nowrap rounded-control px-3.5 font-ui text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-of-accent ${
+          active
+            ? 'of-rail-active font-semibold text-of-accent-ink'
+            : 'font-medium text-ink-2 hover:bg-surface-2/70 hover:text-ink'
+        }`}
+      >
+        <Icon name={item.icon} size={20} filled={active} className="shrink-0" />
+        <span className="of-rail-label flex items-center gap-2">
+          {item.label}
+          {item.soon && <SoonTag />}
+        </span>
+      </Link>
+    </li>
   );
 }
 
@@ -181,6 +225,8 @@ export function TabBar({ items, more = [] }) {
 /** The "More" sheet: slides up from the bottom, Escape or tapping outside closes it. */
 function MoreSheet({ items, pathname, onClose }) {
   const dialog = useRef(null);
+  const { top, groups } = groupNav(items);
+  const [open, toggle] = useOpenGroup(groups, pathname);
   useEffect(() => {
     const d = dialog.current;
     if (d && !d.open) d.showModal();
@@ -206,45 +252,69 @@ function MoreSheet({ items, pathname, onClose }) {
             <Icon name="close" size={22} />
           </button>
         </div>
-        {groupNav(items).map((group) => (
-          <section key={group.key} aria-labelledby={group.label ? `more-${group.key}` : undefined}>
-            {group.label && (
-              <h3 id={`more-${group.key}`} className="of-eyebrow px-2 pb-1.5 pt-2">
-                {group.label}
-              </h3>
-            )}
-            <ul className="grid grid-cols-2 gap-2">
-              {group.items.map((item) => {
-                const active = isActive(pathname, item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      aria-current={active ? 'page' : undefined}
-                      className={`flex min-h-[56px] items-center gap-3 rounded-tile px-3 font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent ${
-                        active
-                          ? 'bg-of-accent-soft text-of-accent-ink'
-                          : 'bg-surface-2 hover:bg-surface-3'
-                      }`}
-                    >
-                      <Icon name={item.icon} size={22} filled={active} />
-                      <span className="flex min-w-0 flex-col items-start leading-tight">
-                        {item.label}
-                        {item.soon && <SoonTag />}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
+        {top.length > 0 && <SheetGrid items={top} pathname={pathname} onClose={onClose} />}
+        {groups.map((group) => {
+          const isOpen = open === group.key;
+          return (
+            <section key={group.key} className="flex flex-col">
+              <button
+                type="button"
+                onClick={() => toggle(group.key)}
+                aria-expanded={isOpen}
+                aria-controls={`more-${group.key}`}
+                className="flex min-h-[52px] items-center gap-3 rounded-tile px-3 font-bold transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent"
+              >
+                <Icon name={group.icon} size={22} className="text-muted" />
+                <span className="flex-1 text-left">{group.label}</span>
+                <span className="text-meta font-semibold text-muted">{group.items.length}</span>
+                <Icon
+                  name="expand_more"
+                  size={20}
+                  className={`text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {isOpen && (
+                <div id={`more-${group.key}`} className="pb-2 motion-safe:animate-fade-in">
+                  <SheetGrid items={group.items} pathname={pathname} onClose={onClose} />
+                </div>
+              )}
+            </section>
+          );
+        })}
         <p className="flex items-center justify-center gap-1.5 pt-3 text-2xs text-muted">
           <OnefoldMark size={16} className="text-of-accent" />
           onefold
         </p>
       </div>
     </dialog>
+  );
+}
+
+/** Screens as big two-column tiles in the More sheet. */
+function SheetGrid({ items, pathname, onClose }) {
+  return (
+    <ul className="grid grid-cols-2 gap-2">
+      {items.map((item) => {
+        const active = isActive(pathname, item.href);
+        return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              onClick={onClose}
+              aria-current={active ? 'page' : undefined}
+              className={`flex min-h-[56px] items-center gap-3 rounded-tile px-3 font-bold transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-of-accent ${
+                active ? 'bg-of-accent-soft text-of-accent-ink' : 'bg-surface-2 hover:bg-surface-3'
+              }`}
+            >
+              <Icon name={item.icon} size={22} filled={active} />
+              <span className="flex min-w-0 flex-col items-start leading-tight">
+                {item.label}
+                {item.soon && <SoonTag />}
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

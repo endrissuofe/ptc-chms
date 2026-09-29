@@ -301,7 +301,7 @@ function ServiceRow({ service, editable, isLastActive = false, today, onSaved })
       className={`flex flex-col gap-3 rounded-tile border border-line p-4 ${service.active ? 'bg-surface' : 'bg-surface-2'}`}
     >
       <div className="flex flex-wrap items-center gap-3">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[10rem] flex-1">
           <p className="break-words font-brand text-lg font-semibold">{service.name}</p>
           <p className="text-meta text-muted">{when}</p>
         </div>

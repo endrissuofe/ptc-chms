@@ -793,45 +793,12 @@
     opacity: 1;
     transition-delay: 0.06s;
   }
-  /* Section headings: a short line while the menu is closed, the name once it opens. */
-  .of-rail-heading {
-    position: relative;
-    display: flex;
-    height: 1.5rem;
-    align-items: center;
-    padding-inline: 0.875rem;
-    white-space: nowrap;
-    font-family: 'Instrument Sans', system-ui, sans-serif;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgb(var(--muted));
-  }
   /* The menu scrolls on short screens without showing a scrollbar in the glass. */
   .of-rail-scroll {
     scrollbar-width: none;
   }
   .of-rail-scroll::-webkit-scrollbar {
     display: none;
-  }
-  .of-rail-rule {
-    position: absolute;
-    left: 0.875rem;
-    top: 50%;
-    width: 1.25rem;
-    height: 1px;
-    background: rgb(var(--line-2));
-    transition: opacity 0.18s ease;
-  }
-  .of-rail:hover .of-rail-rule,
-  .of-rail:has(:focus-visible) .of-rail-rule {
-    opacity: 0;
-  }
-  @media (hover: none) {
-    .of-rail .of-rail-rule {
-      opacity: 0;
-    }
   }
   .of-rail-active {
     background: rgb(var(--of-accent-soft));
