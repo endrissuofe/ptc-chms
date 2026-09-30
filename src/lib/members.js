@@ -91,6 +91,191 @@ export function splitName(full = '') {
   return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
 }
 
+/** A name's words in any order: "Okafor Chinedu" and "chinedu  okafor" give the same key. */
+export function nameKey(firstName = '', lastName = '') {
+  return `${firstName} ${lastName}`.toLowerCase().split(/\s+/).filter(Boolean).sort().join(' ');
+}
+
+const nameWords = (m) =>
+  `${m.firstName ?? ''} ${m.lastName ?? ''}`
+    .toLowerCase()
+    .replace(/[^a-z\s-]/g, ' ')
+    .split(/[\s-]+/)
+    .filter(Boolean);
+
+function editDistance(a, b) {
+  const row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i += 1) {
+    let diag = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const up = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = up;
+    }
+  }
+  return row[b.length];
+}
+
+/** "Bola"/"Bolanle" (short form), "Chinedu"/"Chinedo" (a slip or two in a long name). */
+function wordsAlike(x, y) {
+  if (x === y) return true;
+  const short = Math.min(x.length, y.length);
+  if (short >= 3 && (x.startsWith(y) || y.startsWith(x))) return true;
+  return short >= 4 && editDistance(x, y) <= (Math.max(x.length, y.length) >= 7 ? 2 : 1);
+}
+
+/**
+ * Why two names on the same phone look like one person, or null when they look like two
+ * (family: "Ada Eze" and "Chuka Eze" share only the surname).
+ */
+export function sameNameReason(a, b) {
+  const [short, long] = [nameWords(a), nameWords(b)].sort((x, y) => x.length - y.length);
+  if (!short.length) return null;
+  if (short.length === long.length && [...short].sort().join() === [...long].sort().join()) {
+    return 'Same name';
+  }
+  const left = [...long];
+  for (const w of short) {
+    const i = left.findIndex((l) => wordsAlike(w, l));
+    if (i === -1) return null;
+    left.splice(i, 1);
+  }
+  if (short.length === 1) return 'One has only one name';
+  if (short.every((w) => long.includes(w))) return 'Middle name more or less';
+  return 'Spelled differently';
+}
+
+/**
+ * Members sharing a phone whose names look like the same person, as pairs to check.
+ * Pairs an admin marked "not the same person" (notDuplicates) are left out.
+ * @returns {{ phone: string, pairs: { a: object, b: object, reason: string }[] }[]}
+ */
+export function possibleDuplicates(members) {
+  const byPhone = new Map();
+  for (const m of members) byPhone.set(m.phone, [...(byPhone.get(m.phone) ?? []), m]);
+  const apart = (a, b) => (a.notDuplicates ?? []).some((id) => String(id) === String(b._id));
+  const groups = [];
+  for (const [phone, list] of byPhone) {
+    const pairs = [];
+    for (let i = 0; i < list.length; i += 1) {
+      for (let j = i + 1; j < list.length; j += 1) {
+        const [a, b] = [list[i], list[j]];
+        if (apart(a, b) || apart(b, a)) continue;
+        const reason = sameNameReason(a, b);
+        if (reason) pairs.push({ a, b, reason });
+      }
+    }
+    if (pairs.length) groups.push({ phone, pairs });
+  }
+  return groups;
+}
+
+/** Is one name's words all inside the other's (at least two words), e.g. a middle name left out? */
+function nameWithin(a, b) {
+  const [short, long] = [a.split(' '), b.split(' ')].sort((x, y) => x.length - y.length);
+  return short.length >= 2 && short.length < long.length && short.every((w) => long.includes(w));
+}
+
+/** Fields the row can fill in on the member without changing anything already there. */
+function blanksToFill(member, row) {
+  const set = {};
+  if (row.gender && !member.gender) set.gender = row.gender;
+  if (row.address && !member.address) set.address = row.address;
+  if (row.birthDay && !member.birthDay) {
+    set.birthDay = row.birthDay;
+    set.birthMonth = row.birthMonth;
+  }
+  if (row.anniversaryDay && !member.anniversaryDay) {
+    set.anniversaryDay = row.anniversaryDay;
+    set.anniversaryMonth = row.anniversaryMonth;
+  }
+  return set;
+}
+
+/**
+ * Plans merging a member list (rows from readMemberCsv) into the members already saved.
+ * - A row with a phone matches a member with that phone and the same name (any word order).
+ *   Unmatched, it's added, unless a member already has that name with another phone: those
+ *   are listed for a person to check (new number, or a different person).
+ * - A row without a usable phone matches by name alone, and only when exactly one member has
+ *   that name (or, failing that, exactly one has it with a middle name more or less); it can
+ *   then fill blanks but is never added (members need a phone).
+ * Matched rows only fill blanks (gender, address, birthday, anniversary); nothing is overwritten.
+ * Returns line numbers for everything left out, so reports never need names or numbers.
+ */
+export function planMemberMerge(rows, members) {
+  const byPhoneName = new Map(
+    members.map((m) => [`${m.phone}|${nameKey(m.firstName, m.lastName)}`, m]),
+  );
+  const byName = new Map();
+  for (const m of members) {
+    const key = nameKey(m.firstName, m.lastName);
+    byName.set(key, [...(byName.get(key) ?? []), m]);
+  }
+
+  const plan = {
+    add: [],
+    fill: new Map(),
+    already: [],
+    repeated: [],
+    noNameOrPhone: [],
+    notFound: [],
+    sameName: [],
+    otherPhone: [],
+  };
+  // People added from earlier rows count as known, so a repeat of them in the file fills in
+  // their blanks (or is held back when the phone differs) instead of being added twice.
+  const addNew = (row, key) => {
+    const entry = { ...row, pending: row };
+    byPhoneName.set(`${row.phone}|${key}`, entry);
+    byName.set(key, [...(byName.get(key) ?? []), entry]);
+    plan.add.push(row);
+  };
+  const fillFrom = (member, row, how) => {
+    if (member.pending) {
+      Object.assign(member.pending, blanksToFill(member.pending, row));
+      return plan.repeated.push(row.line);
+    }
+    const current = { ...member, ...(plan.fill.get(String(member._id))?.set ?? {}) };
+    const set = blanksToFill(current, row);
+    if (!Object.keys(set).length) return plan.already.push(row.line);
+    const entry = plan.fill.get(String(member._id)) ?? {
+      memberId: member._id,
+      lines: [],
+      how,
+      set: {},
+    };
+    entry.lines.push(row.line);
+    Object.assign(entry.set, set);
+    plan.fill.set(String(member._id), entry);
+  };
+
+  for (const row of rows) {
+    const key = nameKey(row.firstName, row.lastName);
+    if (!row.firstName) {
+      plan.noNameOrPhone.push(row.line);
+      continue;
+    }
+    if (row.phone) {
+      const id = `${row.phone}|${key}`;
+      const member = byPhoneName.get(id);
+      if (member) fillFrom(member, row, 'phone');
+      else if (byName.has(key)) plan.otherPhone.push(row.line);
+      else addNew(row, key);
+      continue;
+    }
+    let matches = byName.get(key) ?? [];
+    // "Ada Eze" and "Ada Grace Eze": one name inside the other (two words or more) also counts.
+    if (!matches.length)
+      matches = [...byName.entries()].filter(([k]) => nameWithin(k, key)).flatMap(([, m]) => m);
+    if (matches.length === 1) fillFrom(matches[0], row, 'name');
+    else if (matches.length > 1) plan.sameName.push(row.line);
+    else plan.notFound.push(row.line);
+  }
+  return { ...plan, fill: [...plan.fill.values()] };
+}
+
 export function parseGender(value = '') {
   const v = value.trim().toLowerCase();
   if (['m', 'male', 'man', 'boy'].includes(v)) return 'male';

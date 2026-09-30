@@ -1,11 +1,14 @@
 /**
- * Adds members from a spreadsheet (.xlsx) or CSV to the Members list. Only people not already
- * on the list are added (same phone and same name = already there); nobody is changed.
+ * Merges a spreadsheet (.xlsx) or CSV into the Members list (rules: planMemberMerge in
+ * src/lib/members.js). New people with a phone are added; existing members only get blanks
+ * filled in (birthday, anniversary, gender, address), matched by phone and name, or by name
+ * alone when no phone is given and exactly one member has that name. Nothing is overwritten.
  * Columns are read like the Members screen's upload: Name and Phone, plus any of Address,
  * Gender, Birthday, Anniversary.
  *
- *   npm run members:import -- "C:\path\file.xlsx"            -> shows what would be added
- *   npm run members:import -- "C:\path\file.xlsx" --confirm  -> adds them
+ *   npm run members:import -- "C:\path\file.xlsx"            -> shows what would change
+ *   npm run members:import -- "C:\path\file.xlsx" --confirm  -> saves it
+ *   add --review="C:\path\review.csv" to save the rows left out, with names, to check by hand
  *
  * Reads MONGODB_URI from .env, or from the environment (PowerShell: $env:MONGODB_URI = "...").
  * Prints counts and line numbers only, never names or phone numbers.
@@ -15,11 +18,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import mongoose from 'mongoose';
 import ExcelJS from 'exceljs';
-import { readMemberCsv } from '../src/lib/members.js';
+import { nameKey, planMemberMerge, readMemberCsv } from '../src/lib/members.js';
 
 const args = process.argv.slice(2);
 const confirm = args.includes('--confirm');
 const file = args.find((a) => !a.startsWith('--'));
+// --review=C:\path\review.csv writes the rows left out, and new people sharing a member's phone,
+// with names and reasons, for a person to check. It's written on this computer only; keep it out of the project folder.
+const review = args.find((a) => a.startsWith('--review='))?.slice('--review='.length);
 
 /** A cell's text, whatever Excel stored (numbers, dates, rich text, links, formulas). */
 function cellText(value) {
@@ -51,9 +57,6 @@ async function readAsCsv(filePath) {
   });
   return lines.join('\n');
 }
-
-const identity = (m) =>
-  `${m.phone}|${m.firstName.trim().toLowerCase()}|${(m.lastName || '').trim().toLowerCase()}`;
 
 async function main() {
   if (!file || !fs.existsSync(file)) {
@@ -87,87 +90,138 @@ async function main() {
     .replace(/[/?].*$/, '');
   const members = db.collection('members');
 
-  const phones = [...new Set(rows.filter((r) => r.phone).map((r) => r.phone))];
-  const existing = await members.find({ phone: { $in: phones } }).toArray();
-  const known = new Set(existing.map(identity));
-  const knownPhones = new Set(existing.map((m) => m.phone));
-  const firstTimers = new Set(
+  const all = await members
+    .find(
+      { mergedInto: { $exists: false } },
+      {
+        projection: {
+          firstName: 1,
+          lastName: 1,
+          phone: 1,
+          gender: 1,
+          address: 1,
+          birthDay: 1,
+          birthMonth: 1,
+          anniversaryDay: 1,
+          anniversaryMonth: 1,
+        },
+      },
+    )
+    .toArray();
+  const plan = planMemberMerge(rows, all);
+  const unreadable = rows.filter((r) => r.phoneRaw && !r.phone).map((r) => r.line);
+  const knownPhones = new Set(all.map((m) => m.phone));
+  const firstTimerKeys = new Set(
     (
       await db
         .collection('people')
-        .find({ phone: { $in: phones } })
+        .find({ phone: { $in: plan.add.map((r) => r.phone) } })
         .toArray()
-    ).map(identity),
+    ).map((p) => `${p.phone}|${nameKey(p.firstName, p.lastName)}`),
   );
-
-  const seen = new Set();
-  const add = [];
-  const invalid = [];
-  let already = 0;
-  let repeated = 0;
-  let sharedPhone = 0;
-  let alsoFirstTimer = 0;
-  for (const r of rows) {
-    if (r.problems.length) {
-      invalid.push(`  line ${r.line}: ${r.problems.join(', ')}`);
-      continue;
-    }
-    const id = identity(r);
-    if (known.has(id)) {
-      already += 1;
-      continue;
-    }
-    if (seen.has(id)) {
-      repeated += 1;
-      continue;
-    }
-    seen.add(id);
-    if (knownPhones.has(r.phone)) sharedPhone += 1;
-    if (firstTimers.has(id)) alsoFirstTimer += 1;
-    add.push(r);
-  }
+  const count = (fields) => plan.fill.filter((f) => fields.some((k) => k in f.set)).length;
+  const lines = (list) =>
+    list.length > 12 ? `${list.slice(0, 12).join(', ')}, …` : list.join(', ');
+  const show = (label, list, note = '') =>
+    list.length &&
+    console.log(
+      `  ${label.padEnd(34)}${String(list.length).padStart(4)}${note}   lines ${lines(list)}`,
+    );
 
   console.log(`Database: ${host}`);
-  console.log(`File: ${path.basename(file)} (${rows.length} rows)\n`);
-  console.log(`  To add:                     ${add.length}`);
-  console.log(`    with an address:          ${add.filter((r) => r.address).length}`);
-  console.log(`    with a birthday:          ${add.filter((r) => r.birthDay).length}`);
-  if (sharedPhone)
-    console.log(`    sharing a member’s phone: ${sharedPhone} (family; different name)`);
-  if (alsoFirstTimer) console.log(`    also on First timers:     ${alsoFirstTimer}`);
-  console.log(`  Already on the list:        ${already}`);
-  if (repeated) console.log(`  Repeated in the file:       ${repeated}`);
-  console.log(`  Can’t be added:             ${invalid.length}`);
-  if (invalid.length) console.log(invalid.join('\n'));
-  const unread = rows.filter((r) => r.birthdayUnread).length;
-  if (unread) console.log(`  Birthdays not understood:   ${unread} (added without a birthday)`);
+  console.log(`File: ${path.basename(file)} (${rows.length} rows)
+`);
+  console.log(`  To add (new, with a phone):       ${String(plan.add.length).padStart(4)}`);
+  console.log(
+    `    with a birthday:                ${String(plan.add.filter((r) => r.birthDay).length).padStart(4)}`,
+  );
+  const shared = plan.add.filter((r) => knownPhones.has(r.phone)).length;
+  if (shared)
+    console.log(
+      `    sharing a member's phone:       ${String(shared).padStart(4)} (family; different name)`,
+    );
+  const alsoFt = plan.add.filter((r) =>
+    firstTimerKeys.has(`${r.phone}|${nameKey(r.firstName, r.lastName)}`),
+  ).length;
+  if (alsoFt) console.log(`    also on First timers:           ${String(alsoFt).padStart(4)}`);
+  console.log(`  Members to fill in:               ${String(plan.fill.length).padStart(4)}`);
+  console.log(
+    `    matched by phone and name:      ${String(plan.fill.filter((f) => f.how === 'phone').length).padStart(4)}`,
+  );
+  console.log(
+    `    matched by name only:           ${String(plan.fill.filter((f) => f.how === 'name').length).padStart(4)}`,
+  );
+  console.log(`    getting a birthday:             ${String(count(['birthDay'])).padStart(4)}`);
+  console.log(
+    `    getting an anniversary:         ${String(count(['anniversaryDay'])).padStart(4)}`,
+  );
+  console.log(
+    `    getting a gender or address:    ${String(count(['gender', 'address'])).padStart(4)}`,
+  );
+  console.log(`  Already complete, nothing to do:  ${String(plan.already.length).padStart(4)}`);
+  console.log('\nLeft out (check these lines in your file):');
+  show('No name', plan.noNameOrPhone);
+  show('No phone, not a member yet', plan.notFound);
+  show('No phone, 2+ members share name', plan.sameName);
+  show('Known name on a different phone', plan.otherPhone);
+  show('Repeated in the file', plan.repeated);
+  show('Phone number not readable', unreadable, ' (matched by name instead)');
+  const unread = rows.filter((r) => r.birthdayUnread).map((r) => r.line);
+  show('Birthday not understood', unread, ' (row still used without it)');
+
+  if (review) {
+    const reasons = [
+      ['No name', plan.noNameOrPhone],
+      ['No phone, not a member yet', plan.notFound],
+      ['No phone, 2 or more members share this name', plan.sameName],
+      ['A member has this name with a different phone', plan.otherPhone],
+      ['Birthday not understood', unread],
+      [
+        'Will be added: shares a member’s phone (family, or the same person spelled differently?)',
+        plan.add.filter((r) => knownPhones.has(r.phone)).map((r) => r.line),
+      ],
+    ];
+    const byLine = new Map(rows.map((r) => [r.line, r]));
+    const out = [['Line', 'Name', 'Phone as written', 'Reason']];
+    for (const [reason, list] of reasons) {
+      for (const line of list) {
+        const r = byLine.get(line);
+        out.push([line, r.name, r.phoneRaw, reason]);
+      }
+    }
+    fs.writeFileSync(review, `﻿${out.map((r) => r.map(quote).join(',')).join('\r\n')}`);
+    console.log(`\nReview list (${out.length - 1} rows) saved to ${review}`);
+  }
 
   if (!confirm) {
-    console.log('\nNothing was changed. Run again with --confirm to add them.');
-  } else if (add.length) {
-    const now = new Date();
-    await members.insertMany(
-      add.map((r) => ({
-        firstName: r.firstName,
-        lastName: r.lastName,
-        phone: r.phone,
-        ...(r.gender && { gender: r.gender }),
-        ...(r.address && { address: r.address }),
-        ...(r.birthDay && { birthDay: r.birthDay, birthMonth: r.birthMonth }),
-        ...(r.anniversaryDay && {
-          anniversaryDay: r.anniversaryDay,
-          anniversaryMonth: r.anniversaryMonth,
-        }),
-        source: 'csv',
-        smsOptOut: false,
-        active: true,
-        createdAt: now,
-        updatedAt: now,
-      })),
-    );
-    console.log(`\nAdded ${add.length} members.`);
+    console.log('\nNothing was changed. Run again with --confirm to save.');
   } else {
-    console.log('\nNothing new to add.');
+    const now = new Date();
+    if (plan.add.length) {
+      await members.insertMany(
+        plan.add.map((r) => ({
+          firstName: r.firstName,
+          lastName: r.lastName,
+          phone: r.phone,
+          ...(r.gender && { gender: r.gender }),
+          ...(r.address && { address: r.address }),
+          ...(r.birthDay && { birthDay: r.birthDay, birthMonth: r.birthMonth }),
+          ...(r.anniversaryDay && {
+            anniversaryDay: r.anniversaryDay,
+            anniversaryMonth: r.anniversaryMonth,
+          }),
+          source: 'csv',
+          smsOptOut: false,
+          active: true,
+          createdAt: now,
+          updatedAt: now,
+        })),
+      );
+    }
+    for (const f of plan.fill) {
+      await members.updateOne({ _id: f.memberId }, { $set: { ...f.set, updatedAt: now } });
+    }
+    console.log(`\nAdded ${plan.add.length} members and filled in ${plan.fill.length}.`);
   }
   await mongoose.disconnect();
 }

@@ -3,8 +3,8 @@ import { connectDB } from '@/lib/db';
 import { normalizePhone } from '@/lib/phone';
 import { searchFilter } from '@/lib/search';
 import { HttpError } from '@/lib/api';
-import { readMemberCsv } from '@/lib/members';
-import { Member } from '@/models';
+import { possibleDuplicates, readMemberCsv } from '@/lib/members';
+import { Member, Person, SmsLog } from '@/models';
 
 /** "Same person" for imports: same phone and same first and last name, ignoring case. */
 const identity = (m) =>
@@ -160,4 +160,72 @@ export async function updateMember(id, input) {
   const next = { ...current, ...update };
   await assertNotDuplicate(next, id);
   return Member.findByIdAndUpdate(id, update, { new: true, runValidators: true }).lean();
+}
+
+/** Members on the list who share a phone and whose names look like one person. */
+export async function listPossibleDuplicates() {
+  await connectDB();
+  const shared = await Member.aggregate([
+    { $match: { active: true } },
+    { $group: { _id: '$phone', n: { $sum: 1 } } },
+    { $match: { n: { $gt: 1 } } },
+  ]);
+  const members = await Member.find({ active: true, phone: { $in: shared.map((s) => s._id) } })
+    .sort({ createdAt: 1 })
+    .lean();
+  return possibleDuplicates(members);
+}
+
+async function activePair(keepId, removeId) {
+  if (String(keepId) === String(removeId)) throw new HttpError(400, 'Pick two different members');
+  if (![keepId, removeId].every((id) => mongoose.isValidObjectId(id))) {
+    throw new HttpError(404, 'Member not found');
+  }
+  const [keep, remove] = await Promise.all([
+    Member.findOne({ _id: keepId, active: true }).lean(),
+    Member.findOne({ _id: removeId, active: true }).lean(),
+  ]);
+  if (!keep || !remove) throw new HttpError(404, 'Member not found, or already merged');
+  return { keep, remove };
+}
+
+/**
+ * The same person entered twice: `keep` stays, gets any details it's missing from `remove`,
+ * and takes over its first-timer link and SMS history. `remove` comes off the list (kept,
+ * marked mergedInto). If either had SMS switched off, it stays off.
+ */
+export async function mergeMembers({ keep: keepId, remove: removeId }) {
+  await connectDB();
+  const { keep, remove } = await activePair(keepId, removeId);
+  const fill = {};
+  if (!keep.gender && remove.gender) fill.gender = remove.gender;
+  if (!keep.address && remove.address) fill.address = remove.address;
+  if (!keep.birthDay && remove.birthDay) {
+    fill.birthDay = remove.birthDay;
+    fill.birthMonth = remove.birthMonth;
+  }
+  if (!keep.anniversaryDay && remove.anniversaryDay) {
+    fill.anniversaryDay = remove.anniversaryDay;
+    fill.anniversaryMonth = remove.anniversaryMonth;
+  }
+  if (!keep.person && remove.person) fill.person = remove.person;
+  if (remove.smsOptOut) fill.smsOptOut = true;
+
+  await Member.updateOne({ _id: keep._id }, fill);
+  await Promise.all([
+    Person.updateMany({ member: remove._id }, { member: keep._id }),
+    SmsLog.updateMany({ member: remove._id }, { member: keep._id }),
+  ]);
+  await Member.updateOne({ _id: remove._id }, { active: false, mergedInto: keep._id });
+  return Member.findById(keep._id).lean();
+}
+
+/** Two members sharing a phone are different people: stop suggesting them as duplicates. */
+export async function markNotDuplicates({ a, b }) {
+  await connectDB();
+  await activePair(a, b);
+  await Promise.all([
+    Member.updateOne({ _id: a }, { $addToSet: { notDuplicates: b } }),
+    Member.updateOne({ _id: b }, { $addToSet: { notDuplicates: a } }),
+  ]);
 }

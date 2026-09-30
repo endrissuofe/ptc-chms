@@ -6,6 +6,10 @@ import {
   parseGender,
   parseBirthday,
   readMemberCsv,
+  nameKey,
+  planMemberMerge,
+  sameNameReason,
+  possibleDuplicates,
 } from '@/lib/members';
 
 describe('parseCsv', () => {
@@ -95,5 +99,144 @@ describe('readMemberCsv', () => {
 
   it('explains a file without Name and Phone columns', () => {
     expect(() => readMemberCsv('First,Last\nA,B\n')).toThrow(/Name and Phone/);
+  });
+});
+
+describe('planMemberMerge', () => {
+  const members = [
+    { _id: 'm1', firstName: 'Chinedu', lastName: 'Okafor', phone: '+2348030000001' },
+    {
+      _id: 'm2',
+      firstName: 'Bola',
+      lastName: 'Ade',
+      phone: '+2348030000002',
+      birthDay: 3,
+      birthMonth: 5,
+    },
+    { _id: 'm3', firstName: 'Ada', lastName: 'Eze', phone: '+2348030000003' },
+    { _id: 'm4', firstName: 'Ada', lastName: 'Eze', phone: '+2348030000004' },
+  ];
+  const csv = (body) => readMemberCsv(`Name,Phone,Birthday,Anniversary\n${body}`);
+
+  it('matches names in any word order and case', () => {
+    expect(nameKey('Okafor', 'Chinedu')).toBe(nameKey('chinedu', ' OKAFOR '));
+  });
+
+  it('fills a missing birthday by phone and name, never overwriting one', () => {
+    const plan = planMemberMerge(
+      csv('Okafor Chinedu,08030000001,14/10\nBola Ade,08030000002,1/1\n'),
+      members,
+    );
+    expect(plan.fill).toEqual([
+      { memberId: 'm1', lines: [2], how: 'phone', set: { birthDay: 14, birthMonth: 10 } },
+    ]);
+    expect(plan.already).toEqual([3]);
+    expect(plan.add).toEqual([]);
+  });
+
+  it('fills by name alone only when exactly one member has that name', () => {
+    const plan = planMemberMerge(
+      csv('Bro. Chinedu Okafor,,14 Oct,2 Feb\nAda Eze,,1/1\nNew Person,,1/1\n'),
+      members,
+    );
+    expect(plan.fill).toEqual([
+      {
+        memberId: 'm1',
+        lines: [2],
+        how: 'name',
+        set: { birthDay: 14, birthMonth: 10, anniversaryDay: 2, anniversaryMonth: 2 },
+      },
+    ]);
+    expect(plan.sameName).toEqual([3]);
+    expect(plan.notFound).toEqual([4]);
+  });
+
+  it('adds new people with a phone once, and holds back a known name on another phone', () => {
+    const plan = planMemberMerge(
+      csv('Tunde Bello,08030000009,\nTunde Bello,08030000009,\nChinedu Okafor,08030000099,\n'),
+      members,
+    );
+    expect(plan.add.map((r) => r.line)).toEqual([2]);
+    expect(plan.repeated).toEqual([3]);
+    expect(plan.otherPhone).toEqual([4]);
+  });
+
+  it('matches a name with a middle name more or less, only when that points to one member', () => {
+    const plan = planMemberMerge(
+      csv('Chinedu Paul Okafor,,14/10\nAda,,1/1\nAda Grace Eze,,1/1\n'),
+      members,
+    );
+    expect(plan.fill.map((f) => f.memberId)).toEqual(['m1']);
+    expect(plan.notFound).toEqual([3]);
+    expect(plan.sameName).toEqual([4]);
+  });
+
+  it('treats people added from earlier rows as known', () => {
+    const plan = planMemberMerge(
+      csv('Tunde Bello,08030000009,\nBello Tunde,,5 May\nTunde Bello,08030000008,\n'),
+      members,
+    );
+    expect(plan.add).toHaveLength(1);
+    expect(plan.add[0]).toMatchObject({ line: 2, birthDay: 5, birthMonth: 5 });
+    expect(plan.repeated).toEqual([3]);
+    expect(plan.otherPhone).toEqual([4]);
+    expect(plan.fill).toEqual([]);
+  });
+
+  it('merges two rows for the same member without the second overwriting the first', () => {
+    const plan = planMemberMerge(
+      csv('Chinedu Okafor,08030000001,14/10\nChinedu Okafor,,20/12,2/2\n'),
+      members,
+    );
+    expect(plan.fill).toEqual([
+      {
+        memberId: 'm1',
+        lines: [2, 3],
+        how: 'phone',
+        set: { birthDay: 14, birthMonth: 10, anniversaryDay: 2, anniversaryMonth: 2 },
+      },
+    ]);
+  });
+});
+
+describe('possible duplicates', () => {
+  const m = (id, firstName, lastName, extra = {}) => ({
+    _id: id,
+    firstName,
+    lastName,
+    phone: '+2348030000001',
+    ...extra,
+  });
+
+  it('spots one person entered twice, but not a family on one phone', () => {
+    expect(sameNameReason(m(1, 'Chinedu', 'Okafor'), m(2, 'Okafor', 'Chinedu'))).toBe('Same name');
+    expect(sameNameReason(m(1, 'Chinedu', 'Okafor'), m(2, 'Chinedo', 'Okafor'))).toBe(
+      'Spelled differently',
+    );
+    expect(sameNameReason(m(1, 'Bola', 'Ade'), m(2, 'Bolanle', 'Ade'))).toBe('Spelled differently');
+    expect(sameNameReason(m(1, 'Ada', 'Eze'), m(2, 'Ada Grace', 'Eze'))).toBe(
+      'Middle name more or less',
+    );
+    expect(sameNameReason(m(1, 'Ada', ''), m(2, 'Ada', 'Eze'))).toBe('One has only one name');
+    expect(sameNameReason(m(1, 'Ada', 'Eze'), m(2, 'Chuka', 'Eze'))).toBeNull();
+    expect(sameNameReason(m(1, 'Chioma', 'Eze'), m(2, 'Chinedu', 'Eze'))).toBeNull();
+  });
+
+  it('pairs look-alikes by phone and leaves out pairs marked as different people', () => {
+    const groups = possibleDuplicates([
+      m('a', 'Chinedu', 'Okafor'),
+      m('b', 'Chinedo', 'Okafor'),
+      m('c', 'Ngozi', 'Okafor'),
+      m('d', 'Chinedu', 'Okafor', { phone: '+2348030000002' }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].pairs.map((p) => [p.a._id, p.b._id])).toEqual([['a', 'b']]);
+
+    expect(
+      possibleDuplicates([
+        m('a', 'Chinedu', 'Okafor', { notDuplicates: ['b'] }),
+        m('b', 'Chinedo', 'Okafor'),
+      ]),
+    ).toEqual([]);
   });
 });

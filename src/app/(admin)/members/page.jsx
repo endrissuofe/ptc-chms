@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
 import EmptyState from '@/components/ui/EmptyState';
-import { listMembers } from '@/services/member.service';
+import { listMembers, listPossibleDuplicates } from '@/services/member.service';
 import MemberImport from './MemberImport';
 import MemberList, { AddMember } from './MemberList';
 
@@ -12,7 +12,11 @@ export const dynamic = 'force-dynamic';
 export default async function MembersPage({ searchParams }) {
   const { q = '', page = '1' } = await searchParams;
   const current = Math.max(Number(page) || 1, 1);
-  const list = await listMembers({ q, page: current });
+  const [list, duplicates] = await Promise.all([
+    listMembers({ q, page: current }),
+    listPossibleDuplicates(),
+  ]);
+  const toCheck = duplicates.reduce((n, g) => n + g.pairs.length, 0);
   const pages = Math.max(Math.ceil(list.total / list.limit), 1);
   const link = (p) => `/members?${new URLSearchParams({ ...(q && { q }), page: String(p) })}`;
 
@@ -38,6 +42,12 @@ export default async function MembersPage({ searchParams }) {
           <Link href="/sms#broadcast" className="of-btn-quiet">
             <Icon name="send" size={18} />
             Send them a message
+          </Link>
+        )}
+        {toCheck > 0 && (
+          <Link href="/members/duplicates" className="of-btn-quiet">
+            <Icon name="group" size={18} />
+            {toCheck === 1 ? '1 possible duplicate' : `${toCheck} possible duplicates`}
           </Link>
         )}
       </div>

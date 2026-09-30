@@ -45,3 +45,11 @@ export const memberCreateSchema = fields
   .superRefine(checkDates);
 
 export const memberUpdateSchema = fields.partial().superRefine(checkDates);
+
+const memberId = z.string().regex(/^[a-f0-9]{24}$/, 'Member not found');
+
+/** Merge a duplicate: `remove` goes into `keep`. */
+export const memberMergeSchema = z.object({ keep: memberId, remove: memberId });
+
+/** Two members sharing a phone who are different people. */
+export const notDuplicatesSchema = z.object({ a: memberId, b: memberId });

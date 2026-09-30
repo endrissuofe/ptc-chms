@@ -20,6 +20,10 @@ const memberSchema = new mongoose.Schema(
     person: { type: mongoose.Schema.Types.ObjectId, ref: 'Person' },
     smsOptOut: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
+    // A duplicate merged into another member is taken off the list (active: false), not deleted.
+    mergedInto: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
+    // Members sharing this phone that an admin said are a different person (e.g. family).
+    notDuplicates: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Member' }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true },
