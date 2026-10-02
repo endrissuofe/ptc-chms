@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
 import EmptyState from '@/components/ui/EmptyState';
+import { getSession } from '@/lib/auth';
+import { ROLES } from '@/lib/roles';
 import { listMembers, listPossibleDuplicates } from '@/services/member.service';
 import MemberImport from './MemberImport';
 import MemberList, { AddMember } from './MemberList';
@@ -12,9 +14,11 @@ export const dynamic = 'force-dynamic';
 export default async function MembersPage({ searchParams }) {
   const { q = '', page = '1' } = await searchParams;
   const current = Math.max(Number(page) || 1, 1);
+  // Admins also upload spreadsheets and merge duplicates; pastors see and correct the list.
+  const isAdmin = (await getSession())?.user?.role === ROLES.ADMIN;
   const [list, duplicates] = await Promise.all([
     listMembers({ q, page: current }),
-    listPossibleDuplicates(),
+    isAdmin ? listPossibleDuplicates() : [],
   ]);
   const toCheck = duplicates.reduce((n, g) => n + g.pairs.length, 0);
   const pages = Math.max(Math.ceil(list.total / list.limit), 1);
@@ -29,7 +33,9 @@ export default async function MembersPage({ searchParams }) {
         </h1>
         <p className="max-w-[65ch] text-meta text-muted">
           {list.all === 0
-            ? 'Add people one at a time, or upload your list from a spreadsheet.'
+            ? isAdmin
+              ? 'Add people one at a time, or upload your list from a spreadsheet.'
+              : 'Add people one at a time.'
             : 'Their birthdays and anniversaries show on the Birthdays screen. Members with SMS on get church messages and wishes.'}
         </p>
       </header>
@@ -37,7 +43,7 @@ export default async function MembersPage({ searchParams }) {
       {/* Buttons first; a form or upload that is opened drops below them (order-last). */}
       <div className="flex flex-wrap items-center gap-2">
         <AddMember />
-        <MemberImport empty={list.all === 0} />
+        {isAdmin && <MemberImport empty={list.all === 0} />}
         {list.all > 0 && (
           <Link href="/sms#broadcast" className="of-btn-quiet">
             <Icon name="send" size={18} />

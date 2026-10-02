@@ -20,9 +20,15 @@ export const ROUTE_ACCESS = [
   { prefix: '/dashboard', roles: [ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/first-timers', roles: [ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/prayer-requests', roles: [ROLES.PRAYER, ROLES.PASTOR, ROLES.ADMIN] },
-  { prefix: '/sms', roles: [ROLES.ADMIN] },
+  { prefix: '/sms', roles: [ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/services', roles: [ROLES.ADMIN, ROLES.PASTOR] },
-  { prefix: '/members', roles: [ROLES.ADMIN] },
+  // The more specific member screens come first: the first matching prefix decides.
+  {
+    prefix: '/members/new',
+    roles: [ROLES.USHER, ROLES.FOLLOWUP, ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN],
+  },
+  { prefix: '/members/duplicates', roles: [ROLES.ADMIN] },
+  { prefix: '/members', roles: [ROLES.PASTOR, ROLES.ADMIN] },
   { prefix: '/users', roles: [ROLES.ADMIN] },
   { prefix: '/alerts', roles: [ROLES.ADMIN] },
   { prefix: '/birthdays', roles: [ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN] },
@@ -39,6 +45,17 @@ export const ROUTE_ACCESS = [
  */
 export const MEDIA_EDITORS = [ROLES.MEDIA, ROLES.ADMIN];
 export const SERVICE_DETAIL_EDITORS = [ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN];
+
+/**
+ * Members. Ushers, the follow-up team and the media team can add a member (a form only: they
+ * never see the list); pastors and admins see and correct the list. Uploading a spreadsheet and
+ * merging duplicates stay with admins.
+ */
+export const MEMBER_ADDERS = [ROLES.USHER, ROLES.FOLLOWUP, ROLES.MEDIA, ROLES.PASTOR, ROLES.ADMIN];
+export const MEMBER_MANAGERS = [ROLES.PASTOR, ROLES.ADMIN];
+
+/** Who can send a broadcast SMS. The automatic messages and resends stay with admins. */
+export const BROADCASTERS = [ROLES.PASTOR, ROLES.ADMIN];
 
 /** Home screen after sign-in, by role. */
 export const HOME_BY_ROLE = {

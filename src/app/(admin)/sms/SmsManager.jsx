@@ -60,29 +60,39 @@ function plainReason(error = '') {
   return error || 'Unknown reason';
 }
 
-export default function SmsManager({ templates, invite, memberInvite, runs, audienceCounts }) {
+/** `admin` adds what pastors don't get: the automatic messages' wordings and resending. */
+export default function SmsManager({
+  templates,
+  invite,
+  memberInvite,
+  runs,
+  audienceCounts,
+  admin = false,
+}) {
   const previews = { saturday_invite: invite, member_invite: memberInvite };
   return (
     <>
       <Broadcast counts={audienceCounts} />
 
-      <section aria-labelledby="automatic-title" className="flex flex-col gap-3">
-        <div>
-          <h2 id="automatic-title" className="of-h2">
-            Automatic messages
-          </h2>
-          <p className="text-meta text-muted">
-            Sent by the app on their own. Open one to see who gets it or change the wording.
-          </p>
-        </div>
-        <ul className="of-panel divide-y divide-line">
-          {templates.map((t) => (
-            <TemplateEditor key={t.key} template={t} invite={previews[t.key] ?? null} />
-          ))}
-        </ul>
-      </section>
+      {admin && (
+        <section aria-labelledby="automatic-title" className="flex flex-col gap-3">
+          <div>
+            <h2 id="automatic-title" className="of-h2">
+              Automatic messages
+            </h2>
+            <p className="text-meta text-muted">
+              Sent by the app on their own. Open one to see who gets it or change the wording.
+            </p>
+          </div>
+          <ul className="of-panel divide-y divide-line">
+            {templates.map((t) => (
+              <TemplateEditor key={t.key} template={t} invite={previews[t.key] ?? null} />
+            ))}
+          </ul>
+        </section>
+      )}
 
-      <RunHistory runs={runs} />
+      <RunHistory runs={runs} admin={admin} />
     </>
   );
 }
@@ -657,7 +667,7 @@ const runTitle = (run) => {
   return TEMPLATE_INFO[run.template]?.title ?? run.template;
 };
 
-function RunHistory({ runs }) {
+function RunHistory({ runs, admin }) {
   const failed = runs.filter((r) => r.failed > 0 && !r.test).length;
   return (
     <section aria-labelledby="runs-title" className="flex flex-col gap-3">
@@ -705,7 +715,7 @@ function RunHistory({ runs }) {
             </thead>
             <tbody>
               {runs.map((r) => (
-                <RunRow key={r.run} run={r} />
+                <RunRow key={r.run} run={r} admin={admin} />
               ))}
             </tbody>
           </table>
@@ -715,7 +725,7 @@ function RunHistory({ runs }) {
   );
 }
 
-function RunRow({ run }) {
+function RunRow({ run, admin }) {
   const router = useRouter();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
@@ -781,7 +791,7 @@ function RunRow({ run }) {
         <td className="text-right tabular-nums">{run.cost ? naira.format(run.cost) : '—'}</td>
         <td className="pr-5 text-right">
           <div className="flex justify-end gap-1">
-            {run.failed > 0 && !run.test && (
+            {admin && run.failed > 0 && !run.test && (
               <button
                 type="button"
                 onClick={retry}

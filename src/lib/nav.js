@@ -50,7 +50,21 @@ export const NAV = [
     group: 'people',
     roles: [MEDIA, PASTOR, ADMIN],
   },
-  { href: '/members', label: 'Members', icon: 'contacts', group: 'people', roles: [ADMIN] },
+  {
+    href: '/members',
+    label: 'Members',
+    icon: 'contacts',
+    group: 'people',
+    roles: [PASTOR, ADMIN],
+  },
+  // The teams that only add members (they don't see the list).
+  {
+    href: '/members/new',
+    label: 'Add member',
+    icon: 'group_add',
+    group: 'people',
+    roles: [USHER, FOLLOWUP, MEDIA],
+  },
   {
     href: '/today',
     label: 'Today',
@@ -96,7 +110,7 @@ export const NAV = [
     group: 'church',
     roles: [MEDIA, PASTOR, ADMIN],
   },
-  { href: '/sms', label: 'SMS', icon: 'sms', group: 'settings', roles: [ADMIN] },
+  { href: '/sms', label: 'SMS', icon: 'sms', group: 'settings', roles: [PASTOR, ADMIN] },
   { href: '/alerts', label: 'Alerts', icon: 'mail', group: 'settings', roles: [ADMIN] },
   {
     href: '/users',
@@ -129,7 +143,7 @@ const PHONE_TABS = {
   [USHER]: ['/today', '/attendance', '/newcomers/new'],
   [PASTOR]: ['/dashboard', '/my-newcomers', '/first-timers', '/prayer-requests'],
   [ADMIN]: ['/dashboard', '/newcomers/new', '/my-newcomers', '/first-timers'],
-  [MEDIA]: ['/media', '/birthdays'],
+  [MEDIA]: ['/media', '/birthdays', '/members/new'],
 };
 
 export const ROLE_LABELS = {

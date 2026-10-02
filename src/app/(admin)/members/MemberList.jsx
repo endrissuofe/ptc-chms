@@ -201,7 +201,7 @@ function DateField({ label, icon, day, month, onDay, onMonth, error, errorId }) 
   );
 }
 
-function MemberForm({ member, title, onCancel, onSaved }) {
+export function MemberForm({ member, title, onCancel, onSaved }) {
   const router = useRouter();
   const confirm = useConfirm();
   const form = useRef(null);

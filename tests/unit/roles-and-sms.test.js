@@ -39,6 +39,24 @@ describe('route access', () => {
     expect(canAccess('/media', ROLES.ADMIN)).toBe(true);
     expect(canAccess('/media', ROLES.FOLLOWUP)).toBe(false);
   });
+
+  it('lets the teams add a member without seeing the members list', () => {
+    for (const role of [ROLES.USHER, ROLES.FOLLOWUP, ROLES.MEDIA]) {
+      expect(canAccess('/members/new', role)).toBe(true);
+      expect(canAccess('/members', role)).toBe(false);
+      expect(canAccess('/members/duplicates', role)).toBe(false);
+      expect(canAccess('/sms', role)).toBe(false);
+    }
+    expect(canAccess('/members/new', ROLES.PRAYER)).toBe(false);
+  });
+
+  it('gives pastors the members list and SMS, but not merging duplicates', () => {
+    expect(canAccess('/members', ROLES.PASTOR)).toBe(true);
+    expect(canAccess('/members/new', ROLES.PASTOR)).toBe(true);
+    expect(canAccess('/sms', ROLES.PASTOR)).toBe(true);
+    expect(canAccess('/members/duplicates', ROLES.PASTOR)).toBe(false);
+    expect(canAccess('/members/duplicates', ROLES.ADMIN)).toBe(true);
+  });
 });
 
 describe('menu', () => {
@@ -74,5 +92,21 @@ describe('menu sections', () => {
     expect(tabs(ROLES.ADMIN)).toEqual(['Dashboard', 'Cards', 'Follow-up', 'First timers']);
     expect(tabs(ROLES.PASTOR)).toEqual(['Dashboard', 'Follow-up', 'First timers', 'Prayer']);
     expect(tabs(ROLES.USHER)).toEqual(['Today', 'Attendance', 'Cards']);
+  });
+
+  it('shows "Add member" to the teams, and Members and SMS to pastors', () => {
+    const labels = (role) => navFor(role).rail.map((i) => i.label);
+    for (const role of [ROLES.USHER, ROLES.FOLLOWUP, ROLES.MEDIA]) {
+      expect(labels(role)).toContain('Add member');
+      expect(labels(role)).not.toContain('Members');
+    }
+    expect(labels(ROLES.PASTOR)).toEqual(expect.arrayContaining(['Members', 'SMS']));
+    expect(labels(ROLES.PASTOR)).not.toContain('Add member');
+    expect(navFor(ROLES.MEDIA).tabs.map((i) => i.label)).toEqual([
+      'Media',
+      'Birthdays',
+      'Add member',
+    ]);
+    expect(navFor(ROLES.USHER).more.map((i) => i.label)).toEqual(['Add member']);
   });
 });

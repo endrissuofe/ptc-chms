@@ -66,6 +66,10 @@ export default async function BirthdaysPage({ searchParams }) {
               : `${comingUp} more ${RANGES[range].rest}`}
           </span>
         </p>
+        <Link href="/members/new" className="of-btn-quiet mt-2 self-start">
+          <Icon name="group_add" size={18} />
+          Someone missing? Add a member
+        </Link>
       </header>
 
       {n > 0 && (
