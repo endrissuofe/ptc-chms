@@ -223,6 +223,24 @@ const MIGRATIONS = [
       await db.collection('mediasettings').createIndex({ key: 1 }, { unique: true });
     },
   },
+  {
+    id: '014-thanksgiving-invite-3-oct-2026',
+    async up(db) {
+      // Saturday 3 Oct 2026 only: both invites announce the Thanksgiving Service on Sunday 4 Oct
+      // (oneOff on SmsTemplate). The usual wordings carry on in turn from the Saturday after.
+      const date = new Date('2026-10-03T00:00:00Z');
+      const set = (key, body) =>
+        db.collection('smstemplates').updateOne({ key }, { $set: { oneOff: { date, body } } });
+      await set(
+        'member_invite',
+        'Hi {FirstName}, tomorrow is Thanksgiving Service at Ptchapel! Come dance and praise God in an unusual way. {ServiceTimes} See you there!',
+      );
+      await set(
+        'saturday_invite',
+        'Hi {FirstName}, tomorrow is Thanksgiving Service at Ptchapel and you are invited! Come dance and praise God in an unusual way. {ServiceTimes}',
+      );
+    },
+  },
 ];
 
 async function main() {

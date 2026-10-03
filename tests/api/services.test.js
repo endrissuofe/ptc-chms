@@ -226,6 +226,24 @@ describe('church services', () => {
     expect(used[6]).toBe(used[0]);
   });
 
+  it('sends a one-off wording on its Saturday only, then goes back to the rotation', async () => {
+    await svc.createFromCard(card({ serviceDate: new Date('2026-09-27T09:00:00Z') }));
+    await sms.ensureTemplates();
+    const body = 'Hi {FirstName}, tomorrow is Thanksgiving Service! {ServiceTimes}';
+    await models.SmsTemplate.updateOne(
+      { key: 'saturday_invite' },
+      { oneOff: { date: new Date('2026-10-03T00:00:00Z'), body } },
+    );
+    const t = await models.SmsTemplate.findOne({ key: 'saturday_invite' }).lean();
+    expect(sms.wordingFor(t, new Date('2026-10-03T11:00:00Z'))).toBe(body);
+    expect(sms.wordingFor(t, new Date('2026-10-10T11:00:00Z'))).not.toBe(body);
+    expect(sms.wordings(t)).not.toContain(body);
+
+    await sms.runScheduledSend('saturday_invite', { today: new Date('2026-10-03T11:00:00Z') });
+    const log = await models.SmsLog.findOne().lean();
+    expect(log.body).toMatch(/tomorrow is Thanksgiving Service! Service starts at 8:00 AM.$/);
+  });
+
   it('invites members too, not twice, and only those with SMS on', async () => {
     const { smsSegments } = await import('@/lib/sms/segments');
     await svc.createFromCard(card({ serviceDate: new Date('2026-09-20T09:00:00Z') }));

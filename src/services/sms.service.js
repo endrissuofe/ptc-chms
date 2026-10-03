@@ -82,8 +82,12 @@ export async function ensureTemplates() {
 /** All of a message's wordings: the main one first. */
 export const wordings = (template) => [template.body, ...(template.variants ?? [])];
 
-/** The wording a rotating message uses on a Saturday. */
+/** The wording a rotating message uses on a Saturday: that day's one-off, or its turn. */
 export const wordingFor = (template, serviceDate) => {
+  const { oneOff } = template;
+  if (oneOff?.body && isoDay(oneOff.date) === isoDay(toServiceDate(serviceDate))) {
+    return oneOff.body;
+  }
   const all = wordings(template);
   return all[wordingIndex(all.length, serviceDate)];
 };
@@ -462,6 +466,9 @@ export async function getSmsOverview({ today = new Date() } = {}) {
         nextWording: TEMPLATE_INFO[t.key]?.rotates
           ? wordingIndex(wordings(t).length, nextSaturday)
           : null,
+        // Set when this Saturday has its own wording, sent in place of the turn above.
+        oneOff:
+          t.oneOff?.body && isoDay(t.oneOff.date) === isoDay(nextSaturday) ? t.oneOff.body : null,
         enabled: t.enabled,
         updatedAt: t.updatedAt,
       })),

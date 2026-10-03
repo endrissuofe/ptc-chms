@@ -571,6 +571,19 @@ function TemplateEditor({ template, invite }) {
           <span>{info.recipients}</span>
         </p>
 
+        {template.oneOff && (
+          <p className="flex items-start gap-2 rounded-card bg-of-accent-soft p-4 text-sm text-of-accent-ink">
+            <Icon name="event" size={16} className="mt-0.5" />
+            <span>
+              <span className="font-semibold">This Saturday only: </span>
+              {template.oneOff}
+              <span className="block text-meta">
+                Set for this week. The wordings below carry on in turn from next Saturday.
+              </span>
+            </span>
+          </p>
+        )}
+
         {rotates ? (
           <ol className="grid gap-x-6 gap-y-5 lg:grid-cols-2">
             {bodies.map((b, i) => (
@@ -578,7 +591,7 @@ function TemplateEditor({ template, invite }) {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="flex items-center gap-2 text-sm font-semibold">
                     Wording {i + 1}
-                    {i === template.nextWording && (
+                    {i === template.nextWording && !template.oneOff && (
                       <span className="chip bg-of-accent-soft text-of-accent-ink">
                         This Saturday
                       </span>
