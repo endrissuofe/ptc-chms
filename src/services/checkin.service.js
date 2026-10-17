@@ -60,6 +60,8 @@ export async function sendCheckIns({ today = new Date() } = {}) {
     text: template.body,
     run: `checkin:${isoDay(toServiceDate(today))}`,
     template: 'checkin',
+    // Each has their own survey link.
+    onePerPhone: false,
   });
   logger.info(result, 'Check-in SMS');
   return result;

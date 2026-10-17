@@ -1,4 +1,5 @@
 import { logger } from '../logger';
+import { SEND_TIMEOUT_MS } from './reliable';
 
 /**
  * BulkSMSLive provider (HTTP API 2.0, API-key method).
@@ -35,6 +36,10 @@ function headers() {
 
 const succeeded = (data) => Number(data?.status) === 1;
 
+/** Busy or broken on their side (try again); a bad number or no units is final. */
+const retryable = (data, status) =>
+  status === 429 || status >= 500 || String(data?.status) === '-10';
+
 function errorText(data, status) {
   if (status === 401) return 'Unauthenticated: check the API key';
   const code = data?.status != null ? String(data.status) : null;
@@ -56,22 +61,39 @@ export const bulkSmsLiveProvider = {
           recipients: to.replace('+', ''),
           forcednd: forceDnd(),
         }),
+        signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !succeeded(data)) return { ok: false, error: errorText(data, res.status) };
+      if (!res.ok || !succeeded(data)) {
+        return {
+          ok: false,
+          error: errorText(data, res.status),
+          retryable: retryable(data, res.status),
+        };
+      }
       return {
         ok: true,
         providerRef: data.msgid != null ? String(data.msgid) : undefined,
         cost: Number(data.units) || undefined,
       };
     } catch (err) {
+      const timedOut = err?.name === 'TimeoutError' || err?.name === 'AbortError';
       logger.error({ err: err.message }, 'BulkSMSLive request failed');
-      return { ok: false, error: err.message };
+      return {
+        ok: false,
+        error: timedOut ? `Timed out after ${SEND_TIMEOUT_MS / 1000}s` : err.message,
+        // No answer or no connection is worth another try; a setup problem (no key) is not.
+        retryable: timedOut || err instanceof TypeError,
+      };
     }
   },
 
   async balance() {
-    const res = await fetch(`${BASE}/balance`, { method: 'POST', headers: headers() });
+    const res = await fetch(`${BASE}/balance`, {
+      method: 'POST',
+      headers: headers(),
+      signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+    });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !succeeded(data)) throw new Error(errorText(data, res.status));
     return { balance: data.amount ?? data.balance ?? data.data?.balance, currency: 'units' };

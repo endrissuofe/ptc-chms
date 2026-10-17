@@ -105,7 +105,14 @@ export async function sendCelebrationSms({ today = new Date() } = {}) {
     }
     const recipients = people.filter((p) => p.kind === kind && p.canSms).map((p) => p.recipient);
     results[kind] = recipients.length
-      ? await deliver({ recipients, text: template.body, run: `${kind}:${day}`, template: kind })
+      ? await deliver({
+          recipients,
+          text: template.body,
+          run: `${kind}:${day}`,
+          template: kind,
+          // Each wish names one person: family on one phone each get their own.
+          onePerPhone: false,
+        })
       : { total: 0 };
   }
   logger.info({ day, ...results }, 'Birthday and anniversary SMS');

@@ -22,6 +22,8 @@ const broadcastSchema = new mongoose.Schema(
     sent: { type: Number, default: 0 },
     failed: { type: Number, default: 0 },
     status: { type: String, enum: ['sending', 'done'], default: 'sending' },
+    // When the last check for anyone missed (a batch cut off part-way) started; one at a time.
+    sweepAt: { type: Date },
     finishedAt: { type: Date },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },

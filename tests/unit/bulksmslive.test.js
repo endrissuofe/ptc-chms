@@ -55,25 +55,38 @@ describe('BulkSMSLive SMS provider', () => {
   it('explains an error code', async () => {
     fakeFetch(200, { status: -7 });
     const res = await bulkSmsLiveProvider.send({ to: '+2348030000001', body: 'x', from: 'P' });
-    expect(res).toEqual({ ok: false, error: '-7: Insufficient units' });
+    expect(res).toEqual({ ok: false, error: '-7: Insufficient units', retryable: false });
   });
 
   it('prefers the reason BulkSMSLive gives', async () => {
     fakeFetch(200, { status: -4, msg: 'Sender name not approved' });
     const res = await bulkSmsLiveProvider.send({ to: '+2348030000001', body: 'x', from: 'P' });
-    expect(res).toEqual({ ok: false, error: '-4: Sender name not approved' });
+    expect(res).toEqual({ ok: false, error: '-4: Sender name not approved', retryable: false });
   });
 
   it('reports a wrong API key', async () => {
     fakeFetch(401, { message: 'Unauthenticated.' });
     const res = await bulkSmsLiveProvider.send({ to: '+2348030000001', body: 'x', from: 'P' });
-    expect(res).toEqual({ ok: false, error: 'Unauthenticated: check the API key' });
+    expect(res).toEqual({
+      ok: false,
+      error: 'Unauthenticated: check the API key',
+      retryable: false,
+    });
   });
 
   it('refuses to send without an API key', async () => {
     delete process.env.BULKSMSLIVE_API_KEY;
     const res = await bulkSmsLiveProvider.send({ to: '+2348030000001', body: 'x', from: 'P' });
-    expect(res).toEqual({ ok: false, error: 'BULKSMSLIVE_API_KEY is not set' });
+    expect(res).toEqual({ ok: false, error: 'BULKSMSLIVE_API_KEY is not set', retryable: false });
+  });
+
+  it('marks a busy server or a lost connection as worth another try', async () => {
+    fakeFetch(503, {});
+    const busy = await bulkSmsLiveProvider.send({ to: '+2348030000001', body: 'x', from: 'P' });
+    expect(busy).toMatchObject({ ok: false, retryable: true });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fetch failed')));
+    const lost = await bulkSmsLiveProvider.send({ to: '+2348030000001', body: 'x', from: 'P' });
+    expect(lost).toEqual({ ok: false, error: 'fetch failed', retryable: true });
   });
 
   it('reads the balance in units', async () => {

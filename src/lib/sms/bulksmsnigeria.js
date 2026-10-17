@@ -1,4 +1,5 @@
 import { logger } from '../logger';
+import { SEND_TIMEOUT_MS } from './reliable';
 
 /**
  * BulkSMS Nigeria provider (API v2).
@@ -32,6 +33,7 @@ export const bulkSmsNigeriaProvider = {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({ from, to: to.replace('+', ''), body, gateway: gateway() }),
+        signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data?.status !== 'success') {

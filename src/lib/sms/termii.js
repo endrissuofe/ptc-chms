@@ -1,4 +1,5 @@
 import { logger } from '../logger';
+import { SEND_TIMEOUT_MS } from './reliable';
 
 /**
  * Termii provider (https://developers.termii.com).
@@ -36,6 +37,7 @@ export const termiiProvider = {
       const res = await fetch(`${base()}/api/sms/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
         body: JSON.stringify({
           api_key: apiKey(),
           to: to.replace('+', ''),

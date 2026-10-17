@@ -20,6 +20,7 @@ beforeAll(async () => {
   mongod = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongod.getUri('ptc_test');
   process.env.SMS_PROVIDER = 'mock';
+  process.env.SMS_RETRY_DELAY_MS = '0';
   process.env.LOG_LEVEL = 'silent';
   svc = await import('@/services/newcomer.service');
   sms = await import('@/services/sms.service');
@@ -119,10 +120,15 @@ describe('church services', () => {
   });
 
   it('holds a special service only on its date', async () => {
-    const special = await churchSvc.createService(
-      { kind: 'special', name: 'Thanksgiving Service', startTime: '10:00', date: '2026-09-26' },
-      pastor,
-    );
+    // Special dates must be from the past week on, so add it as if in that week.
+    const { vi } = await import('vitest');
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-09-24T12:00:00Z') });
+    const special = await churchSvc
+      .createService(
+        { kind: 'special', name: 'Thanksgiving Service', startTime: '10:00', date: '2026-09-26' },
+        pastor,
+      )
+      .finally(() => vi.useRealTimers());
     expect(special).toMatchObject({ key: 'thanksgiving-service', kind: 'special' });
     const saturday = new Date('2026-09-26T12:00:00Z');
     expect((await churchSvc.listServices({ on: saturday })).map((s) => s.key)).toEqual([
@@ -620,7 +626,8 @@ describe('broadcasts', () => {
       audience: 'members',
       body: 'Hi {FirstName}, see you Sunday!',
     });
-    expect(preview).toMatchObject({ count: 3, pages: 1, units: 3 });
+    // Chinedu and Ngozi share a phone: one message to that number.
+    expect(preview).toMatchObject({ count: 2, pages: 1, units: 2 });
     expect(preview.sample).toMatch(/^Hi (Chinedu|Ngozi), see you Sunday!$/);
     expect(await models.SmsLog.countDocuments()).toBe(0);
   });
@@ -629,17 +636,17 @@ describe('broadcasts', () => {
     await withMembers();
     const b = broadcastSvc;
     const { id, total } = await b.createBroadcast({ audience: 'members', body: 'Hi {FirstName}!' });
-    expect(total).toBe(3);
+    expect(total).toBe(2);
     let p;
     do p = await b.sendBroadcastBatch(id);
     while (!p.done);
-    expect(p).toMatchObject({ total: 3, processed: 3, sent: 3, failed: 0, done: true });
-    expect(await b.sendBroadcastBatch(id)).toMatchObject({ sent: 3, done: true });
-    expect(await models.SmsLog.countDocuments({ run: `broadcast:${id}` })).toBe(3);
+    expect(p).toMatchObject({ total: 2, processed: 2, sent: 2, failed: 0, done: true });
+    expect(await b.sendBroadcastBatch(id)).toMatchObject({ sent: 2, done: true });
+    expect(await models.SmsLog.countDocuments({ run: `broadcast:${id}` })).toBe(2);
     const [run] = await sms.recentRuns();
     expect(run).toMatchObject({
       run: `broadcast:${id}`,
-      sent: 3,
+      sent: 2,
       broadcast: { audience: 'members' },
     });
   });
@@ -651,7 +658,78 @@ describe('broadcasts', () => {
       card({ phone: '0901 000 0102', firstName: 'Tunde', lastName: 'Bello' }),
     );
     const b = broadcastSvc;
-    expect(await b.audienceCounts()).toEqual({ members: 3, first_timers: 2, everyone: 4 });
+    expect(await b.audienceCounts()).toEqual({ members: 2, first_timers: 2, everyone: 3 });
+  });
+
+  it('finishes the people a cut-off batch never reached before calling it done', async () => {
+    await withMembers();
+    const b = broadcastSvc;
+    const { id } = await b.createBroadcast({ audience: 'members', body: 'Hi {FirstName}!' });
+    // A batch claimed everyone, then its function was stopped before sending anything.
+    await models.Broadcast.updateOne({ _id: id }, { cursor: 2 });
+    let p = await b.sendBroadcastBatch(id);
+    expect(p.done).toBe(false);
+    while (!p.done) p = await b.sendBroadcastBatch(id);
+    expect(await models.SmsLog.countDocuments({ run: `broadcast:${id}`, status: 'sent' })).toBe(2);
+  });
+
+  it('retries a hiccup, and logs what a run had no time for so Resend can finish it', async () => {
+    const { vi } = await import('vitest');
+    const { mockProvider } = await import('@/lib/sms/mock');
+    await withMembers();
+    const run = 'test:reliability';
+    const recipients = await broadcastSvc.audienceRecipients('members');
+
+    // Each number fails once with a network error, then goes through.
+    const seen = new Set();
+    const spy = vi.spyOn(mockProvider, 'send').mockImplementation(async ({ to }) => {
+      if (!seen.has(to)) {
+        seen.add(to);
+        return { ok: false, error: 'fetch failed' };
+      }
+      return { ok: true, providerRef: 'x' };
+    });
+    const first = await sms.deliver({
+      recipients,
+      text: 'Hi {FirstName}',
+      run,
+      template: 'broadcast',
+    });
+    expect(first).toMatchObject({ sent: 2, failed: 0, notReached: 0 });
+
+    // A run that is already out of time sends nothing new and logs the rest as not sent.
+    const late = await sms.deliver({
+      recipients,
+      text: 'Hi {FirstName}',
+      run: 'test:late',
+      template: 'broadcast',
+      deadline: Date.now(),
+    });
+    expect(late).toMatchObject({ sent: 0, notReached: 2 });
+    spy.mockRestore();
+    const again = await sms.resendFailed('test:late');
+    expect(again).toMatchObject({ retried: 2, sent: 2 });
+    expect(await models.SmsLog.countDocuments({ runKey: 'test:late' })).toBe(2);
+  });
+
+  it('texts a shared number once, but each person gets their own birthday wish', async () => {
+    await withMembers();
+    const people = (await models.Member.find().lean()).map(sms.memberRecipient);
+    const once = await sms.deliver({
+      recipients: people,
+      text: 'Hi {FirstName}',
+      run: 'test:once',
+      template: 'broadcast',
+    });
+    expect(once).toMatchObject({ sent: 2, samePhone: 1 });
+    const each = await sms.deliver({
+      recipients: people,
+      text: 'Happy birthday {FirstName}',
+      run: 'test:each',
+      template: 'birthday',
+      onePerPhone: false,
+    });
+    expect(each).toMatchObject({ sent: 3, samePhone: 0 });
   });
 
   it('refuses tags a broadcast cannot fill', async () => {

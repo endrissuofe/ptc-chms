@@ -119,10 +119,15 @@ describe('media week', () => {
   });
 
   it('shows next week, with a special service announced 7 days ahead', async () => {
-    await churchSvc.createService(
-      { kind: 'special', name: 'Thanksgiving Service', startTime: '10:00', date: '2026-10-10' },
-      admin,
-    );
+    // Added well ahead (on the test's "today"), so it isn't announced at short notice.
+    const { vi } = await import('vitest');
+    vi.useFakeTimers({ toFake: ['Date'], now: today });
+    await churchSvc
+      .createService(
+        { kind: 'special', name: 'Thanksgiving Service', startTime: '10:00', date: '2026-10-10' },
+        admin,
+      )
+      .finally(() => vi.useRealTimers());
     const thisWeek = itemsOf(await media.getMediaWeek({ today }));
     expect(thisWeek.find((i) => i.service?.key === 'thanksgiving-service')).toMatchObject({
       kind: 'announcement',

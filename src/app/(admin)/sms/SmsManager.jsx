@@ -776,7 +776,9 @@ function RunRow({ run, admin }) {
       const r = await sendJson('/api/sms/resend', 'POST', { run: run.run });
       setResend({
         kind: 'ok',
-        message: `Resent ${r.sent}${r.failed ? `, ${r.failed} failed again` : ''}.`,
+        message: `Resent ${r.sent}${r.failed ? `, ${r.failed} failed again` : ''}.${
+          r.notReached ? ` ${r.notReached} still to go: press Resend failed again.` : ''
+        }`,
       });
       setPeople(null);
       router.refresh();

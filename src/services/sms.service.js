@@ -1,6 +1,13 @@
 import { connectDB } from '@/lib/db';
 import { HttpError } from '@/lib/api';
 import { getSmsProvider } from '@/lib/sms';
+import {
+  NOT_REACHED,
+  SEND_CONCURRENCY,
+  SEND_TIMEOUT_MS,
+  eachLimited,
+  sendWithRetry,
+} from '@/lib/sms/reliable';
 import { TEMPLATE_INFO, renderTemplate, unknownTags, wordingIndex } from '@/lib/sms/templates';
 import { formatPhone } from '@/lib/phone';
 import { toServiceDate, addDays, isoDay } from '@/lib/dates';
@@ -11,6 +18,11 @@ import { Member, Person, SmsTemplate, SmsLog, Broadcast } from '@/models';
 import { listServices } from './churchService.service';
 
 const CHURCH_NAME = () => process.env.CHURCH_NAME || 'Ptchapel';
+
+/** How long one deliver() call may keep starting messages, unless the caller says otherwise. */
+const DELIVER_BUDGET_MS = 45000;
+/** Both Saturday invites together: the cron function is stopped at 300 s. */
+const SATURDAY_BUDGET_MS = 240000;
 
 export const DEFAULT_TEMPLATES = [
   {
@@ -131,18 +143,48 @@ export const memberRecipient = (m) => ({
 /**
  * Sends `text` to each recipient, recording every attempt. Anyone already sent this `run`
  * successfully is skipped, so a run can safely be retried or resumed.
+ * - `onePerPhone` (on by default): a number gets the message once, even when family members
+ *   share it. Birthday-style messages addressed to one person turn it off.
+ * - Passing failures are retried (sendWithRetry); a few messages go out at once.
+ * - Nothing new starts after `deadline` (ms timestamp, default 45 s from now): the rest are
+ *   logged as not sent (NOT_REACHED) so "Resend failed" can finish them.
  */
-export async function deliver({ recipients, text, run, template, extraTags = {} }) {
+export async function deliver({
+  recipients,
+  text,
+  run,
+  template,
+  extraTags = {},
+  onePerPhone = true,
+  deadline = Date.now() + DELIVER_BUDGET_MS,
+}) {
   await connectDB();
   const provider = getSmsProvider();
   const from = smsStatus().senderId;
-  const result = { total: recipients.length, sent: 0, failed: 0, alreadySent: 0 };
+  const result = {
+    total: recipients.length,
+    sent: 0,
+    failed: 0,
+    alreadySent: 0,
+    samePhone: 0,
+    notReached: 0,
+  };
 
+  // Already done in this run, by person and by number (one look-up, not one per person).
+  const done = await SmsLog.find({ runKey: run }).select('recipientKey to').lean();
+  const doneKeys = new Set(done.map((d) => d.recipientKey));
+  const donePhones = new Set(done.map((d) => d.to));
+  const queue = [];
   for (const r of recipients) {
-    if (await SmsLog.exists({ runKey: run, recipientKey: r.key })) {
-      result.alreadySent += 1;
-      continue;
+    if (doneKeys.has(r.key)) result.alreadySent += 1;
+    else if (onePerPhone && donePhones.has(r.phone)) result.samePhone += 1;
+    else {
+      if (onePerPhone) donePhones.add(r.phone);
+      queue.push(r);
     }
+  }
+
+  await eachLimited(queue, SEND_CONCURRENCY, async (r) => {
     const message = renderTemplate(text, {
       FirstName: r.firstName,
       LastName: r.lastName,
@@ -151,7 +193,10 @@ export async function deliver({ recipients, text, run, template, extraTags = {} 
       // A recipient's own tags, e.g. their personal survey {Link}.
       ...r.tags,
     });
-    const res = await provider.send({ to: r.phone, body: message, from });
+    const outOfTime = Date.now() + SEND_TIMEOUT_MS > deadline;
+    const res = outOfTime
+      ? { ok: false, error: NOT_REACHED }
+      : await sendWithRetry(provider, { to: r.phone, body: message, from }, { deadline });
     try {
       await SmsLog.create({
         person: r.person,
@@ -173,9 +218,14 @@ export async function deliver({ recipients, text, run, template, extraTags = {} 
       if (err?.code !== 11000) throw err;
       // Someone else recorded this person's message for this run in the meantime.
       result.alreadySent += 1;
-      continue;
+      return;
     }
-    res.ok ? (result.sent += 1) : (result.failed += 1);
+    if (res.ok) result.sent += 1;
+    else if (outOfTime) result.notReached += 1;
+    else result.failed += 1;
+  });
+  if (result.failed || result.notReached) {
+    logger.warn({ run, ...result }, 'Some SMS in this run were not sent');
   }
   return result;
 }
@@ -226,13 +276,16 @@ async function serviceTimesAfter(day) {
   return describeServiceTimes(await listServices({ on: addDays(day, 1) }));
 }
 
-/** Members for the Sunday invite: SMS on, and not already getting the first timers' invite. */
+/**
+ * Members for the Sunday invite: SMS on, and not on a number already getting the first timers'
+ * invite (one invite per phone, even when a member and a first timer share it).
+ */
 async function memberInviteRecipients(day) {
-  const same = (x) =>
-    `${x.phone}|${x.firstName.trim().toLowerCase()}|${(x.lastName || '').trim().toLowerCase()}`;
-  const firstTimers = new Set((await inviteRecipients(day)).filter((p) => p.smsConsent).map(same));
+  const firstTimerPhones = new Set(
+    (await inviteRecipients(day)).filter((p) => p.smsConsent).map((p) => p.phone),
+  );
   const members = await Member.find({ active: true, smsOptOut: { $ne: true } }).lean();
-  return members.filter((m) => !firstTimers.has(same(m)));
+  return members.filter((m) => !firstTimerPhones.has(m.phone));
 }
 
 const SCHEDULED = {
@@ -242,11 +295,13 @@ const SCHEDULED = {
 };
 
 /** Both Saturday invites (cron, 12 noon): first timers, then members. Each runs even if the other fails. */
-export async function runSaturdayInvites({ today = new Date() } = {}) {
+export async function runSaturdayInvites({ today = new Date(), deadline } = {}) {
+  // Both share one time budget, well inside the cron function's 5 minutes.
+  const until = deadline ?? Date.now() + SATURDAY_BUDGET_MS;
   const results = {};
   for (const key of Object.keys(SCHEDULED)) {
     try {
-      results[key] = await runScheduledSend(key, { today });
+      results[key] = await runScheduledSend(key, { today, deadline: until });
     } catch (err) {
       logger.error({ err, templateKey: key }, 'Saturday invite failed');
       results[key] = { error: 'failed' };
@@ -256,7 +311,7 @@ export async function runSaturdayInvites({ today = new Date() } = {}) {
 }
 
 /** One scheduled Saturday invite, in this week's wording. Safe to run twice. */
-export async function runScheduledSend(templateKey, { today = new Date() } = {}) {
+export async function runScheduledSend(templateKey, { today = new Date(), deadline } = {}) {
   if (!SCHEDULED[templateKey]) throw new Error(`No schedule for "${templateKey}"`);
   await ensureTemplates();
   const template = await SmsTemplate.findOne({ key: templateKey }).lean();
@@ -271,6 +326,7 @@ export async function runScheduledSend(templateKey, { today = new Date() } = {})
     run,
     template: templateKey,
     extraTags: { ServiceTimes: await serviceTimesAfter(day) },
+    ...(deadline && { deadline }),
   });
   logger.info({ templateKey, run, ...result }, 'Scheduled SMS run finished');
   return { templateKey, runKey: run, ...result };
@@ -309,27 +365,35 @@ export async function updateTemplate(key, { body, bodies, enabled }, user) {
  * Tries again for everyone in `run` whose message failed and who hasn't been sent it since,
  * using the exact message they should have got.
  */
-export async function resendFailed(run) {
+export async function resendFailed(run, { deadline = Date.now() + DELIVER_BUDGET_MS } = {}) {
   requireLiveSms();
   await connectDB();
   const failed = await SmsLog.find({ run, status: 'failed' }).sort({ createdAt: -1 }).lean();
-  const seen = new Set();
   const provider = getSmsProvider();
   const from = smsStatus().senderId;
-  const result = { retried: 0, sent: 0, failed: 0 };
+  const result = { retried: 0, sent: 0, failed: 0, notReached: 0 };
 
-  for (const log of failed) {
+  // Skip anyone (or any number) this run has since reached, and each person's older failures.
+  const done = await SmsLog.find({ runKey: run }).select('recipientKey to').lean();
+  const doneKeys = new Set(done.map((d) => d.recipientKey));
+  const donePhones = new Set(done.map((d) => d.to));
+  const seen = new Set();
+  const queue = failed.filter((log) => {
     const key = log.recipientKey || `to:${log.to}`;
-    if (seen.has(key)) continue;
+    if (seen.has(key) || doneKeys.has(log.recipientKey) || donePhones.has(log.to)) return false;
     seen.add(key);
-    if (
-      log.recipientKey &&
-      (await SmsLog.exists({ runKey: run, recipientKey: log.recipientKey }))
-    ) {
-      continue;
+    donePhones.add(log.to);
+    return true;
+  });
+
+  await eachLimited(queue, SEND_CONCURRENCY, async (log) => {
+    const outOfTime = Date.now() + SEND_TIMEOUT_MS > deadline;
+    if (outOfTime) {
+      result.notReached += 1;
+      return;
     }
     result.retried += 1;
-    const res = await provider.send({ to: log.to, body: log.body, from });
+    const res = await sendWithRetry(provider, { to: log.to, body: log.body, from }, { deadline });
     await SmsLog.create({
       person: log.person,
       member: log.member,
@@ -349,7 +413,7 @@ export async function resendFailed(run) {
       if (err?.code !== 11000) throw err;
     });
     res.ok ? (result.sent += 1) : (result.failed += 1);
-  }
+  });
   return result;
 }
 
