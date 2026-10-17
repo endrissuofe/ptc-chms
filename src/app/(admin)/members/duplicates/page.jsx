@@ -3,6 +3,8 @@ import Icon from '@/components/ui/Icon';
 import EmptyState from '@/components/ui/EmptyState';
 import { formatPhone } from '@/lib/phone';
 import { listPossibleDuplicates } from '@/services/member.service';
+import { previewCleanup } from '@/services/cleanup.service';
+import CleanupPanel from './CleanupPanel';
 import DuplicatePair from './DuplicatePair';
 
 export const metadata = { title: 'Possible duplicates' };
@@ -24,7 +26,7 @@ const shown = (m) => ({
 
 /** /members/duplicates: members sharing a phone whose names look like one person. */
 export default async function DuplicatesPage() {
-  const groups = await listPossibleDuplicates();
+  const [groups, cleanup] = await Promise.all([listPossibleDuplicates(), previewCleanup()]);
   const pairs = groups.reduce((n, g) => n + g.pairs.length, 0);
 
   return (
@@ -44,6 +46,8 @@ export default async function DuplicatesPage() {
           record, adds anything it was missing from the other, and takes the other off the list.
         </p>
       </header>
+
+      <CleanupPanel members={cleanup.members.toMerge} firstTimers={cleanup.firstTimers.toMerge} />
 
       {groups.length === 0 ? (
         <EmptyState
