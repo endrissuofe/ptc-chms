@@ -120,6 +120,7 @@ export default async function DashboardPage() {
         <Figure
           value={checkIns.average == null ? '—' : checkIns.average}
           label="One-month check-in"
+          href="/first-timers/check-ins"
           sub={
             checkIns.sent
               ? `Out of 5 · ${checkIns.answered} of ${checkIns.sent} answered (90 days)`
@@ -307,13 +308,27 @@ function Sparkline({ values }) {
   );
 }
 
-function Figure({ value, label, sub }) {
-  return (
-    <div className="of-panel flex min-w-0 flex-col gap-1.5 p-5">
+/** One number in the "This month" row; with `href`, the whole box opens that screen. */
+function Figure({ value, label, sub, href }) {
+  const body = (
+    <>
       <p className="of-figure text-[2rem]">{value}</p>
-      <p className="font-semibold">{label}</p>
+      <p className="flex items-center gap-1 font-semibold">
+        {label}
+        {href && <Icon name="chevron_right" size={18} className="text-muted" />}
+      </p>
       <p className="text-meta text-muted">{sub}</p>
-    </div>
+    </>
+  );
+  return href ? (
+    <Link
+      href={href}
+      className="of-panel flex min-w-0 flex-col gap-1.5 p-5 transition-colors hover:bg-surface-2"
+    >
+      {body}
+    </Link>
+  ) : (
+    <div className="of-panel flex min-w-0 flex-col gap-1.5 p-5">{body}</div>
   );
 }
 

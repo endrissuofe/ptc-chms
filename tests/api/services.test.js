@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 
@@ -41,6 +41,18 @@ afterAll(async () => {
 beforeEach(async () => {
   await Promise.all(Object.values(models).map((m) => m.deleteMany({})));
 });
+
+// Written in late September 2026: pin "today" there, so dates such as "a special service
+// from the past week" or "not seen for weeks" mean the same whenever the tests run.
+beforeEach(() => {
+  vi.useFakeTimers({
+    toFake: ['Date'],
+    now: new Date('2026-09-30T09:00:00Z'),
+    shouldAdvanceTime: true,
+    advanceTimeDelta: 1,
+  });
+});
+afterEach(() => vi.useRealTimers());
 
 const card = (overrides = {}) => ({
   firstName: 'Kemi',

@@ -137,3 +137,27 @@ describe('answers', () => {
     expect((await models.Person.findById(p._id).lean()).callRequestedAt).toBeInstanceOf(Date);
   });
 });
+
+describe('check-in answers screen', () => {
+  it('lists answers newest first, then those still to answer', async () => {
+    const [a, b, c] = await Promise.all([
+      person({ firstName: 'Ada' }),
+      person({ firstName: 'Bola' }),
+      person({ firstName: 'Chidi' }),
+    ]);
+    const make = (p, extra = {}) =>
+      models.CheckIn.create({ person: p._id, token: `tok-${p.firstName}`, ...extra });
+    await make(a, { answeredAt: daysAgo(2), rating: 5, comment: 'Lovely welcome' });
+    await make(b, { answeredAt: daysAgo(1), rating: 2, wantsCall: true });
+    await make(c);
+
+    const { answered, waiting } = await checkins.listCheckIns({ today: TODAY });
+    expect(answered.map((r) => [r.name, r.rating, r.wantsCall])).toEqual([
+      ['Bola Ade', 2, true],
+      ['Ada Ade', 5, false],
+    ]);
+    expect(answered[1].comment).toBe('Lovely welcome');
+    expect(waiting.map((r) => r.name)).toEqual(['Chidi Ade']);
+    expect(answered[0]).not.toHaveProperty('token');
+  });
+});

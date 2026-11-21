@@ -121,3 +121,34 @@ export async function checkInSummary({ days = 90, today = new Date() } = {}) {
     : null;
   return { sent, answered: answered.length, average };
 }
+
+/**
+ * Every check-in sent in the last `days`, for the Check-in answers screen: answered ones
+ * newest answer first, then those still waiting, newest sent first.
+ */
+export async function listCheckIns({ days = 90, today = new Date() } = {}) {
+  await connectDB();
+  const since = addDays(new Date(today), -days);
+  const docs = await CheckIn.find({ createdAt: { $gte: since } })
+    .select('-token')
+    .populate('person', 'firstName lastName phone firstVisitDate')
+    .lean();
+  const rows = docs
+    .filter((d) => d.person)
+    .map((d) => ({
+      id: String(d._id),
+      personId: String(d.person._id),
+      name: `${d.person.firstName} ${d.person.lastName}`.trim(),
+      phone: d.person.phone,
+      firstVisitDate: d.person.firstVisitDate,
+      sentAt: d.createdAt,
+      answeredAt: d.answeredAt ?? null,
+      rating: d.rating ?? null,
+      wantsCall: Boolean(d.wantsCall),
+      comment: d.comment ?? null,
+    }));
+  return {
+    answered: rows.filter((r) => r.answeredAt).sort((a, b) => b.answeredAt - a.answeredAt),
+    waiting: rows.filter((r) => !r.answeredAt).sort((a, b) => b.sentAt - a.sentAt),
+  };
+}

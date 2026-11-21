@@ -84,10 +84,16 @@ export default async function FirstTimersPage({ searchParams }) {
             </p>
           )}
         </div>
-        <a href={exportHref} className="of-btn-quiet">
-          <Icon name="download" size={18} />
-          Export to Excel
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/first-timers/check-ins" className="of-btn-quiet">
+            <Icon name="reviews" size={18} />
+            Check-in answers
+          </Link>
+          <a href={exportHref} className="of-btn-quiet">
+            <Icon name="download" size={18} />
+            Export to Excel
+          </a>
+        </div>
       </header>
 
       {moved > 0 && <FormAlert success={`Moved ${people(moved)} into the Members list.`} />}
